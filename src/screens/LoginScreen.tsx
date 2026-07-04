@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 30,
+    paddingHorizontal: 28,
     paddingTop: 22,
     paddingBottom: 18
   },
@@ -116,23 +116,23 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   mascot: {
-    width: 176,
-    height: 182,
-    marginBottom: 14
+    width: 184,
+    height: 190,
+    marginBottom: 16
   },
   title: {
-    fontSize: 44,
-    lineHeight: 50,
+    fontSize: 42,
+    lineHeight: 48,
     fontWeight: "900",
     color: colors.primary,
     textAlign: "center"
   },
   subtitle: {
     marginTop: 10,
-    fontSize: 18,
-    lineHeight: 26,
+    fontSize: 17,
+    lineHeight: 25,
     fontWeight: "600",
-    color: "#777E7A",
+    color: colors.textMuted,
     textAlign: "center"
   },
   actions: {
@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
   },
   button: {
     width: "100%",
-    minHeight: 54,
-    borderRadius: 18,
+    minHeight: 56,
+    borderRadius: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -151,18 +151,20 @@ const styles = StyleSheet.create({
   },
   whiteButton: {
     backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.06)",
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.09,
-    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.07,
+    shadowRadius: 24,
     elevation: 4
   },
   emailButton: {
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.22,
+    shadowRadius: 26,
     elevation: 6
   },
   buttonPressed: {
@@ -195,7 +197,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     fontWeight: "700",
-    color: "#747C78",
+    color: colors.textMuted,
     textAlign: "center"
   },
   legalLink: {

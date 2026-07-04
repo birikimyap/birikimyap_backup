@@ -3,16 +3,16 @@ import { colors } from "./colors";
 export const shadows = {
   card: {
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.07,
+    shadowRadius: 28,
     elevation: 4
   },
   button: {
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
     elevation: 5
   }
 } as const;

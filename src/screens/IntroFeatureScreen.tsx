@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: 28,
     paddingTop: 20,
     paddingBottom: 18
   },
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     width: 206,
     height: 94,
     borderRadius: 120,
-    backgroundColor: "#EAF0DF"
+    backgroundColor: colors.primarySoft
   },
   mascot: {
     width: 184,
@@ -149,8 +149,8 @@ const styles = StyleSheet.create({
     fontSize: 19
   },
   heading: {
-    fontSize: 30,
-    lineHeight: 37,
+    fontSize: 31,
+    lineHeight: 38,
     fontWeight: "900",
     color: colors.primary,
     textAlign: "center"
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 23,
     fontWeight: "600",
-    color: "#747C78",
+    color: colors.textMuted,
     textAlign: "center"
   },
   features: {
@@ -178,20 +178,24 @@ const styles = StyleSheet.create({
   },
   featureRowHighlighted: {
     minHeight: 92,
-    backgroundColor: "rgba(255, 252, 246, 0.76)",
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.06)",
+    backgroundColor: "rgba(255, 254, 250, 0.86)",
     paddingVertical: spacing.sm,
     paddingRight: spacing.md,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 12 },
+    shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 0.06,
-    shadowRadius: 18,
+    shadowRadius: 24,
     elevation: 3
   },
   iconBox: {
     width: 64,
     height: 64,
-    borderRadius: 20,
-    backgroundColor: "#EBEDE1",
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.06)",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: colors.shadow,
@@ -244,9 +248,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.22,
+    shadowRadius: 26,
     elevation: 7
   },
   ctaPressed: {

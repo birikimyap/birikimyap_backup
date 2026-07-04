@@ -432,24 +432,10 @@ function VoiceExpenseSheet({
             <Text style={styles.speechWarning}>Expo Go’da gerçek ses tanıma desteklenmiyor. Development build gerekir.</Text>
           ) : null}
 
-          <Pressable style={({ pressed }) => [styles.testSpeechButton, pressed && styles.pressed]} onPress={fillTestText}>
-            <Text style={styles.testSpeechButtonText}>Test metni doldur</Text>
-          </Pressable>
-
           <View style={styles.parsedGrid}>
             <ParsedField label="Tutar" value={amount ? formatCurrency(parseAmount(amount)) : formatCurrency(0)} />
             <ParsedField label="Kategori" value={category || "-"} />
             <ParsedField label="Not" value={note || "-"} />
-          </View>
-
-          <View style={styles.debugBox}>
-            <Text style={styles.debugText}>permission: {permissionStatus}</Text>
-            <Text style={styles.debugText}>listening: {isListening ? "true" : "false"}</Text>
-            <Text style={styles.debugText}>transcript: {transcript || "-"}</Text>
-            <Text style={styles.debugText}>
-              parser: {parsedExpense.amount} / {parsedExpense.category || "-"} / {parsedExpense.note || "-"}
-            </Text>
-            <Text style={styles.debugText}>error: {error || "-"}</Text>
           </View>
 
           <TextInput
@@ -619,9 +605,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 8,
-    paddingBottom: 92
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 94
   },
   header: {
     flexDirection: "row",
@@ -633,8 +619,8 @@ const styles = StyleSheet.create({
     flex: 1
   },
   greeting: {
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 26,
+    lineHeight: 32,
     fontWeight: "900",
     color: colors.primary
   },
@@ -646,12 +632,19 @@ const styles = StyleSheet.create({
     color: "#747C78"
   },
   notificationButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#F0ECE4",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.08)",
+    backgroundColor: "rgba(255,254,250,0.86)",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3
   },
   notificationDot: {
     position: "absolute",
@@ -667,18 +660,18 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.99 }]
   },
   heroCard: {
-    marginTop: 14,
-    height: 170,
-    borderRadius: 24,
+    marginTop: 16,
+    height: 178,
+    borderRadius: 28,
     backgroundColor: colors.primary,
     overflow: "hidden",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 14 },
+    shadowOffset: { width: 0, height: 18 },
     shadowOpacity: 0.22,
-    shadowRadius: 24,
-    elevation: 7
+    shadowRadius: 30,
+    elevation: 8
   },
   heroCopy: {
     width: "54%",
@@ -688,7 +681,9 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     minHeight: 24,
     borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.13)",
+    backgroundColor: "rgba(255,255,255,0.10)",
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -717,8 +712,8 @@ const styles = StyleSheet.create({
   },
   heroAmount: {
     marginTop: 2,
-    fontSize: 32,
-    lineHeight: 36,
+    fontSize: 34,
+    lineHeight: 38,
     fontWeight: "900",
     color: colors.white
   },
@@ -756,7 +751,7 @@ const styles = StyleSheet.create({
   heroProgressFill: {
     height: "100%",
     borderRadius: 9,
-    backgroundColor: "#DDEBDE"
+    backgroundColor: "#E6D4A9"
   },
   heroPercentText: {
     marginTop: 5,
@@ -785,10 +780,10 @@ const styles = StyleSheet.create({
   },
   heroMascot: {
     position: "absolute",
-    right: 4,
-    bottom: 18,
-    width: 120,
-    height: 120,
+    right: 2,
+    bottom: 12,
+    width: 130,
+    height: 130,
     shadowColor: "#0A2015",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.16,
@@ -801,11 +796,13 @@ const styles = StyleSheet.create({
   },
   periodWrap: {
     marginTop: 14,
-    minHeight: 42,
-    borderRadius: 21,
-    backgroundColor: "#F1ECE4",
+    minHeight: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.06)",
+    backgroundColor: "#ECE7DD",
     flexDirection: "row",
-    padding: 3,
+    padding: 4,
     gap: 3
   },
   periodItem: {
@@ -818,7 +815,12 @@ const styles = StyleSheet.create({
     gap: 8
   },
   periodItemSelected: {
-    backgroundColor: colors.primary
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3
   },
   periodText: {
     fontSize: 13,
@@ -831,15 +833,17 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     marginTop: 12,
-    minHeight: 100,
-    borderRadius: 22,
+    minHeight: 108,
+    borderRadius: 24,
     backgroundColor: colors.white,
-    paddingHorizontal: 9,
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.06)",
+    paddingHorizontal: 10,
     paddingVertical: 14,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.06,
+    shadowRadius: 26,
     elevation: 4,
     flexDirection: "row",
     alignItems: "stretch",
@@ -854,7 +858,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     width: 1,
-    backgroundColor: "#EEE7DD",
+    backgroundColor: "#ECE5DA",
     marginVertical: 4
   },
   metricIcon: {
@@ -879,8 +883,8 @@ const styles = StyleSheet.create({
   },
   metricAmount: {
     marginTop: 3,
-    fontSize: 20,
-    lineHeight: 25,
+    fontSize: 19,
+    lineHeight: 24,
     fontWeight: "900"
   },
   progressTrack: {
@@ -923,17 +927,17 @@ const styles = StyleSheet.create({
   },
   addExpenseButton: {
     marginTop: 12,
-    height: 48,
-    borderRadius: 22,
+    height: 50,
+    borderRadius: 25,
     overflow: "hidden",
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.14,
-    shadowRadius: 18,
-    elevation: 4
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 6
   },
   addExpenseGradient: {
-    height: 48,
+    height: 50,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -993,14 +997,16 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 0,
     marginTop: 10,
-    borderRadius: 22,
+    borderRadius: 24,
     backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.06)",
     paddingHorizontal: 14,
     paddingVertical: 5,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.07,
-    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.06,
+    shadowRadius: 26,
     elevation: 4,
     overflow: "hidden"
   },
@@ -1035,7 +1041,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: colors.primary,
+    backgroundColor: "#123A30",
     alignItems: "center",
     justifyContent: "center"
   },
@@ -1168,16 +1174,16 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(17, 22, 20, 0.38)"
   },
   sheet: {
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    backgroundColor: "#FBF7EF",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    backgroundColor: colors.surface,
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 22,
     shadowColor: "#111614",
     shadowOffset: { width: 0, height: -14 },
-    shadowOpacity: 0.16,
-    shadowRadius: 24,
+    shadowOpacity: 0.14,
+    shadowRadius: 30,
     elevation: 12
   },
   sheetHandle: {
@@ -1203,12 +1209,12 @@ const styles = StyleSheet.create({
   },
   liveTextBox: {
     marginTop: 16,
-    borderRadius: 18,
+    borderRadius: 20,
     backgroundColor: colors.white,
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: "#EEE7DD"
+    borderColor: "#E8E0D3"
   },
   liveTextLabel: {
     fontSize: 11,
@@ -1298,8 +1304,10 @@ const styles = StyleSheet.create({
   parsedField: {
     flex: 1,
     minHeight: 64,
-    borderRadius: 16,
-    backgroundColor: "#F1ECE4",
+    borderRadius: 18,
+    backgroundColor: "#F0ECE3",
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.05)",
     paddingHorizontal: 10,
     paddingVertical: 9
   },
@@ -1382,17 +1390,19 @@ const styles = StyleSheet.create({
     left: 18,
     right: 18,
     bottom: 10,
-    minHeight: 66,
-    borderRadius: 28,
-    backgroundColor: colors.white,
+    minHeight: 68,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.06)",
+    backgroundColor: "rgba(255,254,250,0.96)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 12 },
+    shadowOffset: { width: 0, height: 18 },
     shadowOpacity: 0.08,
-    shadowRadius: 22,
-    elevation: 6
+    shadowRadius: 28,
+    elevation: 7
   },
   tabItem: {
     flex: 1,
