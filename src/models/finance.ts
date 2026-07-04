@@ -1,0 +1,51 @@
+export type Period = "daily" | "weekly" | "monthly";
+
+export type Income = {
+  id: string;
+  label: string;
+  subtitle?: string;
+  amount: number;
+  period: Period;
+};
+
+export type Expense = {
+  id: string;
+  label: string;
+  subtitle?: string;
+  amount: number;
+  period: Period;
+  isFixed: boolean;
+  category?: string;
+  note?: string;
+  occurredAt?: string;
+};
+
+export type SavingsGoal = {
+  title: string;
+  selectedGoal?: string;
+  targetAmount: number;
+  currentAmount: number;
+  monthlyContribution: number;
+  dailyTarget: number;
+  planStartDate: string;
+};
+
+export type SpendingLimits = {
+  daily: number;
+  weekly: number;
+  monthly: number;
+};
+
+export type SpendingTotals = SpendingLimits;
+
+export type FinancePlan = {
+  monthlyIncome: number;
+  totalFixedExpenses: number;
+  monthlyRemaining: number;
+  monthlySavings: number;
+  spendableMonthlyBudget: number;
+  limits: SpendingLimits;
+  selectedPeriodLimit: number;
+  selectedPeriodSpent: number;
+  selectedPeriodRemaining: number;
+};
