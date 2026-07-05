@@ -7,7 +7,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { colors, radius } from "@/theme";
 import { formatCurrency } from "@/utils/currency";
 
-const mascot = require("../../pgn/mascot-transparent.png");
+const mascot = require("../../pgn/mascot-cutout.png");
 
 const waveBars = Array.from({ length: 12 }, (_, index) => ({
   id: `voice-wave-${index}`,

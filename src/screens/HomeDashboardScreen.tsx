@@ -23,7 +23,7 @@ import { colors, radius } from "@/theme";
 import { formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod } from "@/utils/finance";
 
-const mascot = require("../../pgn/mascot-piggy-soft-cutout.png");
+const mascot = require("../../pgn/mascot-cutout.png");
 
 const voiceWaveBars = [
   { id: "voice-sheet-wave-1", value: 0 },
@@ -81,6 +81,99 @@ export default function HomeDashboardScreen() {
   const [recentListHeight, setRecentListHeight] = useState(0);
   const [recentContentHeight, setRecentContentHeight] = useState(0);
   const recentScrollY = useRef(new Animated.Value(0)).current;
+
+  // Custom states for Siri Voice Overlay and Toast
+  const [isDirectVoiceActive, setIsDirectVoiceActive] = useState(false);
+  const [draftTranscript, setDraftTranscript] = useState("");
+  const [toastConfig, setToastConfig] = useState<{ visible: boolean; message: string; subtext?: string } | null>(null);
+
+  const {
+    isListening: isVoiceListening,
+    transcript: voiceTranscript,
+    error: voiceError,
+    permissionStatus: voicePermissionStatus,
+    startListening: startVoiceListening,
+    stopListening: stopVoiceListening,
+    setTranscript: setVoiceTranscript,
+    parsedExpense: voiceParsedExpense
+  } = useVoiceExpenseInput();
+
+  const directVoiceWave = useRef(new Animated.Value(0)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const previousIsVoiceListening = useRef(false);
+
+  useEffect(() => {
+    if (isDirectVoiceActive) {
+      startVoiceListening();
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true
+      }).start();
+    } else {
+      stopVoiceListening();
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true
+      }).start();
+    }
+  }, [isDirectVoiceActive]);
+
+  useEffect(() => {
+    if (!isDirectVoiceActive || !isVoiceListening) {
+      directVoiceWave.stopAnimation();
+      return;
+    }
+
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(directVoiceWave, { toValue: 1, duration: 720, useNativeDriver: true }),
+        Animated.timing(directVoiceWave, { toValue: 0, duration: 720, useNativeDriver: true })
+      ])
+    );
+    animation.start();
+
+    return () => animation.stop();
+  }, [isVoiceListening, isDirectVoiceActive, directVoiceWave]);
+
+  useEffect(() => {
+    if (isDirectVoiceActive && previousIsVoiceListening.current && !isVoiceListening) {
+      // Dinleme bitti
+      const numericAmount = voiceParsedExpense.amount;
+      if (numericAmount && numericAmount > 0) {
+        // Başarıyla çözümlendi
+        const expense = {
+          id: `voice-expense-${Date.now()}-${Math.random()}`,
+          label: voiceParsedExpense.note.trim() || `${voiceParsedExpense.category.trim() || "Harcama"} harcaması`,
+          subtitle: voiceParsedExpense.category.trim() || "Harcama",
+          amount: numericAmount,
+          period: "daily" as const,
+          isFixed: false,
+          category: voiceParsedExpense.category.trim() || "Harcama",
+          note: voiceParsedExpense.note.trim(),
+          occurredAt: new Date().toISOString()
+        };
+        addExpense(expense);
+
+        setToastConfig({
+          visible: true,
+          message: `${formatCurrency(numericAmount)} Harcama Eklendi`,
+          subtext: `${expense.label} başarıyla kaydedildi! 🎯`
+        });
+        setIsDirectVoiceActive(false);
+      } else {
+        // Çözümlenemedi, manuel ekranı aç ve yazıyı aktar
+        if (voiceTranscript.trim()) {
+          setDraftTranscript(voiceTranscript);
+          setIsSheetVisible(true);
+        }
+        setIsDirectVoiceActive(false);
+      }
+    }
+    previousIsVoiceListening.current = isVoiceListening;
+  }, [isVoiceListening, isDirectVoiceActive, voiceParsedExpense, voiceTranscript]);
+
   const copy = periodCopy[selectedPeriod];
   const selectedPeriodLimit = plan.limits[selectedPeriod];
   const periodExpenses = useMemo(() => getExpensesForPeriod(expenses, selectedPeriod), [expenses, selectedPeriod]);
@@ -160,16 +253,25 @@ export default function HomeDashboardScreen() {
             />
           </View>
 
-          <Pressable style={({ pressed }) => [styles.addExpenseButton, pressed && styles.pressed]} onPress={() => setIsSheetVisible(true)}>
-            <LinearGradient colors={["#074A31", colors.primary, "#063B28"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.addExpenseGradient}>
-              <View style={styles.addExpenseIconWrap}>
-                <Feather name="plus" size={22} color={colors.primary} />
-              </View>
-              <Text style={styles.addExpenseText}>Harcama Ekle</Text>
-              <View style={styles.addExpenseDivider} />
-              <Feather name="mic" size={28} color={colors.white} />
-            </LinearGradient>
-          </Pressable>
+          <View style={styles.addExpenseButtonRow}>
+            <Pressable style={({ pressed }) => [styles.mainAddButton, pressed && styles.pressed]} onPress={() => setIsSheetVisible(true)}>
+              <LinearGradient colors={["#074A31", colors.primary, "#063B28"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.addGradient}>
+                <View style={styles.addIconWrap}>
+                  <Feather name="plus" size={18} color={colors.primary} />
+                </View>
+                <Text style={styles.addText}>Harcama Ekle</Text>
+              </LinearGradient>
+            </Pressable>
+
+            <Pressable style={({ pressed }) => [styles.mainVoiceButton, pressed && styles.pressed]} onPress={() => setIsDirectVoiceActive(true)}>
+              <LinearGradient colors={["#DF7A12", "#C8640E"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.voiceGradient}>
+                <View style={styles.voiceIconWrap}>
+                  <Feather name="mic" size={18} color="#DF7A12" />
+                </View>
+                <Text style={styles.voiceText}>Sesli Ekle</Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
 
           <View style={styles.periodWrap}>
             {periods.map((period) => {
@@ -253,7 +355,65 @@ export default function HomeDashboardScreen() {
             addExpense(expense);
             setIsSheetVisible(false);
           }}
+          draftTranscript={draftTranscript}
+          setDraftTranscript={setDraftTranscript}
         />
+
+        {/* Siri Direct Voice Overlay */}
+        {isDirectVoiceActive && (
+          <Animated.View style={[styles.directVoiceOverlay, { opacity: overlayOpacity }]}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={() => setIsDirectVoiceActive(false)} />
+            <View style={styles.directVoiceContent}>
+              <Text style={styles.directVoiceTitle}>Dinliyorum...</Text>
+              <Text style={styles.directVoiceSubtitle}>"120 lira market" gibi konuşabilirsin.</Text>
+              
+              <View style={styles.directVoiceTranscriptBox}>
+                <Text style={styles.directVoiceTranscriptText}>
+                  {voiceTranscript || "Sizi dinliyorum..."}
+                </Text>
+              </View>
+
+              <View style={styles.directVoiceWaveWrap}>
+                {voiceWaveBars.map((item) => (
+                  <Animated.View
+                    key={item.id}
+                    style={[
+                      styles.directVoiceWaveBar,
+                      {
+                        transform: [
+                          {
+                            scaleY: directVoiceWave.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0.45 + item.value * 0.08, 1.15 - item.value * 0.06]
+                            })
+                          }
+                        ]
+                      }
+                    ]}
+                  />
+                ))}
+              </View>
+
+              {voiceError ? <Text style={styles.directVoiceErrorText}>{voiceError}</Text> : null}
+
+              <Pressable 
+                style={({ pressed }) => [styles.directVoiceStopButton, pressed && styles.pressed]}
+                onPress={() => stopVoiceListening()}
+              >
+                <Feather name="square" size={20} color={colors.white} />
+              </Pressable>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Toast Capsule Banner */}
+        {toastConfig?.visible && (
+          <ToastBanner 
+            message={toastConfig.message} 
+            subtext={toastConfig.subtext} 
+            onHide={() => setToastConfig(null)} 
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -262,11 +422,15 @@ export default function HomeDashboardScreen() {
 function VoiceExpenseSheet({
   visible,
   onClose,
-  onSave
+  onSave,
+  draftTranscript,
+  setDraftTranscript
 }: {
   visible: boolean;
   onClose: () => void;
   onSave: (expense: Expense) => void;
+  draftTranscript: string;
+  setDraftTranscript: (text: string) => void;
 }) {
   const [spokenText, setSpokenText] = useState("");
   const [amount, setAmount] = useState("");
@@ -283,6 +447,13 @@ function VoiceExpenseSheet({
     setTranscript,
     parsedExpense
   } = useVoiceExpenseInput();
+
+  useEffect(() => {
+    if (visible && draftTranscript) {
+      setTranscript(draftTranscript);
+      setDraftTranscript("");
+    }
+  }, [visible, draftTranscript]);
 
   useEffect(() => {
     setSpokenText(transcript);
@@ -372,80 +543,89 @@ function VoiceExpenseSheet({
         <Pressable style={styles.sheetBackdrop} onPress={closeSheet} />
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Sesli harcama ekle</Text>
-          <Text style={styles.sheetSubtitle}>Harcamanı söyle, biz otomatik anlayalım.</Text>
+          <Text style={styles.sheetTitle}>Harcama Ekle</Text>
+          <Text style={styles.sheetSubtitle}>Harcamanı konuşarak veya yazarak hızlıca ekleyebilirsin.</Text>
 
-          <View style={styles.liveTextBox}>
-            <Text style={styles.liveTextLabel}>Canlı metin</Text>
-            <Text style={styles.liveText}>{spokenText || (isListening ? "Dinleniyorum..." : error || "Mikrofona dokun ve harcamanı söyle.")}</Text>
+          <View style={styles.speechBubbleContainer}>
+            <TextInput
+              value={transcript}
+              onChangeText={setTranscript}
+              placeholder={isListening ? "Dinleniyor..." : "Konuş veya yaz... (Örn: 150 lira market)"}
+              placeholderTextColor="#9CA19E"
+              style={styles.speechBubbleInput}
+              multiline
+            />
           </View>
 
-          <TextInput
-            value={transcript}
-            onChangeText={setTranscript}
-            placeholder="Transcript yaz veya mikrofona konuş"
-            placeholderTextColor="#929997"
-            style={styles.transcriptInput}
-            multiline
-          />
+          <View style={styles.micControlRow}>
+            <Pressable style={({ pressed }) => [styles.sheetMicButton, isListening && styles.sheetMicButtonListening, pressed && styles.pressed]} onPress={handleMicPress}>
+              <Feather name={isListening ? "square" : "mic"} size={22} color={colors.white} />
+            </Pressable>
+            <View style={styles.waveContainer}>
+              {isListening ? (
+                <View style={styles.waveWrap}>
+                  {voiceWaveBars.map((item) => (
+                    <Animated.View
+                      key={item.id}
+                      style={[
+                        styles.waveBar,
+                        {
+                          transform: [
+                            {
+                              scaleY: wave.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0.45 + item.value * 0.08, 1.15 - item.value * 0.06]
+                              })
+                            }
+                          ]
+                        }
+                      ]}
+                    />
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.micHelperText}>
+                  {error || (permissionStatus === "unsupported" ? "Expo Go'da konuşma yazarak eklenir." : "Mikrofona basarak konuşun.")}
+                </Text>
+              )}
+            </View>
+          </View>
 
-          <View style={styles.waveWrap}>
-            {voiceWaveBars.map((item) => (
-              <Animated.View
-                key={item.id}
-                style={[
-                  styles.waveBar,
-                  {
-                    transform: [
-                      {
-                        scaleY: wave.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.45 + item.value * 0.08, 1.15 - item.value * 0.06]
-                        })
-                      }
-                    ]
-                  }
-                ]}
+          <View style={styles.formGroup}>
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Tutar (₺)</Text>
+              <TextInput
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="decimal-pad"
+                placeholder="0,00"
+                placeholderTextColor="#9CA19E"
+                style={styles.formInputAmount}
               />
-            ))}
+            </View>
+            <View style={styles.formDivider} />
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Kategori</Text>
+              <TextInput
+                value={category}
+                onChangeText={setCategory}
+                placeholder="Belirtilmedi"
+                placeholderTextColor="#9CA19E"
+                style={styles.formInput}
+              />
+            </View>
+            <View style={styles.formDivider} />
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>Açıklama</Text>
+              <TextInput
+                value={note}
+                onChangeText={setNote}
+                placeholder="Harcama notu"
+                placeholderTextColor="#9CA19E"
+                style={styles.formInput}
+              />
+            </View>
           </View>
-
-          <Pressable style={({ pressed }) => [styles.sheetMicButton, isListening && styles.sheetMicButtonListening, pressed && styles.pressed]} onPress={handleMicPress}>
-            <Feather name="mic" size={38} color={colors.white} />
-          </Pressable>
-
-          {permissionStatus === "unsupported" ? (
-            <Text style={styles.speechWarning}>Expo Go’da gerçek ses tanıma desteklenmiyor. Development build gerekir.</Text>
-          ) : null}
-
-          <View style={styles.parsedGrid}>
-            <ParsedField label="Tutar" value={amount ? formatCurrency(parseAmount(amount)) : formatCurrency(0)} />
-            <ParsedField label="Kategori" value={category || "-"} />
-            <ParsedField label="Not" value={note || "-"} />
-          </View>
-
-          <TextInput
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="decimal-pad"
-            placeholder="Tutar"
-            placeholderTextColor="#929997"
-            style={styles.sheetInput}
-          />
-          <TextInput
-            value={category}
-            onChangeText={setCategory}
-            placeholder="Kategori"
-            placeholderTextColor="#929997"
-            style={styles.sheetInput}
-          />
-          <TextInput
-            value={note}
-            onChangeText={setNote}
-            placeholder="Not"
-            placeholderTextColor="#929997"
-            style={styles.sheetInput}
-          />
 
           <View style={styles.sheetActions}>
             <Pressable style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]} onPress={closeSheet}>
@@ -461,12 +641,35 @@ function VoiceExpenseSheet({
   );
 }
 
-function ParsedField({ label, value }: { label: string; value: string }) {
+function ToastBanner({
+  message,
+  subtext,
+  onHide
+}: {
+  message: string;
+  subtext?: string;
+  onHide: () => void;
+}) {
+  const slideAnim = useRef(new Animated.Value(-100)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(slideAnim, { toValue: 50, duration: 400, useNativeDriver: true }),
+      Animated.delay(2200),
+      Animated.timing(slideAnim, { toValue: -100, duration: 300, useNativeDriver: true })
+    ]).start(() => onHide());
+  }, [slideAnim]);
+
   return (
-    <View style={styles.parsedField}>
-      <Text style={styles.parsedLabel}>{label}</Text>
-      <Text style={styles.parsedValue}>{value}</Text>
-    </View>
+    <Animated.View style={[styles.toastCapsule, { transform: [{ translateY: slideAnim }] }]}>
+      <View style={styles.toastCheckmark}>
+        <Feather name="check" size={16} color={colors.white} />
+      </View>
+      <View style={styles.toastCopy}>
+        <Text style={styles.toastMessage}>{message}</Text>
+        {subtext && <Text style={styles.toastSubtext}>{subtext}</Text>}
+      </View>
+    </Animated.View>
   );
 }
 
@@ -702,19 +905,25 @@ const styles = StyleSheet.create({
   },
   heroMascot: {
     position: "absolute",
-    right: 2,
-    bottom: 12,
-    width: 130,
-    height: 130,
-    shadowColor: "#0A2015",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.16,
-    shadowRadius: 16,
-    elevation: 4
+    right: 14,
+    top: 29,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3
   },
   heroMascotImage: {
-    width: "100%",
-    height: "100%"
+    width: "92%",
+    height: "92%",
+    borderRadius: 55
   },
   periodWrap: {
     marginTop: 14,
@@ -822,47 +1031,77 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#111614"
   },
-  addExpenseButton: {
+  addExpenseButtonRow: {
     marginTop: 12,
-    height: 50,
-    borderRadius: 25,
+    flexDirection: "row",
+    gap: 12,
+    height: 52
+  },
+  mainAddButton: {
+    flex: 1,
+    height: "100%",
+    borderRadius: 26,
     overflow: "hidden",
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 6
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 4
   },
-  addExpenseGradient: {
-    height: 50,
-    paddingHorizontal: 16,
+  addGradient: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between"
+    paddingHorizontal: 16,
+    height: "100%"
   },
-  addExpenseIconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+  addIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center"
   },
-  addExpenseText: {
+  addText: {
     flex: 1,
-    marginLeft: 18,
-    fontSize: 19,
-    lineHeight: 24,
-    fontWeight: "900",
-    color: colors.white,
-    textAlign: "center"
+    marginLeft: 14,
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.white
   },
-  addExpenseDivider: {
-    width: 1,
-    height: 26,
-    marginLeft: 18,
-    marginRight: 16,
-    backgroundColor: "rgba(255,255,255,0.5)"
+  mainVoiceButton: {
+    flex: 1,
+    height: "100%",
+    borderRadius: 26,
+    overflow: "hidden",
+    shadowColor: "#DF7A12",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 4
+  },
+  voiceGradient: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    height: "100%"
+  },
+  voiceIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  voiceText: {
+    flex: 1,
+    marginLeft: 14,
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.white
   },
   recentSection: {
     flex: 1,
@@ -1055,7 +1294,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 8
   },
-  voiceText: {
+  obsoleteVoiceText: {
     flex: 1,
     fontSize: 13,
     lineHeight: 18,
@@ -1104,150 +1343,113 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#747C78"
   },
-  liveTextBox: {
+  speechBubbleContainer: {
     marginTop: 16,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: "#E8E0D3"
-  },
-  liveTextLabel: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: "900",
-    color: "#747C78"
-  },
-  liveText: {
-    marginTop: 4,
-    fontSize: 17,
-    lineHeight: 23,
-    fontWeight: "900",
-    color: "#111614"
-  },
-  transcriptInput: {
-    marginTop: 10,
-    minHeight: 54,
     borderRadius: 16,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: "#E5DED3",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "800",
-    color: "#111614"
-  },
-  waveWrap: {
-    height: 38,
-    marginTop: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 7
-  },
-  waveBar: {
-    width: 8,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: colors.primary
-  },
-  sheetMicButton: {
-    alignSelf: "center",
-    width: 86,
-    height: 86,
-    borderRadius: 43,
-    backgroundColor: colors.primary,
-    borderWidth: 12,
-    borderColor: "#DDEBDE",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8
-  },
-  sheetMicButtonListening: {
-    backgroundColor: "#DF7A12"
-  },
-  speechWarning: {
-    marginTop: 10,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "800",
-    color: "#B24A2F",
-    textAlign: "center"
-  },
-  testSpeechButton: {
-    alignSelf: "center",
-    marginTop: 10,
-    minHeight: 38,
-    borderRadius: 16,
-    backgroundColor: "#EFE8DD",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16
-  },
-  testSpeechButtonText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
-    color: "#111614"
-  },
-  parsedGrid: {
-    marginTop: 16,
-    flexDirection: "row",
-    gap: 8
-  },
-  parsedField: {
-    flex: 1,
-    minHeight: 64,
-    borderRadius: 18,
-    backgroundColor: "#F0ECE3",
+    backgroundColor: "rgba(13,50,40,0.03)",
     borderWidth: 1,
     borderColor: "rgba(13,50,40,0.05)",
-    paddingHorizontal: 10,
-    paddingVertical: 9
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 76
   },
-  parsedLabel: {
-    fontSize: 10,
-    lineHeight: 14,
-    fontWeight: "900",
-    color: "#747C78"
+  speechBubbleInput: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "500",
+    color: "#111614",
+    padding: 0,
+    margin: 0,
+    textAlignVertical: "top"
   },
-  parsedValue: {
-    marginTop: 4,
+  micControlRow: {
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  sheetMicButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3
+  },
+  sheetMicButtonListening: {
+    backgroundColor: "#DF7A12",
+    shadowColor: "#DF7A12"
+  },
+  waveContainer: {
+    flex: 1,
+    height: 48,
+    justifyContent: "center"
+  },
+  waveWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5
+  },
+  waveBar: {
+    width: 6,
+    height: 24,
+    borderRadius: 3,
+    backgroundColor: colors.primary
+  },
+  micHelperText: {
     fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "900",
-    color: "#111614"
-  },
-  debugBox: {
-    marginTop: 10,
-    borderRadius: 14,
-    backgroundColor: "#F6F1E8",
-    borderWidth: 1,
-    borderColor: "#E5DED3",
-    paddingHorizontal: 10,
-    paddingVertical: 8
-  },
-  debugText: {
-    fontSize: 10,
-    lineHeight: 14,
-    fontWeight: "800",
+    fontWeight: "500",
     color: "#747C78"
   },
-  sheetInput: {
-    marginTop: 10,
-    minHeight: 48,
+  formGroup: {
+    marginTop: 16,
     borderRadius: 16,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: "#E5DED3",
-    paddingHorizontal: 14,
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "800",
-    color: "#111614"
+    borderColor: "rgba(13,50,40,0.06)",
+    paddingVertical: 4,
+    overflow: "hidden"
+  },
+  formRow: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#747C78"
+  },
+  formInput: {
+    flex: 1,
+    textAlign: "right",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111614",
+    paddingVertical: 8,
+    paddingLeft: 20
+  },
+  formInputAmount: {
+    flex: 1,
+    textAlign: "right",
+    fontSize: 17,
+    fontWeight: "700",
+    color: colors.primary,
+    paddingVertical: 8,
+    paddingLeft: 20
+  },
+  formDivider: {
+    height: 1,
+    backgroundColor: "rgba(13,50,40,0.05)",
+    marginHorizontal: 16
   },
   sheetActions: {
     marginTop: 14,
@@ -1315,6 +1517,126 @@ const styles = StyleSheet.create({
   },
   tabLabelActive: {
     color: colors.primary
+  },
+  directVoiceOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(13, 50, 40, 0.96)",
+    zIndex: 99999,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  directVoiceContent: {
+    width: "85%",
+    alignItems: "center"
+  },
+  directVoiceTitle: {
+    fontSize: 28,
+    fontWeight: "900",
+    color: colors.white,
+    textAlign: "center"
+  },
+  directVoiceSubtitle: {
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "rgba(255, 255, 255, 0.6)",
+    textAlign: "center"
+  },
+  directVoiceTranscriptBox: {
+    marginTop: 32,
+    minHeight: 120,
+    width: "100%",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  directVoiceTranscriptText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: colors.white,
+    textAlign: "center",
+    lineHeight: 26
+  },
+  directVoiceWaveWrap: {
+    height: 48,
+    marginTop: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8
+  },
+  directVoiceWaveBar: {
+    width: 6,
+    height: 36,
+    borderRadius: 3,
+    backgroundColor: "#DF7A12"
+  },
+  directVoiceErrorText: {
+    marginTop: 16,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FF8A80",
+    textAlign: "center"
+  },
+  directVoiceStopButton: {
+    marginTop: 48,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#D32F2F",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#D32F2F",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5
+  },
+  toastCapsule: {
+    position: "absolute",
+    top: 0,
+    left: 20,
+    right: 20,
+    zIndex: 9999,
+    minHeight: 58,
+    borderRadius: 29,
+    backgroundColor: "#172E26",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22,
+    shadowRadius: 20,
+    elevation: 10
+  },
+  toastCheckmark: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#2E7D32",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  toastCopy: {
+    flex: 1,
+    marginLeft: 12
+  },
+  toastMessage: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.white
+  },
+  toastSubtext: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: "rgba(255, 255, 255, 0.7)"
   }
 });
-

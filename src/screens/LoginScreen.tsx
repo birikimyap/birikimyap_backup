@@ -20,7 +20,7 @@ type LoginButtonProps = {
   onPress: () => void;
 };
 
-const mascot = require("../../pgn/mascot-transparent.png");
+const mascot = require("../../pgn/mascot-cutout.png");
 const googleMark = require("../../pgn/google-mark.png");
 
 export default function LoginScreen() {
@@ -121,17 +121,17 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   title: {
-    fontSize: 42,
-    lineHeight: 48,
-    fontWeight: "900",
+    fontSize: 36,
+    lineHeight: 42,
+    fontWeight: "800",
     color: colors.primary,
     textAlign: "center"
   },
   subtitle: {
     marginTop: 10,
-    fontSize: 17,
-    lineHeight: 25,
-    fontWeight: "600",
+    fontSize: 16,
+    lineHeight: 23,
+    fontWeight: "500",
     color: colors.textMuted,
     textAlign: "center"
   },
@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
   },
   button: {
     width: "100%",
-    minHeight: 56,
-    borderRadius: 20,
+    minHeight: 52,
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -154,18 +154,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(13,50,40,0.06)",
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.07,
-    shadowRadius: 24,
-    elevation: 4
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.03,
+    shadowRadius: 12,
+    elevation: 2
   },
   emailButton: {
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.22,
-    shadowRadius: 26,
-    elevation: 6
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3
   },
   buttonPressed: {
     opacity: 0.9,
@@ -176,14 +176,15 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   googleMark: {
-    width: 30,
-    height: 30
+    width: 26,
+    height: 26
   },
   buttonText: {
     flex: 1,
-    ...typography.subtitle,
+    fontSize: 16,
+    lineHeight: 22,
     color: "#050505",
-    fontWeight: "800",
+    fontWeight: "700",
     textAlign: "center"
   },
   emailButtonText: {
@@ -194,15 +195,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm
   },
   legalText: {
-    fontSize: 14,
-    lineHeight: 22,
-    fontWeight: "700",
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "600",
     color: colors.textMuted,
     textAlign: "center"
   },
   legalLink: {
     color: colors.primary,
-    fontWeight: "900"
+    fontWeight: "700"
   },
   trustRow: {
     width: "100%",
@@ -237,15 +238,15 @@ const styles = StyleSheet.create({
     opacity: 0.72
   },
   loginMuted: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "800",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
     color: "#747C78"
   },
   loginLink: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: "900",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "700",
     color: colors.primary
   }
 });

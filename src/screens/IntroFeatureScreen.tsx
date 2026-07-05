@@ -12,7 +12,7 @@ type FeatureItem = {
   highlighted?: boolean;
 };
 
-const mascot = require("../../pgn/mascot-transparent.png");
+const mascot = require("../../pgn/mascot-cutout.png");
 
 const features: FeatureItem[] = [
   {
@@ -149,9 +149,9 @@ const styles = StyleSheet.create({
     fontSize: 19
   },
   heading: {
-    fontSize: 31,
-    lineHeight: 38,
-    fontWeight: "900",
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: "800",
     color: colors.primary,
     textAlign: "center"
   },
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 15,
     lineHeight: 23,
-    fontWeight: "600",
+    fontWeight: "500",
     color: colors.textMuted,
     textAlign: "center"
   },
@@ -171,38 +171,38 @@ const styles = StyleSheet.create({
   featureRow: {
     width: "100%",
     minHeight: 68,
-    borderRadius: 24,
+    borderRadius: 16,
     flexDirection: "row",
     alignItems: "center",
     gap: 16
   },
   featureRowHighlighted: {
-    minHeight: 92,
+    minHeight: 88,
     borderWidth: 1,
     borderColor: "rgba(13,50,40,0.06)",
     backgroundColor: "rgba(255, 254, 250, 0.86)",
     paddingVertical: spacing.sm,
     paddingRight: spacing.md,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.06,
-    shadowRadius: 24,
-    elevation: 3
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.03,
+    shadowRadius: 12,
+    elevation: 2
   },
   iconBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 22,
+    width: 56,
+    height: 56,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "rgba(13,50,40,0.06)",
     backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
-    shadowRadius: 14,
-    elevation: 2
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1
   },
   iconBoxHighlighted: {
     backgroundColor: colors.primarySoft
@@ -225,22 +225,22 @@ const styles = StyleSheet.create({
     color: colors.primary
   },
   featureTitle: {
-    fontSize: 18,
-    lineHeight: 23,
-    fontWeight: "900",
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "700",
     color: colors.primary
   },
   exampleText: {
     marginTop: 4,
     fontSize: 12,
     lineHeight: 17,
-    fontWeight: "700",
+    fontWeight: "500",
     color: "#747C78"
   },
   cta: {
     width: "100%",
-    minHeight: 62,
-    borderRadius: 31,
+    minHeight: 52,
+    borderRadius: 26,
     backgroundColor: colors.primary,
     marginTop: 28,
     paddingHorizontal: 24,
@@ -248,10 +248,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.22,
-    shadowRadius: 26,
-    elevation: 7
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3
   },
   ctaPressed: {
     opacity: 0.9,
@@ -261,9 +261,9 @@ const styles = StyleSheet.create({
     width: 26
   },
   ctaText: {
-    fontSize: 20,
-    lineHeight: 26,
-    fontWeight: "900",
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "700",
     color: colors.white,
     textAlign: "center"
   },

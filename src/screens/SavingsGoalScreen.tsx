@@ -9,7 +9,7 @@ import { colors, radius } from "@/theme";
 import { formatCurrency } from "@/utils/currency";
 import { getMonthlyRemaining, getTotalFixedExpenses, getTotalIncome } from "@/utils/finance";
 
-const mascot = require("../../pgn/mascot-transparent.png");
+const mascot = require("../../pgn/mascot-cutout.png");
 
 const goalCards = [
   { id: "emergency", title: "Acil durum", subtitle: "Güvende hisset", icon: "shield" },
