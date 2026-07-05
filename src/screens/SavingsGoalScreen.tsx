@@ -91,25 +91,19 @@ export default function SavingsGoalScreen() {
 
           <View style={styles.budgetCard}>
             <View style={styles.walletBadge}>
-              <Feather name="briefcase" size={28} color={colors.primary} />
+              <Feather name="briefcase" size={26} color={colors.primary} />
             </View>
             <View style={styles.budgetCopy}>
               <View style={styles.cardTitleRow}>
                 <Text style={styles.cardLabel}>Sana kalan aylık bütçe</Text>
-                <Feather name="info" size={16} color="#9CAA96" />
               </View>
               <Text style={styles.budgetAmount}>{formatCurrency(monthlyRemaining)}</Text>
-              <Text style={styles.cardBody}>Gelir ve giderlerine göre bu ay kullanabileceğin toplam tutar.</Text>
-            </View>
-            <View style={styles.landscape}>
-              <Feather name="sun" size={23} color="#F3B64B" />
-              <View style={styles.hillBack} />
-              <View style={styles.hillFront} />
+              <Text style={styles.cardBody}>Bu ay kullanabileceğin net harcama limiti.</Text>
             </View>
           </View>
 
           <View style={styles.sliderIntro}>
-            <Text style={styles.sectionTitle}>Bu paranın ne kadarını biriktirmek istiyorsun?</Text>
+            <Text style={styles.sectionTitle}>Birikim Oranı</Text>
             <Text style={styles.helperText}>Slider’ı hareket ettirerek birikim hedefini belirle.</Text>
           </View>
 
@@ -117,8 +111,8 @@ export default function SavingsGoalScreen() {
             <View style={styles.savingsHeader}>
               <Text style={styles.selectedAmount}>{formatCurrency(selectedSavings)}</Text>
               <View style={styles.percentBadge}>
-                <Feather name="shield" size={15} color={colors.primary} />
-                <Text style={styles.percentText}>%{percentage}’si</Text>
+                <Feather name="shield" size={14} color={colors.primary} />
+                <Text style={styles.percentText}>Kalanın %{percentage}’si</Text>
               </View>
             </View>
             <Slider max={monthlyRemaining} step={sliderStep} value={selectedSavings} onChange={updateSelectedSavings} />
@@ -127,17 +121,15 @@ export default function SavingsGoalScreen() {
               <Text style={styles.sliderLabel}>{formatCurrency(monthlyRemaining)}</Text>
             </View>
 
-            <View style={styles.infoCard}>
-              <View style={styles.infoIcon}>
-                <Feather name="trending-up" size={22} color="#E87516" />
-              </View>
-              <Text style={styles.infoText}>
-                Bu hedefle ay sonunda yaklaşık <Text style={styles.infoHighlight}>{formatCurrency(selectedSavings)}</Text> biriktirebilirsin.
+            <View style={styles.sliderInfoRow}>
+              <Feather name="trending-up" size={16} color="#E87516" />
+              <Text style={styles.sliderInfoText}>
+                Bu hedefle ay sonunda <Text style={styles.sliderInfoHighlight}>{formatCurrency(selectedSavings)}</Text> biriktirebilirsin.
               </Text>
             </View>
           </View>
 
-          <Text style={styles.goalTitle}>Birikim hedefini seç (opsiyonel)</Text>
+          <Text style={styles.goalTitle}>Birikim hedefi (opsiyonel)</Text>
           <FlatList
             data={goalCards}
             horizontal
@@ -148,13 +140,6 @@ export default function SavingsGoalScreen() {
               <GoalCardItem goal={item} selectedGoal={selectedGoal} onSelect={setSelectedGoal} />
             )}
           />
-
-          <View style={styles.bottomInfo}>
-            <View style={styles.bulb}>
-              <Feather name="zap" size={20} color="#E2A23A" />
-            </View>
-            <Text style={styles.bottomInfoText}>Hedefini şimdi belirle, düzenli birikimle hayallerine daha hızlı ulaş!</Text>
-          </View>
         </ScrollView>
 
         <View style={styles.footer}>
@@ -317,26 +302,24 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   budgetCard: {
-    minHeight: 112,
     marginTop: 16,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#DDE6D7",
-    backgroundColor: "#F5F8EF",
+    borderColor: "#E2ECD9",
+    backgroundColor: "#F5F9F1",
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    overflow: "hidden",
+    padding: 16,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.06,
-    shadowRadius: 22,
-    elevation: 3
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 2
   },
   walletBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "#E4F0DE",
     borderWidth: 1,
     borderColor: "#CFDFC8",
@@ -345,8 +328,7 @@ const styles = StyleSheet.create({
   },
   budgetCopy: {
     flex: 1,
-    marginLeft: 12,
-    zIndex: 2
+    marginLeft: 12
   },
   cardTitleRow: {
     flexDirection: "row",
@@ -367,48 +349,19 @@ const styles = StyleSheet.create({
     color: colors.primary
   },
   cardBody: {
-    maxWidth: 210,
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "700",
-    color: "#747C78"
-  },
-  landscape: {
-    position: "absolute",
-    right: 14,
-    bottom: 14,
-    width: 92,
-    height: 64,
-    alignItems: "flex-end"
-  },
-  hillBack: {
-    position: "absolute",
-    right: 22,
-    bottom: 20,
-    width: 78,
-    height: 34,
-    borderTopLeftRadius: 80,
-    borderTopRightRadius: 80,
-    backgroundColor: "#DDEBD2",
-    opacity: 0.7
-  },
-  hillFront: {
-    position: "absolute",
-    right: 0,
-    bottom: 0,
-    width: 96,
-    height: 40,
-    borderTopLeftRadius: 90,
-    borderTopRightRadius: 90,
-    backgroundColor: "#CEE1C4"
+    color: "#747C78",
+    marginTop: 2
   },
   sliderIntro: {
-    marginTop: 14,
+    marginTop: 18,
     gap: 2
   },
   sectionTitle: {
-    fontSize: 17,
-    lineHeight: 23,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: "900",
     color: colors.primary
   },
@@ -419,48 +372,48 @@ const styles = StyleSheet.create({
     color: "#747C78"
   },
   sliderCard: {
-    marginTop: 8,
-    borderRadius: 20,
+    marginTop: 10,
+    borderRadius: 16,
     backgroundColor: colors.white,
-    padding: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#F0EAE1",
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 22,
-    elevation: 4
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 2
   },
   savingsHeader: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "space-between",
+    marginBottom: 8
   },
   selectedAmount: {
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 32,
+    lineHeight: 38,
     fontWeight: "900",
     color: colors.primary
   },
   percentBadge: {
-    position: "absolute",
-    right: 0,
-    top: 5,
-    borderRadius: 22,
-    backgroundColor: "#E7F0DD",
-    paddingHorizontal: 9,
+    borderRadius: 12,
+    backgroundColor: "#E8F2E1",
+    paddingHorizontal: 10,
     paddingVertical: 6,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6
+    gap: 4
   },
   percentText: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
+    fontSize: 12,
+    fontWeight: "800",
     color: colors.primary
   },
   slider: {
     width: "100%",
     height: 34,
-    marginTop: 8,
+    marginTop: 4,
     justifyContent: "center"
   },
   sliderTrack: {
@@ -477,25 +430,25 @@ const styles = StyleSheet.create({
   },
   sliderThumb: {
     position: "absolute",
-    width: 40,
-    height: 40,
-    marginLeft: -20,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    marginLeft: -18,
+    borderRadius: 18,
     backgroundColor: colors.primary,
     borderWidth: 8,
     borderColor: "#F5EFE7",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 4
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3
   },
   sliderThumbText: {
     marginTop: -1,
-    fontSize: 16,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 16,
     fontWeight: "900",
     color: colors.white
   },
@@ -510,38 +463,30 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#747C78"
   },
-  infoCard: {
-    marginTop: 8,
-    borderRadius: 15,
-    backgroundColor: "#FBF0E2",
-    padding: 10,
+  sliderInfoRow: {
+    marginTop: 16,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12
+    gap: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#F4EDE4"
   },
-  infoIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: colors.white,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  infoText: {
+  sliderInfoText: {
     flex: 1,
     fontSize: 13,
-    lineHeight: 19,
-    fontWeight: "800",
+    lineHeight: 18,
+    fontWeight: "700",
     color: "#747C78"
   },
-  infoHighlight: {
+  sliderInfoHighlight: {
     color: "#E87516",
     fontWeight: "900"
   },
   goalTitle: {
-    marginTop: 14,
-    fontSize: 17,
-    lineHeight: 23,
+    marginTop: 18,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: "900",
     color: colors.primary
   },
@@ -551,28 +496,28 @@ const styles = StyleSheet.create({
     paddingBottom: 4
   },
   goalCard: {
-    width: 92,
-    minHeight: 116,
-    borderRadius: 16,
+    width: 96,
+    minHeight: 110,
+    borderRadius: 14,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: "#EFE5D9",
+    borderColor: "#EDE7DE",
     alignItems: "center",
     padding: 8,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.06,
-    shadowRadius: 18,
-    elevation: 3
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1
   },
   goalCardSelected: {
     borderColor: colors.primary,
     backgroundColor: "#FCFFF8"
   },
   goalIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: "#EEF4E8",
     alignItems: "center",
     justifyContent: "center"
@@ -598,9 +543,9 @@ const styles = StyleSheet.create({
   },
   radio: {
     marginTop: "auto",
-    width: 19,
-    height: 19,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     borderWidth: 2,
     borderColor: "#E7D8C4",
     alignItems: "center",
@@ -614,30 +559,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: colors.primary
-  },
-  bottomInfo: {
-    marginTop: 12,
-    borderRadius: 16,
-    backgroundColor: "#FBF0DE",
-    padding: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14
-  },
-  bulb: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#F7DC9C",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  bottomInfoText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: "800",
-    color: "#5F6863"
   },
   footer: {
     position: "absolute",

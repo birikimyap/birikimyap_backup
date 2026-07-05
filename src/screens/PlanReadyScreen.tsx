@@ -46,13 +46,6 @@ export default function PlanReadyScreen() {
         <View style={styles.mainCard}>
           <Text style={styles.mainCardLabel}>Bu ay harcayabileceğin toplam tutar</Text>
           <Text style={styles.mainAmount}>{formatCurrency(spendableMonthlyBudget)}</Text>
-          <View style={styles.landscape}>
-            <View style={styles.treeLeft} />
-            <View style={styles.hillBack} />
-            <View style={styles.sun} />
-            <View style={styles.hillFront} />
-            <View style={styles.treeRight} />
-          </View>
         </View>
 
         <View style={styles.limitGrid}>
@@ -63,30 +56,12 @@ export default function PlanReadyScreen() {
 
         <View style={styles.savingsCard}>
           <View style={styles.targetIcon}>
-            <Feather name="target" size={34} color="#E87516" />
+            <Feather name="target" size={28} color="#D06D1E" />
           </View>
           <View style={styles.savingsCopy}>
             <Text style={styles.savingsTitle}>Birikim hedefin</Text>
             <Text style={styles.savingsAmount}>{formatCurrency(selectedSavings)}</Text>
             <Text style={styles.savingsCaption}>{goalType} için ay sonuna kadar seni takip edeceğiz.</Text>
-          </View>
-          <View style={styles.plantBadge}>
-            <Feather name="trending-up" size={36} color={colors.primary} />
-          </View>
-        </View>
-
-        <View style={styles.voiceCard}>
-          <View style={styles.voiceIcon}>
-            <Feather name="mic" size={34} color="#2E6FBD" />
-          </View>
-          <View style={styles.voiceCopy}>
-            <Text style={styles.voiceTitle}>Sesli harcama ekleyerek</Text>
-            <Text style={styles.voiceSubtitle}>limitlerini anlık takip edebilirsin.</Text>
-          </View>
-          <View style={styles.wave}>
-            {waveBars.map((bar) => (
-              <View key={bar.id} style={[styles.waveBar, { height: bar.height }]} />
-            ))}
           </View>
         </View>
 
@@ -209,92 +184,32 @@ const styles = StyleSheet.create({
   },
   mainCard: {
     marginTop: 16,
-    minHeight: 142,
-    borderRadius: 22,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#DDE6D7",
-    backgroundColor: "#F5F8EF",
+    borderColor: "#E2ECD9",
+    backgroundColor: "#F5F9F1",
     alignItems: "center",
-    paddingTop: 16,
-    overflow: "hidden",
+    padding: 20,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.06,
-    shadowRadius: 22,
-    elevation: 3
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 2
   },
   mainCardLabel: {
-    fontSize: 15,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: "900",
     color: colors.primary,
     textAlign: "center"
   },
   mainAmount: {
     marginTop: 6,
-    fontSize: 44,
-    lineHeight: 52,
+    fontSize: 40,
+    lineHeight: 48,
     fontWeight: "900",
     color: colors.primary,
     textAlign: "center"
-  },
-  landscape: {
-    position: "absolute",
-    left: 24,
-    right: 24,
-    bottom: 0,
-    height: 54
-  },
-  hillBack: {
-    position: "absolute",
-    left: 30,
-    right: 48,
-    bottom: 12,
-    height: 26,
-    borderTopLeftRadius: 80,
-    borderTopRightRadius: 80,
-    backgroundColor: "#DDEBD2",
-    opacity: 0.72
-  },
-  hillFront: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 34,
-    borderTopLeftRadius: 90,
-    borderTopRightRadius: 90,
-    backgroundColor: "#CEE1C4",
-    opacity: 0.85
-  },
-  sun: {
-    position: "absolute",
-    left: "48%",
-    bottom: 20,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#F7C879"
-  },
-  treeLeft: {
-    position: "absolute",
-    left: 36,
-    bottom: 16,
-    width: 13,
-    height: 36,
-    borderRadius: 9,
-    backgroundColor: "#5A956D",
-    zIndex: 2
-  },
-  treeRight: {
-    position: "absolute",
-    right: 42,
-    bottom: 12,
-    width: 16,
-    height: 42,
-    borderRadius: 10,
-    backgroundColor: "#4D9366",
-    zIndex: 2
   },
   limitGrid: {
     marginTop: 12,
@@ -303,17 +218,19 @@ const styles = StyleSheet.create({
   },
   limitCard: {
     flex: 1,
-    minHeight: 108,
-    borderRadius: 18,
+    minHeight: 104,
+    borderRadius: 14,
     backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: "#EDE7DE",
     alignItems: "center",
-    paddingHorizontal: 7,
-    paddingVertical: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 12,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.07,
-    shadowRadius: 18,
-    elevation: 3
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1
   },
   limitIcon: {
     width: 36,
@@ -355,28 +272,26 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   savingsCard: {
-    marginTop: 13,
-    minHeight: 96,
-    borderRadius: 19,
+    marginTop: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#F1DFC8",
-    backgroundColor: "#FCF2E7",
+    borderColor: "#F5E9D9",
+    backgroundColor: "#FDF7EF",
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    overflow: "hidden"
+    padding: 14
   },
   targetIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "rgba(255,255,255,0.7)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center"
   },
   savingsCopy: {
     flex: 1,
-    marginLeft: 14
+    marginLeft: 12
   },
   savingsTitle: {
     fontSize: 15,
@@ -386,7 +301,7 @@ const styles = StyleSheet.create({
   },
   savingsAmount: {
     marginTop: 4,
-    fontSize: 27,
+    fontSize: 26,
     lineHeight: 32,
     fontWeight: "900",
     color: "#D06D1E"
@@ -397,63 +312,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "700",
     color: "#737B77"
-  },
-  plantBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#F7E7D0",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  voiceCard: {
-    marginTop: 12,
-    minHeight: 76,
-    borderRadius: 19,
-    borderWidth: 1,
-    borderColor: "#D9E6F8",
-    backgroundColor: "#F2F8FF",
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 11
-  },
-  voiceIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#E0EEFF",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  voiceCopy: {
-    flex: 1,
-    marginLeft: 14
-  },
-  voiceTitle: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
-    color: "#132A4A"
-  },
-  voiceSubtitle: {
-    marginTop: 2,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "700",
-    color: "#737B77"
-  },
-  wave: {
-    width: 78,
-    height: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 3
-  },
-  waveBar: {
-    width: 3,
-    borderRadius: 3,
-    backgroundColor: "#9FC7F5"
   },
   cta: {
     minHeight: 58,

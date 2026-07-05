@@ -42,30 +42,30 @@ const periods: Array<{ value: Period; label: string; icon: keyof typeof Feather.
 const periodCopy = {
   daily: {
     main: "Bugün harcayabileceğin",
-    limit: "Günlük limitin",
-    spent: "Bugünkü harcama toplamın",
-    remaining: "Kalan limitin",
-    limitCaption: "Günlük belirlenen limit",
-    spentCaption: "Harcamaların toplamı",
-    remainingCaption: "Limitinden kalan tutar"
+    limit: "Limit",
+    spent: "Harcanan",
+    remaining: "Kalan",
+    limitCaption: "Günlük limit",
+    spentCaption: "Toplam harcanan",
+    remainingCaption: "Kalan limit"
   },
   weekly: {
     main: "Bu hafta harcayabileceğin",
-    limit: "Haftalık limitin",
-    spent: "Haftalık harcama toplamın",
-    remaining: "Kalan limitin",
-    limitCaption: "Haftalık belirlenen limit",
-    spentCaption: "Harcamaların toplamı",
-    remainingCaption: "Limitinden kalan tutar"
+    limit: "Limit",
+    spent: "Harcanan",
+    remaining: "Kalan",
+    limitCaption: "Haftalık limit",
+    spentCaption: "Toplam harcanan",
+    remainingCaption: "Kalan limit"
   },
   monthly: {
     main: "Bu ay harcayabileceğin",
-    limit: "Aylık limitin",
-    spent: "Aylık harcama toplamın",
-    remaining: "Kalan limitin",
-    limitCaption: "Aylık belirlenen limit",
-    spentCaption: "Harcamaların toplamı",
-    remainingCaption: "Limitinden kalan tutar"
+    limit: "Limit",
+    spent: "Harcanan",
+    remaining: "Kalan",
+    limitCaption: "Aylık limit",
+    spentCaption: "Toplam harcanan",
+    remainingCaption: "Kalan limit"
   }
 } satisfies Record<Period, Record<string, string>>;
 
@@ -91,8 +91,6 @@ export default function HomeDashboardScreen() {
   const goalSavedAmount = Math.max(savingsGoal.currentAmount || 0, 0);
   const goalProgress = getProgress(goalSavedAmount, goalTargetAmount);
   const goalProgressPercent = goalTargetAmount > 0 ? Math.round(goalProgress * 100) : 0;
-  const spentProgress = getProgress(recentTotal, selectedPeriodLimit);
-  const remainingProgress = getProgress(selectedPeriodRemaining, selectedPeriodLimit);
   const isRecentListScrollable = recentContentHeight > recentListHeight + 1;
   const scrollableDistance = Math.max(recentContentHeight - recentListHeight, 1);
   const customScrollTrackTravel = Math.max(recentListHeight * 0.7 - 40, 0);
@@ -144,8 +142,6 @@ export default function HomeDashboardScreen() {
               icon="credit-card"
               title={copy.limit}
               amount={selectedPeriodLimit}
-              caption={copy.limitCaption}
-              progress={1}
               tone="green"
             />
             <View style={styles.divider} />
@@ -153,17 +149,13 @@ export default function HomeDashboardScreen() {
               icon="pie-chart"
               title={copy.spent}
               amount={recentTotal}
-              caption={copy.spentCaption}
-              progress={spentProgress}
               tone="orange"
             />
             <View style={styles.divider} />
             <SummaryMetric
-              icon="credit-card"
+              icon="shield"
               title={copy.remaining}
               amount={selectedPeriodRemaining}
-              caption={copy.remainingCaption}
-              progress={remainingProgress}
               tone="green"
             />
           </View>
@@ -338,12 +330,6 @@ function VoiceExpenseSheet({
     startListening();
   }
 
-  function fillTestText() {
-    const transcript = "120 lira kahve harcadım";
-    console.log("[voice-expense] transcript result", { transcript, source: "test-button" });
-    setTranscript(transcript);
-  }
-
   function saveExpense() {
     const numericAmount = parseAmount(amount);
 
@@ -488,28 +474,23 @@ function SummaryMetric({
   icon,
   title,
   amount,
-  caption,
-  progress,
   tone
 }: {
   icon: keyof typeof Feather.glyphMap;
   title: string;
   amount: number;
-  caption: string;
-  progress: number;
   tone: "green" | "orange";
 }) {
   const tint = tone === "green" ? colors.primary : "#DF7A12";
   return (
     <View style={styles.metric}>
       <View style={[styles.metricIcon, tone === "orange" && styles.metricIconOrange]}>
-      <Feather name={icon} size={24} color={tint} />
+        <Feather name={icon} size={20} color={tint} />
       </View>
       <Text style={styles.metricTitle}>{title}</Text>
-      <Text style={[styles.metricAmount, { color: tint }]}>{formatCurrency(amount)}</Text>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: tint }]} />
-      </View>
+      <Text style={[styles.metricAmount, { color: tint }]} numberOfLines={1} adjustsFontSizeToFit>
+        {formatCurrency(amount)}
+      </Text>
     </View>
   );
 }
@@ -544,37 +525,6 @@ function buildExpenseRows(expenses: Expense[]) {
       renderId: seenCount === 0 ? baseId : `${baseId}-${seenCount}`
     };
   });
-}
-
-function isExpenseInPeriod(expense: Expense, period: Period) {
-  if (!expense.occurredAt) {
-    return false;
-  }
-
-  const occurredAt = new Date(expense.occurredAt);
-  const now = new Date();
-
-  if (Number.isNaN(occurredAt.getTime())) {
-    return false;
-  }
-
-  if (period === "daily") {
-    return occurredAt.toDateString() === now.toDateString();
-  }
-
-  if (period === "weekly") {
-    return getWeekStart(occurredAt).getTime() === getWeekStart(now).getTime();
-  }
-
-  return occurredAt.getFullYear() === now.getFullYear() && occurredAt.getMonth() === now.getMonth();
-}
-
-function getWeekStart(date: Date) {
-  const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const day = (weekStart.getDay() + 6) % 7;
-  weekStart.setDate(weekStart.getDate() - day);
-  weekStart.setHours(0, 0, 0, 0);
-  return weekStart;
 }
 
 function getExpenseBadge(expense: Expense) {
@@ -699,17 +649,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "rgba(255,255,255,0.88)"
   },
-  heroTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8
-  },
-  heroLabel: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
-    color: colors.white
-  },
   heroAmount: {
     marginTop: 2,
     fontSize: 34,
@@ -760,23 +699,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "rgba(255,255,255,0.78)",
     textAlign: "left"
-  },
-  statusPill: {
-    alignSelf: "flex-start",
-    marginTop: 8,
-    borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.13)",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 11,
-    paddingVertical: 7
-  },
-  statusText: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "900",
-    color: colors.white
   },
   heroMascot: {
     position: "absolute",
@@ -833,39 +755,36 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     marginTop: 12,
-    minHeight: 108,
-    borderRadius: 24,
+    borderRadius: 16,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: "rgba(13,50,40,0.06)",
-    paddingHorizontal: 10,
+    borderColor: "#EFE5D9",
+    paddingHorizontal: 12,
     paddingVertical: 14,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.06,
-    shadowRadius: 26,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.03,
+    shadowRadius: 12,
+    elevation: 2,
     flexDirection: "row",
-    alignItems: "stretch",
-    flexWrap: "wrap"
+    alignItems: "center"
   },
   metric: {
     flex: 1,
-    minWidth: 0,
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 5
+    justifyContent: "center",
+    paddingHorizontal: 4
   },
   divider: {
     width: 1,
+    height: 40,
     backgroundColor: "#ECE5DA",
-    marginVertical: 4
+    marginHorizontal: 4
   },
   metricIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "transparent",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center"
   },
@@ -873,38 +792,16 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent"
   },
   metricTitle: {
-    marginTop: 5,
-    minHeight: 30,
+    marginTop: 4,
     fontSize: 12,
-    lineHeight: 15,
-    fontWeight: "900",
-    color: "#111614",
+    fontWeight: "800",
+    color: "#747C78",
     textAlign: "center"
   },
   metricAmount: {
-    marginTop: 3,
-    fontSize: 19,
-    lineHeight: 24,
-    fontWeight: "900"
-  },
-  progressTrack: {
-    marginTop: 6,
-    width: "100%",
-    height: 5,
-    borderRadius: 8,
-    backgroundColor: "#DDE2DE",
-    overflow: "hidden"
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 8
-  },
-  metricCaption: {
-    marginTop: 4,
-    fontSize: 10,
-    lineHeight: 12,
-    fontWeight: "700",
-    color: "#747C78",
+    marginTop: 2,
+    fontSize: 16,
+    fontWeight: "900",
     textAlign: "center"
   },
   tipRow: {
