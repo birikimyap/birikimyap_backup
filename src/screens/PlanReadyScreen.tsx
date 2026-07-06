@@ -8,7 +8,8 @@ import { colors, radius } from "@/theme";
 import { formatCurrency } from "@/utils/currency";
 import { translations } from "@/utils/translations";
 
-const mascot = require("../../pgn/mascot-cutout.png");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 
 const waveBars = Array.from({ length: 12 }, (_, index) => ({
   id: `voice-wave-${index}`,
@@ -17,6 +18,7 @@ const waveBars = Array.from({ length: 12 }, (_, index) => ({
 
 export default function PlanReadyScreen() {
   const language = useFinanceStore((state) => state.language);
+  const mascot = language === "tr" ? mascotTR : mascotEN;
   const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
 
   const plan = useFinanceStore((state) => state.plan);

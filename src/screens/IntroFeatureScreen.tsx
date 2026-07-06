@@ -14,12 +14,14 @@ type FeatureItem = {
   highlighted?: boolean;
 };
 
-const mascot = require("../../pgn/mascot-cutout.png");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 
 // Static configuration removed to support dynamic translations
 
 export default function IntroFeatureScreen() {
   const language = useFinanceStore((state) => state.language);
+  const mascot = language === "tr" ? mascotTR : mascotEN;
   const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
 
   const features: FeatureItem[] = [

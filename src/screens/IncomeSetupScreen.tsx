@@ -50,7 +50,8 @@ const defaultIncomeRows = [
 
 const defaultIncomeRowIds = new Set<string>(defaultIncomeRows.map((row) => row.id));
 
-const mascot = require("../../pgn/mascot-cutout.png");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 const rowHeight = 86;
 
 function createRowId(prefix: string) {
@@ -76,6 +77,7 @@ export default function IncomeSetupScreen() {
   const storedIncomes = useFinanceStore((state) => state.incomes);
   const setIncomes = useFinanceStore((state) => state.setIncomes);
   const language = useFinanceStore((state) => state.language);
+  const mascot = language === "tr" ? mascotTR : mascotEN;
   const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
 
   const translateDefaultLabel = (id: string, field: "title" | "subtitle", val: string) => {
@@ -416,7 +418,7 @@ function IncomeRow({ title, subtitle, icon, tone, amount, onChangeText, onChange
           keyboardType="decimal-pad"
           style={styles.amountInput}
         />
-        <Text style={styles.currency}>₺</Text>
+        <Text style={styles.currency}>{language === "tr" ? "₺" : "$"}</Text>
       </View>
     </View>
   );

@@ -23,11 +23,13 @@ type LoginButtonProps = {
   onPress: () => void;
 };
 
-const mascot = require("../../pgn/mascot-cutout.png");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 const googleMark = require("../../pgn/google-mark.png");
 
 export default function LoginScreen() {
   const language = useFinanceStore((state) => state.language);
+  const mascot = language === "tr" ? mascotTR : mascotEN;
   const setLanguage = useFinanceStore((state) => state.setLanguage);
   const isHapticsEnabled = useFinanceStore((state) => state.isHapticsEnabled);
   const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;

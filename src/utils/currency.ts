@@ -1,5 +1,11 @@
-export const formatCurrency = (value: number) =>
-  `₺${new Intl.NumberFormat("tr-TR").format(Math.max(value, 0))}`;
+import { useFinanceStore } from "@/store/financeStore";
+
+export const formatCurrency = (value: number) => {
+  const language = useFinanceStore.getState().language;
+  const currencySign = language === "tr" ? "₺" : "$";
+  const locale = language === "tr" ? "tr-TR" : "en-US";
+  return `${currencySign}${new Intl.NumberFormat(locale).format(Math.max(value, 0))}`;
+};
 
 export function parseAmount(value: string | number) {
   if (typeof value === "number") {

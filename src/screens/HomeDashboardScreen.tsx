@@ -28,7 +28,8 @@ import { formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 
-const mascot = require("../../pgn/mascot-cutout.png");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 
 const voiceWaveBars = [
   { id: "voice-sheet-wave-1", value: 0 },
@@ -56,6 +57,7 @@ export default function HomeDashboardScreen() {
   const setIsDarkMode = useFinanceStore((state) => state.setIsDarkMode);
   const setIsHapticsEnabled = useFinanceStore((state) => state.setIsHapticsEnabled);
   const language = useFinanceStore((state) => state.language);
+  const mascot = language === "tr" ? mascotTR : mascotEN;
   const setLanguage = useFinanceStore((state) => state.setLanguage);
 
   const t = (key: keyof typeof translations["tr"], variables?: Record<string, string>): string => {
