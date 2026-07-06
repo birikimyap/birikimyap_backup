@@ -81,6 +81,8 @@ export default function HomeDashboardScreen() {
   const setSelectedPeriod = useFinanceStore((state) => state.setSelectedPeriod);
   const addExpense = useFinanceStore((state) => state.addExpense);
   const setSavingsGoal = useFinanceStore((state) => state.setSavingsGoal);
+  const setIncomes = useFinanceStore((state) => state.setIncomes);
+  const setExpenses = useFinanceStore((state) => state.setExpenses);
   const totalIncome = useFinanceStore((state) => state.getTotalIncome());
   const totalFixedExpenses = useFinanceStore((state) => state.getTotalFixedExpenses());
   const setIsDarkMode = useFinanceStore((state) => state.setIsDarkMode);
@@ -94,6 +96,9 @@ export default function HomeDashboardScreen() {
   // Analysis period & modal states
   const [analysisPeriod, setAnalysisPeriod] = useState<"weekly" | "monthly">("weekly");
   const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
+  const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
+  const [isFaqModalVisible, setIsFaqModalVisible] = useState(false);
+  const [isResetConfirmVisible, setIsResetConfirmVisible] = useState(false);
   const [tempGoalTitle, setTempGoalTitle] = useState("");
   const [tempGoalTarget, setTempGoalTarget] = useState("");
   const [tempGoalSaved, setTempGoalSaved] = useState("");
@@ -739,6 +744,76 @@ export default function HomeDashboardScreen() {
             />
           </View>
         </View>
+
+        {/* Support & Information Card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", paddingVertical: 8, marginTop: 14 }]}>
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              setToastConfig({
+                visible: true,
+                message: "Destek Adresi Kopyalandı",
+                subtext: "support@birikimyap.com adresine mail atabilirsiniz! 📬"
+              });
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="mail" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Bize Ulaşın</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
+          </Pressable>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              setIsFaqModalVisible(true);
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="help-circle" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Sıkça Sorulan Sorular (SSS)</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
+          </Pressable>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              setIsAboutModalVisible(true);
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="info" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Uygulama Hakkında</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
+          </Pressable>
+        </View>
+
+        {/* Danger Zone Card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.danger, borderWidth: 1.5, flexDirection: "column", paddingVertical: 8, marginTop: 14 }]}>
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              setIsResetConfirmVisible(true);
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="trash-2" size={20} color={themeColors.danger} />
+              <Text style={[styles.settingLabel, { color: themeColors.danger }]}>Tüm Verileri Sıfırla</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={themeColors.danger} />
+          </Pressable>
+        </View>
       </View>
     );
   }
@@ -805,6 +880,48 @@ export default function HomeDashboardScreen() {
               monthlyContribution: Math.min(savingsGoal.monthlyContribution, Math.max(parsedTarget - parsedSaved, 0))
             });
             setIsGoalModalVisible(false);
+          }}
+        />
+
+        <AboutModal
+          visible={isAboutModalVisible}
+          onClose={() => setIsAboutModalVisible(false)}
+        />
+
+        <FaqModal
+          visible={isFaqModalVisible}
+          onClose={() => setIsFaqModalVisible(false)}
+        />
+
+        <ResetConfirmModal
+          visible={isResetConfirmVisible}
+          onClose={() => setIsResetConfirmVisible(false)}
+          onConfirm={() => {
+            triggerHaptic();
+            // Clear variable expenses
+            setExpenses([]);
+            // Clear incomes
+            setIncomes([
+              { id: "salary", label: "Maaş", amount: 0, period: "monthly" },
+              { id: "freelance", label: "Freelance", amount: 0, period: "monthly" },
+              { id: "extra", label: "Ek gelir", amount: 0, period: "monthly" }
+            ]);
+            // Clear savings goal
+            setSavingsGoal({
+              title: "Acil durum",
+              selectedGoal: "Acil durum",
+              targetAmount: 0,
+              currentAmount: 0,
+              monthlyContribution: 0,
+              dailyTarget: 0,
+              planStartDate: new Date().toISOString()
+            });
+            setIsResetConfirmVisible(false);
+            setToastConfig({
+              visible: true,
+              message: "Veriler Sıfırlandı",
+              subtext: "Tüm uygulama verileri başarıyla sıfırlandı! 🧹"
+            });
           }}
         />
 
@@ -1291,6 +1408,95 @@ function SavingsGoalEditModal({
           </View>
         </View>
       </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function AboutModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.sheetBackdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={[styles.dialogBox, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <View style={[styles.dialogAvatar, { backgroundColor: themeColors.primary }]}>
+            <Text style={{ fontSize: 32 }}>🐷</Text>
+          </View>
+          <Text style={[styles.dialogTitle, { color: themeColors.text }]}>Birikim Yap</Text>
+          <Text style={[styles.dialogVersion, { color: themeColors.textMuted }]}>Sürüm 1.0.0 (Expo Build)</Text>
+          <Text style={[styles.dialogBody, { color: themeColors.text }]}>
+            Birikim Yap, harcamalarınızı sesli veya manuel olarak hızlıca eklemenize ve aylık bütçe limitlerinizi gelişmiş grafik analizlerle takip etmenize olanak sağlayan akıllı finansal asistanınızdır.
+          </Text>
+          <Pressable style={({ pressed }) => [styles.dialogButton, pressed && styles.pressed]} onPress={onClose}>
+            <Text style={styles.dialogButtonText}>Kapat</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function FaqModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+  const faqs = [
+    { q: "Sesli harcama ekleme nasıl çalışır?", a: "Anasayfadaki 'Sesli Ekle' butonuna basıp '150 lira market' gibi doğal bir cümle kurduğunuzda, yapay zeka tutarı ve kategoriyi otomatik ayrıştırır." },
+    { q: "Verilerim güvende mi?", a: "Tüm finansal verileriniz ve bütçe planlarınız tamamen cihazınızda (yerel depolamada) saklanır. Dışarıya hiçbir veri aktarılmaz." },
+    { q: "Limitler nasıl hesaplanıyor?", a: "Aylık gelirinizden sabit giderlerinizi ve hedef birikim miktarınızı çıkarttıktan sonra kalan bütçeyi gün/hafta/ay bazında bölerek harcama limitlerinizi hesaplar." }
+  ];
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: 450 }]}>
+          <View style={styles.sheetHandle} />
+          <Text style={[styles.sheetTitle, { color: themeColors.primary }]}>Sıkça Sorulan Sorular</Text>
+          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>Uygulama kullanımı hakkında hızlı cevaplar.</Text>
+          
+          <View style={{ gap: 14, marginTop: 20 }}>
+            {faqs.map((faq, index) => (
+              <View key={index} style={[styles.faqBox, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(13,50,40,0.02)", borderColor: themeColors.border }]}>
+                <Text style={[styles.faqQuestion, { color: themeColors.text }]}>💡 {faq.q}</Text>
+                <Text style={[styles.faqAnswer, { color: themeColors.textMuted }]}>{faq.a}</Text>
+              </View>
+            ))}
+          </View>
+
+          <Pressable style={({ pressed }) => [styles.cancelButton, { width: "100%", marginTop: 24, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#EFE8DD" }, pressed && styles.pressed]} onPress={onClose}>
+            <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>Kapat</Text>
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function ResetConfirmModal({ visible, onClose, onConfirm }: { visible: boolean; onClose: () => void; onConfirm: () => void }) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.sheetBackdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={[styles.dialogBox, { backgroundColor: themeColors.surface, borderColor: themeColors.danger, borderWidth: 1.5 }]}>
+          <View style={[styles.dialogAvatar, { backgroundColor: "#FFCDD2" }]}>
+            <Feather name="alert-triangle" size={28} color="#D32F2F" />
+          </View>
+          <Text style={[styles.dialogTitle, { color: themeColors.danger }]}>Verileri Sıfırla?</Text>
+          <Text style={[styles.dialogBody, { color: themeColors.text, textAlign: "center" }]}>
+            Tüm harcamalarınız, gelir bilgileriniz ve birikim hedefleriniz tamamen sıfırlanacaktır. Bu işlem geri alınamaz!
+          </Text>
+          <View style={styles.dialogActions}>
+            <Pressable style={({ pressed }) => [styles.dialogCancelButton, pressed && styles.pressed]} onPress={onClose}>
+              <Text style={[styles.dialogCancelText, { color: themeColors.text }]}>Vazgeç</Text>
+            </Pressable>
+            <Pressable style={({ pressed }) => [styles.dialogConfirmButton, pressed && styles.pressed]} onPress={onConfirm}>
+              <Text style={styles.dialogConfirmText}>Sıfırla</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -2370,6 +2576,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "800"
   },
+  profileSubActionButtonText: {
+    fontSize: 13,
+    fontWeight: "800"
+  },
   insightCard: {
     marginTop: 16,
     borderRadius: 20,
@@ -2406,8 +2616,102 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center"
   },
-  profileSubActionButtonText: {
+  // Dialog (About / Confirm) Styles
+  dialogBox: {
+    width: "84%",
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8
+  },
+  dialogAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16
+  },
+  dialogTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    textAlign: "center"
+  },
+  dialogVersion: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 4,
+    marginBottom: 16
+  },
+  dialogBody: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 24
+  },
+  dialogButton: {
+    width: "100%",
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#0D3228", // colors.primary literal
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  dialogButtonText: {
+    color: "#FFFFFF", // colors.white literal
+    fontSize: 15,
+    fontWeight: "800"
+  },
+  dialogActions: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%"
+  },
+  dialogCancelButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.05)",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  dialogCancelText: {
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  dialogConfirmButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: "#D32F2F",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  dialogConfirmText: {
+    color: "#FFFFFF", // colors.white literal
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  // FAQ styles
+  faqBox: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 12,
+    gap: 4
+  },
+  faqQuestion: {
     fontSize: 13,
     fontWeight: "800"
+  },
+  faqAnswer: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "600"
   }
 });
