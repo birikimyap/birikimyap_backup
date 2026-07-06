@@ -219,18 +219,22 @@ function GoalCardItem({
       style={({ pressed }) => [styles.goalCard, isSelected && styles.goalCardSelected, pressed && styles.pressed]}
     >
       <View style={[styles.goalIconWrap, isSelected && styles.goalIconSelected]}>
-        <Feather name={goal.icon} size={30} color={isSelected ? colors.white : colors.primary} />
+        <Feather name={goal.icon} size={24} color={isSelected ? colors.white : colors.primary} />
       </View>
-      <Text style={styles.goalCardTitle}>{goal.title}</Text>
-      <Text style={styles.goalCardSubtitle}>{goal.subtitle}</Text>
-      <View style={[styles.radio, isSelected && styles.radioSelected]}>
-        {isSelected && <View style={styles.radioDot} />}
-      </View>
+      <Text style={[styles.goalCardTitle, isSelected && styles.goalCardTitleSelected]}>{goal.title}</Text>
+      <Text style={[styles.goalCardSubtitle, isSelected && styles.goalCardSubtitleSelected]}>{goal.subtitle}</Text>
+      
+      {isSelected ? (
+        <View style={styles.selectionDot}>
+          <Feather name="check" size={10} color={colors.white} />
+        </View>
+      ) : null}
     </Pressable>
   );
 }
 
 function Slider({ value, max, step, onChange }: { value: number; max: number; step: number; onChange: (value: number) => void }) {
+  const language = useFinanceStore((state) => state.language);
   const [trackWidth, setTrackWidth] = useState(1);
   const progress = max > 0 ? Math.min(value / max, 1) : 0;
 
@@ -245,8 +249,12 @@ function Slider({ value, max, step, onChange }: { value: number; max: number; st
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: (event) => updateValue(event.nativeEvent.locationX),
-        onPanResponderMove: (event) => updateValue(event.nativeEvent.locationX)
+        onPanResponderGrant: (evt) => {
+          updateValue(evt.nativeEvent.locationX);
+        },
+        onPanResponderMove: (evt, gestureState) => {
+          updateValue(gestureState.x0 - (evt.currentTarget as any)._layout.x + gestureState.dx);
+        }
       }),
     [max, step, trackWidth]
   );
@@ -260,7 +268,7 @@ function Slider({ value, max, step, onChange }: { value: number; max: number; st
       <View style={styles.sliderTrack} />
       <View style={[styles.sliderFill, { width: `${progress * 100}%` }]} />
       <View style={[styles.sliderThumb, { left: `${progress * 100}%` }]}>
-        <Text style={styles.sliderThumbText}>₺</Text>
+        <Text style={styles.sliderThumbText}>{language === "tr" ? "₺" : "$"}</Text>
       </View>
     </View>
   );
@@ -275,23 +283,27 @@ const styles = StyleSheet.create({
     flex: 1
   },
   content: {
-    paddingHorizontal: 18,
-    paddingTop: 6,
-    paddingBottom: 112
+    paddingHorizontal: 20,
+    paddingTop: 54,
+    paddingBottom: 124
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.pill,
+    position: "absolute",
+    top: 12,
+    left: 16,
+    zIndex: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: "rgba(255,252,246,0.82)",
+    borderColor: "rgba(0,0,0,0.06)",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 2
   },
   pressed: {
@@ -300,17 +312,19 @@ const styles = StyleSheet.create({
   },
   hero: {
     alignItems: "center",
-    marginTop: -8
+    marginTop: 10,
+    marginBottom: 16
   },
   mascotStage: {
-    width: 164,
-    height: 118,
+    width: 220,
+    height: 160,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    marginBottom: 8
   },
   mascot: {
-    width: 112,
-    height: 116
+    width: 140,
+    height: 140
   },
   sparkle: {
     position: "absolute",
@@ -329,49 +343,45 @@ const styles = StyleSheet.create({
   },
   title: {
     maxWidth: 320,
-    fontSize: 27,
-    lineHeight: 32,
+    fontSize: 25,
+    lineHeight: 31,
     fontWeight: "900",
     color: colors.primary,
     textAlign: "center"
   },
   subtitle: {
-    marginTop: 5,
+    marginTop: 6,
     maxWidth: 305,
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: "700",
-    color: "#747C78",
+    fontWeight: "600",
+    color: colors.textMuted,
     textAlign: "center"
   },
   budgetCard: {
-    marginTop: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E2ECD9",
-    backgroundColor: "#F5F9F1",
+    marginTop: 20,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    elevation: 2
+    padding: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    elevation: 5
   },
   walletBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#E4F0DE",
-    borderWidth: 1,
-    borderColor: "#CFDFC8",
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
     alignItems: "center",
     justifyContent: "center"
   },
   budgetCopy: {
     flex: 1,
-    marginLeft: 12
+    marginLeft: 14
   },
   cardTitleRow: {
     flexDirection: "row",
@@ -379,27 +389,27 @@ const styles = StyleSheet.create({
     gap: 8
   },
   cardLabel: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "900",
-    color: colors.primary
+    fontSize: 13,
+    fontWeight: "800",
+    color: "rgba(255, 255, 255, 0.72)",
+    textTransform: "uppercase",
+    letterSpacing: 0.5
   },
   budgetAmount: {
-    marginTop: 2,
-    fontSize: 32,
-    lineHeight: 38,
+    marginTop: 4,
+    fontSize: 34,
+    lineHeight: 40,
     fontWeight: "900",
-    color: colors.primary
+    color: colors.white
   },
   cardBody: {
     fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "700",
-    color: "#747C78",
-    marginTop: 2
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.6)",
+    marginTop: 4
   },
   sliderIntro: {
-    marginTop: 18,
+    marginTop: 20,
     gap: 2
   },
   sectionTitle: {
@@ -411,20 +421,20 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: "700",
-    color: "#747C78"
+    fontWeight: "600",
+    color: colors.textMuted
   },
   sliderCard: {
     marginTop: 10,
-    borderRadius: 16,
+    borderRadius: 20,
     backgroundColor: colors.white,
-    padding: 16,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "#F0EAE1",
+    borderColor: "rgba(13, 50, 40, 0.05)",
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
+    shadowOpacity: 0.03,
+    shadowRadius: 14,
     elevation: 2
   },
   savingsHeader: {
@@ -539,29 +549,38 @@ const styles = StyleSheet.create({
     paddingBottom: 4
   },
   goalCard: {
-    width: 96,
-    minHeight: 110,
-    borderRadius: 14,
+    width: 104,
+    height: 122,
+    borderRadius: 18,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: "#EDE7DE",
+    borderColor: "rgba(13, 50, 40, 0.05)",
     alignItems: "center",
-    padding: 8,
+    padding: 10,
+    justifyContent: "center",
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 1
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.02,
+    shadowRadius: 10,
+    elevation: 1,
+    marginRight: 10,
+    position: "relative"
   },
   goalCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: "#FCFFF8"
+    borderWidth: 2,
+    backgroundColor: colors.primarySoft,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3
   },
   goalIconWrap: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#EEF4E8",
+    backgroundColor: colors.surfaceMuted,
     alignItems: "center",
     justifyContent: "center"
   },
@@ -572,80 +591,80 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "900",
-    color: "#101514",
+    fontWeight: "800",
+    color: colors.primary,
     textAlign: "center"
+  },
+  goalCardTitleSelected: {
+    color: colors.primary
   },
   goalCardSubtitle: {
     marginTop: 2,
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: "700",
-    color: "#747C78",
+    fontWeight: "600",
+    color: colors.textMuted,
     textAlign: "center"
   },
-  radio: {
-    marginTop: "auto",
+  goalCardSubtitleSelected: {
+    color: colors.primaryMuted
+  },
+  selectionDot: {
+    position: "absolute",
+    top: 6,
+    right: 6,
     width: 18,
     height: 18,
     borderRadius: 9,
-    borderWidth: 2,
-    borderColor: "#E7D8C4",
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center"
-  },
-  radioSelected: {
-    borderColor: colors.primary
-  },
-  radioDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary
   },
   footer: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: 18,
-    paddingTop: 8,
-    paddingBottom: 7,
-    backgroundColor: colors.background
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 24,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderColor: "rgba(0,0,0,0.03)"
   },
   cta: {
-    minHeight: 58,
-    borderRadius: 29,
+    minHeight: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary,
     paddingHorizontal: 24,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.24,
-    shadowRadius: 24,
-    elevation: 7
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 5
   },
   ctaPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.99 }]
   },
   ctaSpacer: {
-    width: 28
+    width: 24
   },
   ctaText: {
-    fontSize: 19,
-    lineHeight: 25,
-    fontWeight: "900",
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "800",
     color: colors.white,
     textAlign: "center"
   },
   ctaIcon: {
-    width: 28
+    width: 24
   },
   securityRow: {
-    marginTop: 6,
+    marginTop: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -655,8 +674,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 11,
     lineHeight: 15,
-    fontWeight: "700",
-    color: "#9AA19D",
+    fontWeight: "600",
+    color: colors.textMuted,
     textAlign: "center"
   }
 });

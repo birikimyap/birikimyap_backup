@@ -161,23 +161,27 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
   content: {
-    paddingHorizontal: 18,
-    paddingTop: 6,
-    paddingBottom: 14
+    paddingHorizontal: 20,
+    paddingTop: 54,
+    paddingBottom: 24
   },
   backButton: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.pill,
+    position: "absolute",
+    top: 12,
+    left: 16,
+    zIndex: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: "rgba(255,252,246,0.84)",
+    borderColor: "rgba(0,0,0,0.06)",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 2
   },
   pressed: {
@@ -185,8 +189,9 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.99 }]
   },
   hero: {
-    marginTop: -12,
-    alignItems: "center"
+    marginTop: 10,
+    alignItems: "center",
+    marginBottom: 16
   },
   confettiLayer: {
     ...StyleSheet.absoluteFillObject
@@ -198,13 +203,13 @@ const styles = StyleSheet.create({
     borderRadius: 4
   },
   mascot: {
-    width: 112,
-    height: 116
+    width: 140,
+    height: 140
   },
   title: {
-    marginTop: 0,
-    fontSize: 33,
-    lineHeight: 38,
+    marginTop: 8,
+    fontSize: 28,
+    lineHeight: 34,
     fontWeight: "900",
     color: colors.primary,
     textAlign: "center"
@@ -214,88 +219,85 @@ const styles = StyleSheet.create({
     maxWidth: 330,
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: "800",
-    color: "#7A817D",
-    textAlign: "center"
+    fontWeight: "600",
+    color: colors.textMuted,
+    textAlign: "center",
+    paddingHorizontal: 10
   },
   mainCard: {
-    marginTop: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E2ECD9",
-    backgroundColor: "#F5F9F1",
+    marginTop: 20,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
     alignItems: "center",
-    padding: 20,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    elevation: 2
+    padding: 22,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    elevation: 5
   },
   mainCardLabel: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: "900",
-    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "800",
+    color: "rgba(255, 255, 255, 0.72)",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
     textAlign: "center"
   },
   mainAmount: {
-    marginTop: 6,
-    fontSize: 40,
-    lineHeight: 48,
+    marginTop: 8,
+    fontSize: 38,
+    lineHeight: 46,
     fontWeight: "900",
-    color: colors.primary,
+    color: colors.white,
     textAlign: "center"
   },
   limitGrid: {
-    marginTop: 12,
+    marginTop: 14,
     flexDirection: "row",
-    gap: 7
+    gap: 10
   },
   limitCard: {
     flex: 1,
-    minHeight: 104,
-    borderRadius: 14,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: "#EDE7DE",
+    minHeight: 112,
+    borderRadius: 18,
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 14,
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.02,
+    shadowRadius: 10,
     elevation: 1
   },
   limitIcon: {
     width: 36,
     height: 36,
-    borderRadius: 13,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center"
   },
   greenIcon: {
-    backgroundColor: "#E9F3E6"
+    backgroundColor: "rgba(13, 50, 40, 0.08)"
   },
   orangeIcon: {
-    backgroundColor: "#FAE9D8"
+    backgroundColor: "rgba(232, 117, 22, 0.08)"
   },
   purpleIcon: {
-    backgroundColor: "#EFE5F2"
+    backgroundColor: "rgba(123, 91, 131, 0.08)"
   },
   limitTitle: {
     marginTop: 8,
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "900",
-    color: "#111614",
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+    color: colors.primary,
     textAlign: "center"
   },
   limitAmount: {
     marginTop: 5,
-    fontSize: 20,
-    lineHeight: 25,
+    fontSize: 19,
+    lineHeight: 24,
     fontWeight: "900",
     textAlign: "center"
   },
@@ -303,19 +305,24 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 10,
     lineHeight: 13,
-    fontWeight: "700",
-    color: "#737B77",
+    fontWeight: "600",
+    color: colors.textMuted,
     textAlign: "center"
   },
   savingsCard: {
-    marginTop: 12,
-    borderRadius: 16,
+    marginTop: 14,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#F5E9D9",
+    borderColor: "rgba(232, 117, 22, 0.06)",
     backgroundColor: "#FDF7EF",
     flexDirection: "row",
     alignItems: "center",
-    padding: 14
+    padding: 16,
+    shadowColor: "#E87516",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.02,
+    shadowRadius: 10,
+    elevation: 1
   },
   targetIcon: {
     width: 44,
@@ -330,15 +337,15 @@ const styles = StyleSheet.create({
     marginLeft: 12
   },
   savingsTitle: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "900",
-    color: "#111614"
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "800",
+    color: colors.primary
   },
   savingsAmount: {
     marginTop: 4,
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: 24,
+    lineHeight: 30,
     fontWeight: "900",
     color: "#D06D1E"
   },
@@ -346,32 +353,32 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "700",
-    color: "#737B77"
+    fontWeight: "600",
+    color: colors.textMuted
   },
   cta: {
-    minHeight: 58,
-    borderRadius: 29,
+    minHeight: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary,
-    marginTop: 14,
+    marginTop: 16,
     paddingHorizontal: 24,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.24,
-    shadowRadius: 24,
-    elevation: 7
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 5
   },
   ctaPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.99 }]
   },
   ctaText: {
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "900",
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "800",
     color: colors.white,
     textAlign: "center"
   },
@@ -386,8 +393,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 11,
     lineHeight: 15,
-    fontWeight: "700",
-    color: "#9AA19D",
+    fontWeight: "600",
+    color: colors.textMuted,
     textAlign: "center"
   }
 });

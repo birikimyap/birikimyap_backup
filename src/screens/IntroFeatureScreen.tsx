@@ -10,6 +10,7 @@ import { translations } from "@/utils/translations";
 type FeatureItem = {
   id: string;
   title: string;
+  description: string;
   icon: keyof typeof Feather.glyphMap;
   highlighted?: boolean;
 };
@@ -27,17 +28,22 @@ export default function IntroFeatureScreen() {
   const features: FeatureItem[] = [
     {
       id: "income-expense",
-      title: language === "tr" ? "Gelir ve giderlerini ekle" : "Add income and expenses",
+      title: language === "tr" ? "Gelir ve Giderlerini Ekle" : "Add Income & Expenses",
+      description: language === "tr" ? "Aylık gelir ve sabit ödemelerini girerek limitini belirle." : "Determine your limit by entering monthly incomes and fixed payments.",
       icon: "credit-card"
     },
     {
       id: "savings-goal",
-      title: language === "tr" ? "Birikim hedefini belirle" : "Set your savings goal",
+      title: language === "tr" ? "Birikim Hedefini Belirle" : "Set Your Savings Goal",
+      description: language === "tr" ? "Kendine bir birikim oranı seç ve ilerlemeni anlık gör." : "Choose a savings rate for yourself and see your progress in real-time.",
       icon: "target"
     },
     {
       id: "voice-expense",
-      title: language === "tr" ? "Sesli harcama ekle" : "Add voice expense",
+      title: language === "tr" ? "Sesli Harcama Ekle" : "Add Voice Expense",
+      description: language === "tr" 
+        ? "Örneğin: ‘120 lira kahve harcadım’ dediğinde yapay zeka harcamanı otomatik kaydeder." 
+        : "For example: When you say 'spent 120 dollars on coffee', AI automatically records it.",
       icon: "mic",
       highlighted: true
     }
@@ -80,7 +86,7 @@ export default function IntroFeatureScreen() {
         >
           <View style={styles.ctaSpacer} />
           <Text style={styles.ctaText}>{language === "tr" ? "Başlayalım" : "Let's Start"}</Text>
-          <Feather name="arrow-right" size={26} color={colors.white} style={styles.ctaIcon} />
+          <Feather name="arrow-right" size={24} color={colors.white} style={styles.ctaIcon} />
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -93,22 +99,20 @@ function FeatureCard({ feature }: { feature: FeatureItem }) {
   return (
     <View style={[styles.featureRow, feature.highlighted && styles.featureRowHighlighted]}>
       <View style={[styles.iconBox, feature.highlighted && styles.iconBoxHighlighted]}>
-        <Feather name={feature.icon} size={feature.highlighted ? 30 : 28} color={colors.primary} />
+        <Feather name={feature.icon} size={22} color={feature.highlighted ? colors.primary : colors.primaryMuted} />
       </View>
       <View style={styles.featureCopy}>
-        {feature.highlighted ? (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{language === "tr" ? "YENİ" : "NEW"}</Text>
-          </View>
-        ) : null}
-        <Text style={styles.featureTitle}>{feature.title}</Text>
-        {feature.highlighted ? (
-          <Text style={styles.exampleText}>
-            {language === "tr" 
-              ? "Örneğin: ‘120 lira kahve harcadım’ dediğinde otomatik kaydedilir." 
-              : "For example: When you say 'spent 120 dollars on coffee', it is saved automatically."}
-          </Text>
-        ) : null}
+        <View style={styles.titleRow}>
+          <Text style={styles.featureTitle}>{feature.title}</Text>
+          {feature.highlighted ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{language === "tr" ? "YENİ" : "NEW"}</Text>
+            </View>
+          ) : null}
+        </View>
+        <Text style={[styles.featureDesc, feature.highlighted && styles.exampleText]}>
+          {feature.description}
+        </Text>
       </View>
     </View>
   );
@@ -122,169 +126,184 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 28,
-    paddingTop: 20,
-    paddingBottom: 18
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24
   },
   hero: {
     width: "100%",
-    alignItems: "center"
+    alignItems: "center",
+    marginBottom: 20
   },
   mascotStage: {
-    width: 250,
-    height: 190,
+    width: 240,
+    height: 180,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8
+    marginBottom: 12
   },
   softOval: {
     position: "absolute",
-    bottom: 8,
-    width: 206,
-    height: 94,
-    borderRadius: 120,
-    backgroundColor: colors.primarySoft
+    bottom: 4,
+    width: 190,
+    height: 80,
+    borderRadius: 100,
+    backgroundColor: "rgba(13, 50, 40, 0.08)"
   },
   mascot: {
-    width: 184,
-    height: 188
+    width: 170,
+    height: 170
   },
   sparkle: {
     position: "absolute",
     color: colors.primaryMuted,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "800"
   },
   sparkleLeft: {
-    left: 24,
-    top: 46
+    left: 20,
+    top: 40
   },
   sparkleRight: {
-    right: 28,
-    bottom: 38,
-    fontSize: 19
+    right: 24,
+    bottom: 30,
+    fontSize: 18
   },
   heading: {
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 26,
+    lineHeight: 32,
     fontWeight: "800",
     color: colors.primary,
-    textAlign: "center"
+    textAlign: "center",
+    paddingHorizontal: 12
   },
   subtitle: {
-    marginTop: 10,
-    fontSize: 15,
-    lineHeight: 23,
-    fontWeight: "500",
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "600",
     color: colors.textMuted,
-    textAlign: "center"
+    textAlign: "center",
+    paddingHorizontal: 16
   },
   features: {
     width: "100%",
-    marginTop: 28,
-    gap: 14
+    gap: 0,
+    marginBottom: 16
   },
   featureRow: {
     width: "100%",
-    minHeight: 68,
-    borderRadius: 16,
     flexDirection: "row",
-    alignItems: "center",
-    gap: 16
-  },
-  featureRowHighlighted: {
-    minHeight: 88,
+    alignItems: "flex-start",
+    padding: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(13,50,40,0.06)",
-    backgroundColor: "rgba(255, 254, 250, 0.86)",
-    paddingVertical: spacing.sm,
-    paddingRight: spacing.md,
+    borderColor: "rgba(13, 50, 40, 0.04)",
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.03,
-    shadowRadius: 12,
-    elevation: 2
+    shadowOpacity: 0.02,
+    shadowRadius: 10,
+    elevation: 1,
+    marginBottom: 12
+  },
+  featureRowHighlighted: {
+    borderColor: colors.primarySoft,
+    backgroundColor: colors.primarySoft,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    elevation: 3
   },
   iconBox: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(13,50,40,0.06)",
-    backgroundColor: colors.surface,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 1
+    marginRight: 14
   },
   iconBoxHighlighted: {
-    backgroundColor: colors.primarySoft
+    backgroundColor: colors.white,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2
   },
   featureCopy: {
     flex: 1
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap"
+  },
   badge: {
-    alignSelf: "flex-start",
-    borderRadius: radius.pill,
-    backgroundColor: colors.primarySoft,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginBottom: 4
+    borderRadius: 8,
+    backgroundColor: colors.accent,
+    paddingHorizontal: 6,
+    paddingVertical: 2
   },
   badgeText: {
-    fontSize: 10,
-    lineHeight: 13,
+    fontSize: 9,
     fontWeight: "900",
-    color: colors.primary
+    color: colors.white
   },
   featureTitle: {
     fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "700",
+    lineHeight: 20,
+    fontWeight: "800",
     color: colors.primary
+  },
+  featureDesc: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
+    color: colors.textMuted
   },
   exampleText: {
     marginTop: 4,
     fontSize: 12,
     lineHeight: 17,
-    fontWeight: "500",
-    color: "#747C78"
+    fontWeight: "600",
+    color: colors.primaryMuted
   },
   cta: {
     width: "100%",
-    minHeight: 52,
-    borderRadius: 26,
+    minHeight: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary,
-    marginTop: 28,
     paddingHorizontal: 24,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 3
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 5
   },
   ctaPressed: {
     opacity: 0.9,
     transform: [{ scale: 0.99 }]
   },
   ctaSpacer: {
-    width: 26
+    width: 24
   },
   ctaText: {
     fontSize: 17,
     lineHeight: 22,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.white,
     textAlign: "center"
   },
   ctaIcon: {
-    width: 26
+    width: 24
   }
 });
