@@ -40,6 +40,10 @@ type FinanceState = {
   getMonthlyLimit: () => number;
   getExpensesTotalForPeriod: (period: Period) => number;
   getRemainingLimitForPeriod: (period: Period) => number;
+  isDarkMode: boolean;
+  setIsDarkMode: (enabled: boolean) => void;
+  isHapticsEnabled: boolean;
+  setIsHapticsEnabled: (enabled: boolean) => void;
 };
 
 const initialIncomes: Income[] = [
@@ -125,6 +129,10 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
   savingsGoal: initialGoal,
   selectedPeriod: initialPeriod,
   plan: initialPlan,
+  isDarkMode: false,
+  setIsDarkMode: (isDarkMode) => set({ isDarkMode }),
+  isHapticsEnabled: true,
+  setIsHapticsEnabled: (isHapticsEnabled) => set({ isHapticsEnabled }),
   setIncomes: (incomes) => {
     const normalizedIncomes = incomes.map(normalizeIncome);
     const { expenses, savingsGoal, selectedPeriod } = get();

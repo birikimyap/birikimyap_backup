@@ -10,8 +10,10 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
+  Vibration,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,7 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useVoiceExpenseInput } from "@/hooks/useVoiceExpenseInput";
 import { Expense, Period } from "@/models/finance";
 import { useFinanceStore } from "@/store/financeStore";
-import { colors, radius } from "@/theme";
+import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod } from "@/utils/finance";
 
@@ -81,6 +83,20 @@ export default function HomeDashboardScreen() {
   const [recentListHeight, setRecentListHeight] = useState(0);
   const [recentContentHeight, setRecentContentHeight] = useState(0);
   const recentScrollY = useRef(new Animated.Value(0)).current;
+
+  // Tab state
+  const [currentTab, setCurrentTab] = useState<"home" | "analysis" | "profile">("home");
+
+  // Haptics & Dark Mode
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const isHapticsEnabled = useFinanceStore((state) => state.isHapticsEnabled);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+
+  const triggerHaptic = () => {
+    if (isHapticsEnabled) {
+      Vibration.vibrate(10);
+    }
+  };
 
   // Custom states for Siri Voice Overlay and Toast
   const [isDirectVoiceActive, setIsDirectVoiceActive] = useState(false);
@@ -193,161 +209,424 @@ export default function HomeDashboardScreen() {
     extrapolate: "clamp"
   });
 
-  return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.screen}>
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <View style={styles.greetingWrap}>
-              <Text style={styles.greeting}>Hoş geldin, Gürkan 👋</Text>
-              <Text style={styles.subtitle}>Bugün finansal hedeflerine bir adım daha yaklaştın.</Text>
-            </View>
-            <Pressable style={({ pressed }) => [styles.notificationButton, pressed && styles.pressed]}>
-              <Feather name="bell" size={25} color={colors.text} />
-              <View style={styles.notificationDot} />
-            </Pressable>
-          </View>
+  // Category total spend parser for Analysis tab
+  const analysisCategoryData = useMemo(() => {
+    const totals: Record<string, number> = {};
+    let totalAll = 0;
+    
+    periodExpenses.forEach((exp) => {
+      const cat = exp.category || exp.subtitle || "Diğer";
+      totals[cat] = (totals[cat] || 0) + exp.amount;
+      totalAll += exp.amount;
+    });
 
-          <View style={styles.heroCard}>
-            <View style={styles.heroCopy}>
-              <View style={styles.goalBadge}>
-                <Text style={styles.goalBadgeIcon}>🎯</Text>
-                <Text style={styles.goalBadgeText}>BİRİKİM HEDEFİN</Text>
+    return Object.entries(totals)
+      .map(([category, amount]) => ({
+        category,
+        amount,
+        percentage: totalAll > 0 ? (amount / totalAll) * 100 : 0
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [periodExpenses]);
+
+  // Weekly daily spend trend for Analysis tab bar chart
+  const analysisWeeklyData = useMemo(() => {
+    const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+    const dailySpend = Array(7).fill(0);
+    const today = new Date();
+    
+    expenses.forEach((exp) => {
+      if (exp.isFixed || !exp.occurredAt) return;
+      const date = new Date(exp.occurredAt);
+      const diffTime = Math.abs(today.getTime() - date.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays <= 7) {
+        const dayOfWeekIndex = (date.getDay() + 6) % 7; // Monday is 0, Sunday is 6
+        dailySpend[dayOfWeekIndex] += exp.amount;
+      }
+    });
+
+    const maxSpend = Math.max(...dailySpend, 1);
+
+    return days.map((label, index) => ({
+      label,
+      amount: dailySpend[index],
+      percentage: (dailySpend[index] / maxSpend) * 100
+    }));
+  }, [expenses]);
+
+  function renderHomeTab() {
+    return (
+      <View style={styles.tabContentContainer}>
+        <View style={styles.header}>
+          <View style={styles.greetingWrap}>
+            <Text style={[styles.greeting, { color: themeColors.text }]}>Hoş geldin, Gürkan 👋</Text>
+            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>Bugün finansal hedeflerine bir adım daha yaklaştın.</Text>
+          </View>
+          <Pressable 
+            style={({ pressed }) => [
+              styles.notificationButton, 
+              { backgroundColor: themeColors.surface, borderColor: themeColors.border },
+              pressed && styles.pressed
+            ]}
+            onPress={triggerHaptic}
+          >
+            <Feather name="bell" size={25} color={themeColors.text} />
+            <View style={styles.notificationDot} />
+          </Pressable>
+        </View>
+
+        <View style={styles.heroCard}>
+          <View style={styles.heroCopy}>
+            <View style={styles.goalBadge}>
+              <Text style={styles.goalBadgeIcon}>🎯</Text>
+              <Text style={styles.goalBadgeText}>BİRİKİM HEDEFİN</Text>
+            </View>
+            <Text style={styles.heroSubtitle}>Hedefin</Text>
+            <Text style={styles.heroAmount}>{formatCurrency(goalTargetAmount)}</Text>
+            <View style={styles.savedAmountBlock}>
+              <Text style={styles.savedAmountTitle}>Bugüne kadar biriktirdiğin</Text>
+              <Text style={styles.savedAmountValue}>{formatCurrency(goalSavedAmount)}</Text>
+            </View>
+            <View style={styles.heroProgressTrack}>
+              <View style={[styles.heroProgressFill, { width: `${goalProgress * 100}%` }]} />
+            </View>
+            <Text style={styles.heroPercentText}>Hedefin %{goalProgressPercent}’i tamamlandı</Text>
+          </View>
+          <View style={styles.heroMascot}>
+            <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+          </View>
+        </View>
+
+        <View style={[styles.summaryCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <SummaryMetric
+            icon="credit-card"
+            title={copy.limit}
+            amount={selectedPeriodLimit}
+            tone="green"
+          />
+          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
+          <SummaryMetric
+            icon="pie-chart"
+            title={copy.spent}
+            amount={recentTotal}
+            tone="orange"
+          />
+          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
+          <SummaryMetric
+            icon="shield"
+            title={copy.remaining}
+            amount={selectedPeriodRemaining}
+            tone="green"
+          />
+        </View>
+
+        <View style={styles.addExpenseButtonRow}>
+          <Pressable 
+            style={({ pressed }) => [styles.mainAddButton, pressed && styles.pressed]} 
+            onPress={() => {
+              triggerHaptic();
+              setIsSheetVisible(true);
+            }}
+          >
+            <LinearGradient colors={["#074A31", colors.primary, "#063B28"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.addGradient}>
+              <View style={styles.addIconWrap}>
+                <Feather name="plus" size={18} color={colors.primary} />
               </View>
-              <Text style={styles.heroSubtitle}>Hedefin</Text>
-              <Text style={styles.heroAmount}>{formatCurrency(goalTargetAmount)}</Text>
-              <View style={styles.savedAmountBlock}>
-                <Text style={styles.savedAmountTitle}>Bugüne kadar biriktirdiğin</Text>
-                <Text style={styles.savedAmountValue}>{formatCurrency(goalSavedAmount)}</Text>
+              <Text style={styles.addText}>Harcama Ekle</Text>
+            </LinearGradient>
+          </Pressable>
+
+          <Pressable 
+            style={({ pressed }) => [styles.mainVoiceButton, pressed && styles.pressed]} 
+            onPress={() => {
+              triggerHaptic();
+              setIsDirectVoiceActive(true);
+            }}
+          >
+            <LinearGradient colors={["#DF7A12", "#C8640E"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.voiceGradient}>
+              <View style={styles.voiceIconWrap}>
+                <Feather name="mic" size={18} color="#DF7A12" />
               </View>
-              <View style={styles.heroProgressTrack}>
-                <View style={[styles.heroProgressFill, { width: `${goalProgress * 100}%` }]} />
-              </View>
-              <Text style={styles.heroPercentText}>Hedefin %{goalProgressPercent}’i tamamlandı</Text>
-            </View>
-            <View style={styles.heroMascot}>
-              <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
-            </View>
+              <Text style={styles.voiceText}>Sesli Ekle</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+
+        <View style={styles.periodWrap}>
+          {periods.map((period) => {
+            const isSelected = selectedPeriod === period.value;
+            return (
+              <Pressable
+                key={period.value}
+                onPress={() => {
+                  triggerHaptic();
+                  setSelectedPeriod(period.value);
+                }}
+                style={({ pressed }) => [
+                  styles.periodItem, 
+                  isSelected && [styles.periodItemSelected, { backgroundColor: themeColors.primary }], 
+                  !isSelected && { backgroundColor: themeColors.surface, borderColor: themeColors.border },
+                  pressed && styles.pressed
+                ]}
+              >
+                <Feather name={period.icon} size={20} color={isSelected ? colors.white : themeColors.text} />
+                <Text style={[styles.periodText, { color: isSelected ? colors.white : themeColors.text }]}>{period.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.recentSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>Son harcamalar</Text>
+            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>Toplam miktar: {formatCurrency(recentTotal)}</Text>
           </View>
 
-          <View style={styles.summaryCard}>
-            <SummaryMetric
-              icon="credit-card"
-              title={copy.limit}
-              amount={selectedPeriodLimit}
-              tone="green"
-            />
-            <View style={styles.divider} />
-            <SummaryMetric
-              icon="pie-chart"
-              title={copy.spent}
-              amount={recentTotal}
-              tone="orange"
-            />
-            <View style={styles.divider} />
-            <SummaryMetric
-              icon="shield"
-              title={copy.remaining}
-              amount={selectedPeriodRemaining}
-              tone="green"
-            />
-          </View>
-
-          <View style={styles.addExpenseButtonRow}>
-            <Pressable style={({ pressed }) => [styles.mainAddButton, pressed && styles.pressed]} onPress={() => setIsSheetVisible(true)}>
-              <LinearGradient colors={["#074A31", colors.primary, "#063B28"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.addGradient}>
-                <View style={styles.addIconWrap}>
-                  <Feather name="plus" size={18} color={colors.primary} />
-                </View>
-                <Text style={styles.addText}>Harcama Ekle</Text>
-              </LinearGradient>
-            </Pressable>
-
-            <Pressable style={({ pressed }) => [styles.mainVoiceButton, pressed && styles.pressed]} onPress={() => setIsDirectVoiceActive(true)}>
-              <LinearGradient colors={["#DF7A12", "#C8640E"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.voiceGradient}>
-                <View style={styles.voiceIconWrap}>
-                  <Feather name="mic" size={18} color="#DF7A12" />
-                </View>
-                <Text style={styles.voiceText}>Sesli Ekle</Text>
-              </LinearGradient>
-            </Pressable>
-          </View>
-
-          <View style={styles.periodWrap}>
-            {periods.map((period) => {
-              const isSelected = selectedPeriod === period.value;
-              return (
-                <Pressable
-                  key={period.value}
-                  onPress={() => setSelectedPeriod(period.value)}
-                  style={({ pressed }) => [styles.periodItem, isSelected && styles.periodItemSelected, pressed && styles.pressed]}
-                >
-                  <Feather name={period.icon} size={20} color={isSelected ? colors.white : "#111614"} />
-                  <Text style={[styles.periodText, isSelected && styles.periodTextSelected]}>{period.label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View style={styles.recentSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Son harcamalar</Text>
-              <Text style={styles.sectionTotal}>Toplam miktar: {formatCurrency(recentTotal)}</Text>
-            </View>
-
-            <View style={styles.expenseCard}>
-              <FlatList
-                data={periodExpenseRows}
-                keyExtractor={(item) => item.renderId}
-                nestedScrollEnabled={true}
-                showsVerticalScrollIndicator={false}
-                onLayout={(event) => setRecentListHeight(event.nativeEvent.layout.height)}
-                onContentSizeChange={(_, height) => setRecentContentHeight(height)}
-                onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: recentScrollY } } }], { useNativeDriver: false })}
-                scrollEventThrottle={16}
-                contentContainerStyle={periodExpenseRows.length === 0 ? styles.emptyExpenseListContent : styles.expenseListContent}
-                ListEmptyComponent={
-                <View style={styles.emptyExpenses}>
-                  <Feather name="inbox" size={28} color="#8C9490" />
-                  <Text style={styles.emptyExpensesText}>Henüz harcama eklemedin.</Text>
-                  <Text style={styles.emptyExpensesSubtext}>Harcamalarını ekleyerek takibini kolayca yapabilirsin.</Text>
+          <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+            <FlatList
+              data={periodExpenseRows}
+              keyExtractor={(item) => item.renderId}
+              nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={false}
+              onLayout={(event) => setRecentListHeight(event.nativeEvent.layout.height)}
+              onContentSizeChange={(_, height) => setRecentContentHeight(height)}
+              onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: recentScrollY } } }], { useNativeDriver: false })}
+              scrollEventThrottle={16}
+              contentContainerStyle={periodExpenseRows.length === 0 ? styles.emptyExpenseListContent : styles.expenseListContent}
+              ListEmptyComponent={
+                <View style={[styles.emptyExpenses, { backgroundColor: themeColors.surface }]}>
+                  <Feather name="inbox" size={28} color={themeColors.textMuted} />
+                  <Text style={[styles.emptyExpensesText, { color: themeColors.text }]}>Henüz harcama eklemedin.</Text>
+                  <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>Harcamalarını ekleyerek takibini kolayca yapabilirsin.</Text>
                 </View>
               }
               renderItem={({ item, index }) => (
                 <View>
                   <View style={styles.expenseRow}>
-                    <View style={styles.expenseIcon}>
+                    <View style={[styles.expenseIcon, { backgroundColor: themeColors.primary }]}>
                       <Text style={styles.expenseBadge}>{getExpenseBadge(item.expense)}</Text>
                     </View>
                     <View style={styles.expenseCopy}>
-                      <Text style={styles.expenseTitle}>{item.expense.label}</Text>
-                      <Text style={styles.expenseCategory}>{item.expense.category || item.expense.subtitle || "Harcama"}</Text>
+                      <Text style={[styles.expenseTitle, { color: themeColors.text }]}>{item.expense.label}</Text>
+                      <Text style={[styles.expenseCategory, { color: themeColors.textMuted }]}>{item.expense.category || item.expense.subtitle || "Harcama"}</Text>
                     </View>
                     <View style={styles.expenseMeta}>
-                      <Text style={styles.expenseAmount}>{formatCurrency(item.expense.amount)}</Text>
-                      <Text style={styles.expenseDate}>{formatExpenseDate(item.expense.occurredAt)}</Text>
+                      <Text style={[styles.expenseAmount, { color: themeColors.text }]}>{formatCurrency(item.expense.amount)}</Text>
+                      <Text style={[styles.expenseDate, { color: themeColors.textMuted }]}>{formatExpenseDate(item.expense.occurredAt)}</Text>
                     </View>
-                    <Feather name="chevron-right" size={24} color="#9AA19D" />
+                    <Feather name="chevron-right" size={24} color={themeColors.textMuted} />
                   </View>
-                  {index < periodExpenseRows.length - 1 && <View style={styles.expenseDivider} />}
+                  {index < periodExpenseRows.length - 1 && <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />}
                 </View>
-                )}
-              />
-              {isRecentListScrollable ? (
-                <View pointerEvents="none" style={styles.customScrollTrack}>
-                  <Animated.View style={[styles.customScrollThumb, { transform: [{ translateY: customScrollThumbTranslateY }] }]} />
+              )}
+            />
+            {isRecentListScrollable ? (
+              <View pointerEvents="none" style={[styles.customScrollTrack, { backgroundColor: themeColors.border }]}>
+                <Animated.View style={[styles.customScrollThumb, { backgroundColor: themeColors.primary, transform: [{ translateY: customScrollThumbTranslateY }] }]} />
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  function renderAnalysisTab() {
+    return (
+      <View style={styles.tabContentContainer}>
+        <View style={styles.header}>
+          <View style={styles.greetingWrap}>
+            <Text style={[styles.greeting, { color: themeColors.text }]}>Harcama Analizi</Text>
+            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>Bu dönem yaptığın harcamaların dağılımı.</Text>
+          </View>
+        </View>
+
+        {/* Weekly Trend Bar Chart */}
+        <View style={[styles.analysisCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <Text style={[styles.analysisCardTitle, { color: themeColors.text }]}>Son 7 Günlük Eğilim</Text>
+          <View style={styles.chartRow}>
+            {analysisWeeklyData.map((day, idx) => (
+              <View key={idx} style={styles.chartCol}>
+                <View style={[styles.chartBarTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
+                  <View 
+                    style={[
+                      styles.chartBarFill, 
+                      { 
+                        height: `${day.percentage}%`,
+                        backgroundColor: day.amount > 0 ? themeColors.primary : "transparent"
+                      }
+                    ]} 
+                  />
                 </View>
-              ) : null}
-            </View>
+                <Text style={[styles.chartBarLabel, { color: themeColors.textMuted }]}>{day.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Categories breakdown */}
+        <View style={styles.recentSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>Kategorilere Göre</Text>
+            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>Toplam: {formatCurrency(recentTotal)}</Text>
           </View>
 
+          <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, padding: 16, flex: 1, minHeight: 280 }]}>
+            {analysisCategoryData.length === 0 ? (
+              <View style={styles.emptyExpenses}>
+                <Feather name="bar-chart-2" size={28} color={themeColors.textMuted} />
+                <Text style={[styles.emptyExpensesText, { color: themeColors.text }]}>Gösterilecek veri yok.</Text>
+                <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>Harcama ekledikçe kategorisel analiz burada belirecektir.</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={analysisCategoryData}
+                keyExtractor={(item) => item.category}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <View style={styles.categoryRow}>
+                    <View style={styles.categoryInfo}>
+                      <Text style={[styles.categoryName, { color: themeColors.text }]}>{item.category}</Text>
+                      <Text style={[styles.categoryAmount, { color: themeColors.text }]}>
+                        {formatCurrency(item.amount)} ({Math.round(item.percentage)}%)
+                      </Text>
+                    </View>
+                    <View style={[styles.progressTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
+                      <View 
+                        style={[
+                          styles.progressFill, 
+                          { 
+                            width: `${item.percentage}%`,
+                            backgroundColor: themeColors.primary
+                          }
+                        ]} 
+                      />
+                    </View>
+                  </View>
+                )}
+                ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+              />
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  function renderProfileTab() {
+    const totalIncome = useFinanceStore((state) => state.getTotalIncome());
+    const totalFixedExpenses = useFinanceStore((state) => state.getTotalFixedExpenses());
+    const setIsDarkMode = useFinanceStore((state) => state.setIsDarkMode);
+    const setIsHapticsEnabled = useFinanceStore((state) => state.setIsHapticsEnabled);
+
+    return (
+      <View style={styles.tabContentContainer}>
+        <View style={styles.header}>
+          <View style={styles.greetingWrap}>
+            <Text style={[styles.greeting, { color: themeColors.text }]}>Profil & Ayarlar</Text>
+            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>Uygulama ayarlarını ve bütçe limitlerini yönet.</Text>
+          </View>
         </View>
 
-        <View style={styles.tabBar}>
-          <TabItem icon="home" label="Ana sayfa" active />
-          <TabItem icon="pie-chart" label="Analiz" />
-          <TabItem icon="user" label="Profil" />
+        {/* User Card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <View style={[styles.profileAvatar, { backgroundColor: themeColors.primary }]}>
+            <Text style={styles.profileAvatarText}>G</Text>
+          </View>
+          <View style={styles.profileMeta}>
+            <Text style={[styles.profileName, { color: themeColors.text }]}>Gürkan</Text>
+            <Text style={[styles.profileEmail, { color: themeColors.textMuted }]}>gurkan@birikimyap.com</Text>
+          </View>
         </View>
+
+        {/* Budget summary card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", gap: 14, paddingVertical: 16 }]}>
+          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>Bütçe Özetin</Text>
+          
+          <View style={styles.profileBudgetRow}>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Aylık Toplam Gelir</Text>
+            <Text style={[styles.profileBudgetVal, { color: themeColors.primary, fontWeight: "800" }]}>{formatCurrency(totalIncome)}</Text>
+          </View>
+          
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border, marginVertical: 2 }]} />
+          
+          <View style={styles.profileBudgetRow}>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Sabit Giderler</Text>
+            <Text style={[styles.profileBudgetVal, { color: "#DF7A12", fontWeight: "800" }]}>{formatCurrency(totalFixedExpenses)}</Text>
+          </View>
+        </View>
+
+        {/* Settings Toggle Card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", paddingVertical: 8 }]}>
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconWrap}>
+              <Feather name="moon" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Karanlık Mod (Dark Mode)</Text>
+            </View>
+            <Switch
+              value={isDarkMode}
+              onValueChange={(val) => {
+                triggerHaptic();
+                setIsDarkMode(val);
+              }}
+              trackColor={{ false: "#D1CFC7", true: themeColors.primary }}
+              thumbColor={colors.white}
+            />
+          </View>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconWrap}>
+              <Feather name="activity" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Titreşim Geri Bildirimi</Text>
+            </View>
+            <Switch
+              value={isHapticsEnabled}
+              onValueChange={(val) => {
+                Vibration.vibrate(10);
+                setIsHapticsEnabled(val);
+              }}
+              trackColor={{ false: "#D1CFC7", true: themeColors.primary }}
+              thumbColor={colors.white}
+            />
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.background }]}>
+      <View style={[styles.screen, { backgroundColor: themeColors.background }]}>
+        <View style={styles.content}>
+          {currentTab === "home" && renderHomeTab()}
+          {currentTab === "analysis" && renderAnalysisTab()}
+          {currentTab === "profile" && renderProfileTab()}
+        </View>
+
+        <View style={[styles.tabBar, { backgroundColor: isDarkMode ? "rgba(20,30,27,0.96)" : "rgba(255,254,250,0.96)", borderColor: themeColors.border }]}>
+          <TabItem 
+            icon="home" 
+            label="Ana sayfa" 
+            active={currentTab === "home"} 
+            onPress={() => { triggerHaptic(); setCurrentTab("home"); }} 
+          />
+          <TabItem 
+            icon="pie-chart" 
+            label="Analiz" 
+            active={currentTab === "analysis"} 
+            onPress={() => { triggerHaptic(); setCurrentTab("analysis"); }} 
+          />
+          <TabItem 
+            icon="user" 
+            label="Profil" 
+            active={currentTab === "profile"} 
+            onPress={() => { triggerHaptic(); setCurrentTab("profile"); }} 
+          />
+        </View>
+
         <VoiceExpenseSheet
           visible={isSheetVisible}
           onClose={() => setIsSheetVisible(false)}
@@ -684,13 +963,15 @@ function SummaryMetric({
   amount: number;
   tone: "green" | "orange";
 }) {
-  const tint = tone === "green" ? colors.primary : "#DF7A12";
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+  const tint = tone === "green" ? themeColors.primary : "#DF7A12";
   return (
     <View style={styles.metric}>
-      <View style={[styles.metricIcon, tone === "orange" && styles.metricIconOrange]}>
+      <View style={[styles.metricIcon, tone === "orange" && styles.metricIconOrange, isDarkMode && { backgroundColor: "rgba(255,255,255,0.06)" }]}>
         <Feather name={icon} size={20} color={tint} />
       </View>
-      <Text style={styles.metricTitle}>{title}</Text>
+      <Text style={[styles.metricTitle, { color: themeColors.textMuted }]}>{title}</Text>
       <Text style={[styles.metricAmount, { color: tint }]} numberOfLines={1} adjustsFontSizeToFit>
         {formatCurrency(amount)}
       </Text>
@@ -698,11 +979,23 @@ function SummaryMetric({
   );
 }
 
-function TabItem({ icon, label, active = false }: { icon: keyof typeof Feather.glyphMap; label: string; active?: boolean }) {
+function TabItem({ 
+  icon, 
+  label, 
+  active = false,
+  onPress
+}: { 
+  icon: keyof typeof Feather.glyphMap; 
+  label: string; 
+  active?: boolean;
+  onPress: () => void;
+}) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
   return (
-    <Pressable style={styles.tabItem}>
-      <Feather name={icon} size={24} color={active ? colors.primary : "#929997"} />
-      <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
+    <Pressable style={styles.tabItem} onPress={onPress}>
+      <Feather name={icon} size={24} color={active ? themeColors.primary : "#929997"} />
+      <Text style={[styles.tabLabel, { color: active ? themeColors.primary : "#929997" }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -1638,5 +1931,164 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "500",
     color: "rgba(255, 255, 255, 0.7)"
+  },
+  tabContentContainer: {
+    flex: 1
+  },
+  // Analysis Styles
+  analysisCard: {
+    marginTop: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2
+  },
+  analysisCardTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    marginBottom: 20
+  },
+  chartRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    height: 140,
+    paddingHorizontal: 8
+  },
+  chartCol: {
+    alignItems: "center",
+    flex: 1
+  },
+  chartBarTrack: {
+    width: 14,
+    height: 100,
+    borderRadius: 7,
+    justifyContent: "flex-end",
+    overflow: "hidden"
+  },
+  chartBarFill: {
+    width: "100%",
+    borderRadius: 7
+  },
+  chartBarLabel: {
+    marginTop: 8,
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  categoryRow: {
+    width: "100%"
+  },
+  categoryInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6
+  },
+  categoryName: {
+    fontSize: 14,
+    fontWeight: "700"
+  },
+  categoryAmount: {
+    fontSize: 13,
+    fontWeight: "600"
+  },
+  progressTrack: {
+    height: 8,
+    borderRadius: 4,
+    width: "100%",
+    overflow: "hidden"
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 4
+  },
+  // Profile Styles
+  profileCard: {
+    marginTop: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2
+  },
+  profileAvatar: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  profileAvatarText: {
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: "900"
+  },
+  profileMeta: {
+    marginLeft: 16
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: "900"
+  },
+  profileEmail: {
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 2
+  },
+  profileCardTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    alignSelf: "flex-start",
+    marginBottom: 6
+  },
+  profileBudgetRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingVertical: 4
+  },
+  profileBudgetLabel: {
+    fontSize: 14,
+    fontWeight: "600"
+  },
+  profileBudgetVal: {
+    fontSize: 15
+  },
+  profileEditButton: {
+    marginTop: 6,
+    width: "100%",
+    height: 44,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  profileEditButtonText: {
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  settingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    paddingVertical: 10,
+    paddingHorizontal: 6
+  },
+  settingIconWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  settingLabel: {
+    fontSize: 14,
+    fontWeight: "700"
   }
 });

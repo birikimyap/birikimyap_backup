@@ -1,4 +1,4 @@
-export { colors } from "./colors";
+export { colors, lightColors, darkColors } from "./colors";
 export { radius } from "./radius";
 export { shadows } from "./shadows";
 export { spacing } from "./spacing";
