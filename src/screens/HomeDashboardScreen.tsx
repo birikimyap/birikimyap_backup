@@ -428,37 +428,55 @@ export default function HomeDashboardScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.periodWrap}>
-          {periods.map((period) => {
-            const isSelected = selectedPeriod === period.value;
-            return (
-              <Pressable
-                key={period.value}
-                onPress={() => {
-                  triggerHaptic();
-                  setSelectedPeriod(period.value);
-                }}
-                style={({ pressed }) => [
-                  styles.periodItem, 
-                  isSelected && [styles.periodItemSelected, { backgroundColor: themeColors.primary }], 
-                  !isSelected && { backgroundColor: themeColors.surface, borderColor: themeColors.border },
-                  pressed && styles.pressed
-                ]}
-              >
-                <Feather name={period.icon} size={20} color={isSelected ? colors.white : themeColors.text} />
-                <Text style={[styles.periodText, { color: isSelected ? colors.white : themeColors.text }]}>{period.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
         <View style={styles.recentSection}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>{t("recentSectionTitle")}</Text>
             <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>{t("recentSectionTotal")}: {formatCurrency(recentTotal)}</Text>
           </View>
 
-          <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <View style={[
+            styles.periodWrap, 
+            { 
+              backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#ECE7DD",
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+              borderBottomWidth: 0,
+              marginTop: 10
+            }
+          ]}>
+            {periods.map((period) => {
+              const isSelected = selectedPeriod === period.value;
+              return (
+                <Pressable
+                  key={period.value}
+                  onPress={() => {
+                    triggerHaptic();
+                    setSelectedPeriod(period.value);
+                  }}
+                  style={({ pressed }) => [
+                    styles.periodItem, 
+                    isSelected && [styles.periodItemSelected, { backgroundColor: themeColors.primary }], 
+                    !isSelected && { backgroundColor: themeColors.surface, borderColor: themeColors.border },
+                    pressed && styles.pressed
+                  ]}
+                >
+                  <Feather name={period.icon} size={20} color={isSelected ? colors.white : themeColors.text} />
+                  <Text style={[styles.periodText, { color: isSelected ? colors.white : themeColors.text }]}>{period.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={[
+            styles.expenseCard, 
+            { 
+              backgroundColor: themeColors.surface, 
+              borderColor: themeColors.border,
+              borderTopLeftRadius: 0,
+              borderTopRightRadius: 0,
+              marginTop: 0
+            }
+          ]}>
             <FlatList
               data={periodExpenseRows}
               keyExtractor={(item) => item.renderId}
