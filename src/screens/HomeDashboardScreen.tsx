@@ -124,6 +124,8 @@ export default function HomeDashboardScreen() {
   const [tempGoalTitle, setTempGoalTitle] = useState("");
   const [tempGoalTarget, setTempGoalTarget] = useState("");
   const [tempGoalSaved, setTempGoalSaved] = useState("");
+  const [isNotificationsVisible, setIsNotificationsVisible] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
 
   // Tab state
   const [currentTab, setCurrentTab] = useState<"home" | "analysis" | "profile">("home");
@@ -357,6 +359,80 @@ export default function HomeDashboardScreen() {
     extrapolate: "clamp"
   });
 
+  // Dynamic smart notifications list
+  const notifications = useMemo(() => {
+    const list: Array<{ id: string; title: string; body: string; time: string; type: "warning" | "info" | "success"; icon: keyof typeof Feather.glyphMap }> = [];
+    
+    // 1. Check if limit exceeded in any period (daily / weekly / monthly)
+    const dailyRemaining = plan.limits.daily - getExpensesForPeriod(expenses, "daily").reduce((sum, e) => sum + e.amount, 0);
+    const weeklyRemaining = plan.limits.weekly - getExpensesForPeriod(expenses, "weekly").reduce((sum, e) => sum + e.amount, 0);
+    
+    if (dailyRemaining < 0) {
+      list.push({
+        id: "daily-exceed",
+        title: language === "tr" ? "Günlük Limit Aşıldı!" : "Daily Limit Exceeded!",
+        body: language === "tr" 
+          ? `Bugün harcama limitinizi ${formatCurrency(Math.abs(dailyRemaining))} aştınız. Lütfen dikkat edin.`
+          : `You exceeded your daily budget limit by ${formatCurrency(Math.abs(dailyRemaining))} today.`,
+        time: language === "tr" ? "Şimdi" : "Just now",
+        type: "warning",
+        icon: "alert-triangle"
+      });
+    } else if (dailyRemaining < plan.limits.daily * 0.2) {
+      list.push({
+        id: "daily-warning",
+        title: language === "tr" ? "Günlük Limit Azalıyor" : "Daily Limit Running Low",
+        body: language === "tr"
+          ? "Bugün harcama limitinizin %80'ini doldurdunuz. Dikkatli olun!"
+          : "You spent over 80% of your daily budget limit today.",
+        time: language === "tr" ? "1 sa önce" : "1h ago",
+        type: "warning",
+        icon: "alert-circle"
+      });
+    }
+
+    if (weeklyRemaining < 0) {
+      list.push({
+        id: "weekly-exceed",
+        title: language === "tr" ? "Haftalık Bütçe Aşıldı" : "Weekly Budget Exceeded",
+        body: language === "tr"
+          ? "Bu haftaki toplam harcama limitiniz aşıldı."
+          : "You went over your weekly spending limit.",
+        time: language === "tr" ? "Bugün" : "Today",
+        type: "warning",
+        icon: "alert-triangle"
+      });
+    }
+
+    // 2. Fixed expense warning (upcoming monthly payments)
+    const fixedExpenses = expenses.filter(e => e.isFixed);
+    if (fixedExpenses.length > 0) {
+      const nextExp = fixedExpenses[0];
+      list.push({
+        id: "fixed-expense-upcoming",
+        title: language === "tr" ? "Yaklaşan Sabit Gider" : "Upcoming Fixed Expense",
+        body: language === "tr"
+          ? `Bu ay planlanan ${nextExp.label} (${formatCurrency(nextExp.amount)}) ödemesini unutmayın.`
+          : `Remember your upcoming ${nextExp.label} (${formatCurrency(nextExp.amount)}) payment this month.`,
+        time: language === "tr" ? "Dün" : "Yesterday",
+        type: "info",
+        icon: "calendar"
+      });
+    }
+
+    // 3. Welcome or generic tip
+    list.push({
+      id: "ai-tip-general",
+      title: language === "tr" ? "Yeni AI Finansal Öneri" : "New AI Financial Tip",
+      body: t("analysisAiTipBody"),
+      time: language === "tr" ? "2 gün önce" : "2d ago",
+      type: "success",
+      icon: "zap"
+    });
+
+    return list;
+  }, [expenses, plan, language]);
+
   // Category total spend parser for Analysis tab
   const analysisCategoryData = useMemo(() => {
     const totals: Record<string, { total: number; subs: Record<string, number> }> = {};
@@ -469,10 +545,14 @@ export default function HomeDashboardScreen() {
               { backgroundColor: themeColors.surface, borderColor: themeColors.border },
               pressed && styles.pressed
             ]}
-            onPress={triggerHaptic}
+            onPress={() => {
+              triggerHaptic();
+              setIsNotificationsVisible(true);
+              setHasUnreadNotifications(false);
+            }}
           >
             <Feather name="bell" size={25} color={themeColors.text} />
-            <View style={styles.notificationDot} />
+            {hasUnreadNotifications && <View style={styles.notificationDot} />}
           </Pressable>
         </View>
 
@@ -1175,6 +1255,12 @@ export default function HomeDashboardScreen() {
           setDraftTranscript={setDraftTranscript}
         />
 
+        <NotificationsModal
+          visible={isNotificationsVisible}
+          onClose={() => setIsNotificationsVisible(false)}
+          notifications={notifications}
+        />
+
         <SavingsGoalEditModal
           visible={isGoalModalVisible}
           onClose={() => setIsGoalModalVisible(false)}
@@ -1689,6 +1775,135 @@ function formatExpenseDate(value?: string) {
   }
 
   return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
+}
+
+type NotificationItem = {
+  id: string;
+  title: string;
+  body: string;
+  time: string;
+  type: "warning" | "info" | "success";
+  icon: keyof typeof Feather.glyphMap;
+};
+
+function NotificationsModal({
+  visible,
+  onClose,
+  notifications
+}: {
+  visible: boolean;
+  onClose: () => void;
+  notifications: NotificationItem[];
+}) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+  const language = useFinanceStore((state) => state.language);
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.sheetKeyboardView}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: 380, maxHeight: "80%" }]}>
+          <View style={styles.sheetHandle} />
+          
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: 12 }}>
+            <View style={{ flex: 1, marginRight: 10 }}>
+              <Text style={[styles.sheetTitle, { color: themeColors.primary }]}>
+                {language === "tr" ? "Bildirim Merkezi" : "Notification Center"}
+              </Text>
+              <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>
+                {language === "tr" ? "Bütçe alarmları ve akıllı finansal ipuçları" : "Budget alarms and AI insights"}
+              </Text>
+            </View>
+            <Pressable 
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+              onPress={onClose}
+            >
+              <Feather name="x" size={16} color={themeColors.text} />
+            </Pressable>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 8 }}>
+            {notifications.length === 0 ? (
+              <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 12 }}>
+                <Feather name="bell-off" size={40} color={themeColors.textMuted} />
+                <Text style={{ fontSize: 14, color: themeColors.text, fontWeight: "700" }}>
+                  {language === "tr" ? "Yeni bildirim yok" : "No new notifications"}
+                </Text>
+              </View>
+            ) : (
+              notifications.map((item) => {
+                const isWarning = item.type === "warning";
+                const isSuccess = item.type === "success";
+                
+                const tint = isWarning 
+                  ? "#D32F2F" 
+                  : (isSuccess ? themeColors.primary : "#DF7A12");
+                
+                const bg = isWarning 
+                  ? (isDarkMode ? "rgba(211, 47, 47, 0.08)" : "#FDF2F2")
+                  : (isSuccess 
+                      ? (isDarkMode ? "rgba(0, 223, 137, 0.08)" : "#E8F5E9")
+                      : (isDarkMode ? "rgba(223, 122, 18, 0.08)" : "#FFF3E0"));
+
+                return (
+                  <View 
+                    key={item.id} 
+                    style={{ 
+                      flexDirection: "row", 
+                      backgroundColor: bg, 
+                      borderRadius: 18, 
+                      padding: 14, 
+                      alignItems: "flex-start",
+                      borderWidth: 1,
+                      borderColor: isDarkMode ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)"
+                    }}
+                  >
+                    <View style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.6)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginRight: 12,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.02,
+                      shadowRadius: 2,
+                      elevation: 1
+                    }}>
+                      <Feather name={item.icon} size={18} color={tint} />
+                    </View>
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                        <Text style={{ fontSize: 13, fontWeight: "900", color: themeColors.text }}>
+                          {item.title}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: themeColors.textMuted, fontWeight: "600" }}>
+                          {item.time}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 12, color: themeColors.text, lineHeight: 17, fontWeight: "600", marginTop: 2 }}>
+                        {item.body}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
 }
 
 function SavingsGoalEditModal({
