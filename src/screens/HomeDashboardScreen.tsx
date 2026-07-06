@@ -51,6 +51,8 @@ export default function HomeDashboardScreen() {
   const plan = useFinanceStore((state) => state.plan);
   const setSelectedPeriod = useFinanceStore((state) => state.setSelectedPeriod);
   const addExpense = useFinanceStore((state) => state.addExpense);
+  const categoryLimits = useFinanceStore((state) => state.categoryLimits) || {};
+  const setCategoryLimit = useFinanceStore((state) => state.setCategoryLimit);
   const setSavingsGoal = useFinanceStore((state) => state.setSavingsGoal);
   const setIncomes = useFinanceStore((state) => state.setIncomes);
   const setExpenses = useFinanceStore((state) => state.setExpenses);
@@ -118,6 +120,7 @@ export default function HomeDashboardScreen() {
   // Analysis period & modal states
   const [analysisPeriod, setAnalysisPeriod] = useState<"weekly" | "monthly">("weekly");
   const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
+  const [isCategoryLimitsModalVisible, setIsCategoryLimitsModalVisible] = useState(false);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
   const [isFaqModalVisible, setIsFaqModalVisible] = useState(false);
   const [isResetConfirmVisible, setIsResetConfirmVisible] = useState(false);
@@ -145,6 +148,9 @@ export default function HomeDashboardScreen() {
   const [isDirectVoiceActive, setIsDirectVoiceActive] = useState(false);
   const [draftTranscript, setDraftTranscript] = useState("");
   const [toastConfig, setToastConfig] = useState<{ visible: boolean; message: string; subtext?: string; type?: "success" | "warning" } | null>(null);
+  
+  // Analysis Chart filter state
+  const [selectedChartLabel, setSelectedChartLabel] = useState<string | null>(null);
 
   // Listen for incoming deep links for Siri / Kestirmeler (Shortcuts) integration
   useEffect(() => {
@@ -433,12 +439,137 @@ export default function HomeDashboardScreen() {
     return list;
   }, [expenses, plan, language]);
 
+  // Gamified Savings Challenges progress generator
+  const challenges = useMemo(() => {
+    const last7Days = Array(7).fill(0).map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime();
+    });
+
+    const dailySpendMap = new Map<number, number>();
+    last7Days.forEach(t => dailySpendMap.set(t, 0));
+
+    expenses.forEach((e) => {
+      if (e.isFixed || !e.occurredAt) return;
+      const d = new Date(e.occurredAt);
+      d.setHours(0, 0, 0, 0);
+      const t = d.getTime();
+      if (dailySpendMap.has(t)) {
+        dailySpendMap.set(t, dailySpendMap.get(t)! + e.amount);
+      }
+    });
+
+    let noSpendDaysCount = 0;
+    dailySpendMap.forEach(amount => {
+      if (amount === 0) noSpendDaysCount++;
+    });
+
+    const isNoSpendCompleted = noSpendDaysCount >= 5;
+
+    const weeklyExpenses = getExpensesForPeriod(expenses, "weekly");
+    const weeklyMarketSpent = weeklyExpenses
+      .filter(e => getCategoryKey(e.category) === "market")
+      .reduce((sum, e) => sum + e.amount, 0);
+    const marketProgress = Math.min(weeklyMarketSpent / 1500, 1.0);
+    const isMarketFailed = weeklyMarketSpent > 1500;
+    const isMarketCompleted = !isMarketFailed && weeklyMarketSpent > 0;
+
+    const weeklyDiningSpent = weeklyExpenses
+      .filter(e => getCategoryKey(e.category) === "dining")
+      .reduce((sum, e) => sum + e.amount, 0);
+    const diningProgress = Math.min(weeklyDiningSpent / 300, 1.0);
+    const isDiningFailed = weeklyDiningSpent > 300;
+    const isDiningCompleted = !isDiningFailed && weeklyDiningSpent > 0;
+
+    const goalTarget = Math.max(savingsGoal.targetAmount || 0, 0);
+    const goalSaved = Math.max(savingsGoal.currentAmount || 0, 0);
+    const isGoalQuarterCompleted = goalTarget > 0 ? (goalSaved / goalTarget) >= 0.25 : false;
+
+    return [
+      {
+        id: "no-spend-5d",
+        title: language === "tr" ? "5 Gün Sıfır Harcama" : "5-Day No-Spend",
+        desc: language === "tr" ? "Son 7 günün en az 5 gününü harcamasız kapatın." : "Have at least 5 days without expenses in the last 7 days.",
+        progress: noSpendDaysCount / 5,
+        progressText: `${noSpendDaysCount} / 5 ${language === "tr" ? "gün" : "days"}`,
+        isCompleted: isNoSpendCompleted,
+        isFailed: false,
+        icon: "shield"
+      },
+      {
+        id: "market-saver",
+        title: language === "tr" ? "Market Tasarrufu" : "Grocery Saver",
+        desc: language === "tr" ? "Bu haftalık market harcamanızı ₺1.500 altında tutun." : "Keep weekly grocery spending under ₺1,500.",
+        progress: isMarketFailed ? 1.0 : marketProgress,
+        progressText: `${formatCurrency(weeklyMarketSpent)} / ${formatCurrency(1500)}`,
+        isCompleted: isMarketCompleted,
+        isFailed: isMarketFailed,
+        icon: "shopping-bag"
+      },
+      {
+        id: "dining-friend",
+        title: language === "tr" ? "Kahve Dostu" : "Coffee Friend",
+        desc: language === "tr" ? "Bu haftalık kafe/restoran harcamanızı ₺300 altında tutun." : "Keep weekly cafe/dining spending under ₺300.",
+        progress: isDiningFailed ? 1.0 : diningProgress,
+        progressText: `${formatCurrency(weeklyDiningSpent)} / ${formatCurrency(300)}`,
+        isCompleted: isDiningCompleted,
+        isFailed: isDiningFailed,
+        icon: "coffee"
+      },
+      {
+        id: "savings-quarter",
+        title: language === "tr" ? "Yolun Çeyreği" : "First Quarter",
+        desc: language === "tr" ? "Birikim hedefinizin %25'ine ulaşın." : "Reach 25% of your savings goal target.",
+        progress: goalTarget > 0 ? Math.min((goalSaved / goalTarget) / 0.25, 1.0) : 0,
+        progressText: `${goalTarget > 0 ? Math.round((goalSaved / goalTarget) * 100) : 0}% / 25%`,
+        isCompleted: isGoalQuarterCompleted,
+        isFailed: false,
+        icon: "award"
+      }
+    ];
+  }, [expenses, savingsGoal, language, currency]);
+
+  // Filtered expenses based on chart selection
+  const filteredAnalysisExpenses = useMemo(() => {
+    if (!selectedChartLabel) {
+      return periodExpenses;
+    }
+    
+    return periodExpenses.filter((exp) => {
+      if (exp.isFixed || !exp.occurredAt) return false;
+      const date = new Date(exp.occurredAt);
+      
+      if (analysisPeriod === "weekly") {
+        const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+        const dayOfWeekIndex = (date.getDay() + 6) % 7;
+        return days[dayOfWeekIndex] === selectedChartLabel;
+      } else {
+        const day = date.getDate();
+        let weekLabel = "4. Hft";
+        if (day <= 7) {
+          weekLabel = "1. Hft";
+        } else if (day <= 14) {
+          weekLabel = "2. Hft";
+        } else if (day <= 21) {
+          weekLabel = "3. Hft";
+        }
+        return weekLabel === selectedChartLabel;
+      }
+    });
+  }, [periodExpenses, selectedChartLabel, analysisPeriod]);
+
+  const analysisTotal = useMemo(() => {
+    return filteredAnalysisExpenses.reduce((sum, e) => sum + e.amount, 0);
+  }, [filteredAnalysisExpenses]);
+
   // Category total spend parser for Analysis tab
   const analysisCategoryData = useMemo(() => {
     const totals: Record<string, { total: number; subs: Record<string, number> }> = {};
     let totalAll = 0;
     
-    periodExpenses.forEach((exp) => {
+    filteredAnalysisExpenses.forEach((exp) => {
       const cat = exp.category || "Diğer";
       const sub = exp.subtitle || (language === "tr" ? "Genel" : "General");
       
@@ -785,26 +916,62 @@ export default function HomeDashboardScreen() {
 
         {/* Dynamic Trend Bar Chart */}
         <View style={[styles.analysisCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
-          <Text style={[styles.analysisCardTitle, { color: themeColors.text }]}>
-            {analysisPeriod === "weekly" ? t("analysisChartWeeklyTitle") : t("analysisChartMonthlyTitle")}
-          </Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <Text style={[styles.analysisCardTitle, { color: themeColors.text, marginBottom: 0 }]}>
+              {analysisPeriod === "weekly" ? t("analysisChartWeeklyTitle") : t("analysisChartMonthlyTitle")}
+            </Text>
+            {selectedChartLabel && (
+              <Pressable 
+                onPress={() => {
+                  triggerHaptic();
+                  setSelectedChartLabel(null);
+                }}
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 8,
+                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)"
+                }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: "800", color: themeColors.primary }}>
+                  {language === "tr" ? "Seçimi Temizle" : "Clear Filter"}
+                </Text>
+              </Pressable>
+            )}
+          </View>
           <View style={styles.chartRow}>
-            {activeChartData.map((day, idx) => (
-              <View key={idx} style={styles.chartCol}>
-                <View style={[styles.chartBarTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
-                  <View 
-                    style={[
-                      styles.chartBarFill, 
-                      { 
-                        height: `${day.percentage}%`,
-                        backgroundColor: day.amount > 0 ? themeColors.primary : "transparent"
-                      }
-                    ]} 
-                  />
-                </View>
-                <Text style={[styles.chartBarLabel, { color: themeColors.textMuted }]}>{day.label}</Text>
-              </View>
-            ))}
+            {activeChartData.map((day, idx) => {
+              const isSelected = selectedChartLabel === day.label;
+              const isAnySelected = selectedChartLabel !== null;
+              const barOpacity = isAnySelected ? (isSelected ? 1.0 : 0.35) : 1.0;
+              const barColor = isSelected ? "#00DF89" : themeColors.primary;
+
+              return (
+                <Pressable 
+                  key={idx} 
+                  style={[styles.chartCol, { opacity: barOpacity }]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setSelectedChartLabel(selectedChartLabel === day.label ? null : day.label);
+                  }}
+                >
+                  <View style={[styles.chartBarTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
+                    <View 
+                      style={[
+                        styles.chartBarFill, 
+                        { 
+                          height: `${day.percentage}%`,
+                          backgroundColor: day.amount > 0 ? barColor : "transparent"
+                        }
+                      ]} 
+                    />
+                  </View>
+                  <Text style={[styles.chartBarLabel, { color: isSelected ? barColor : themeColors.textMuted, fontWeight: isSelected ? "900" : "700" }]}>
+                    {day.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -884,7 +1051,9 @@ export default function HomeDashboardScreen() {
         <View style={styles.recentSection}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>{t("analysisCategoryHeader")}</Text>
-            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>{t("analysisCategoryTotal")}: {formatCurrency(recentTotal)}</Text>
+            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>
+              {t("analysisCategoryTotal")}: {formatCurrency(selectedChartLabel ? analysisTotal : recentTotal)}
+            </Text>
           </View>
 
           <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, padding: 16, flex: 1, minHeight: 220 }]}>
@@ -896,27 +1065,50 @@ export default function HomeDashboardScreen() {
               </View>
             ) : (
               <View style={{ gap: 20 }}>
-                {analysisCategoryData.map((item) => (
-                  <View key={item.category} style={{ gap: 6 }}>
-                    <View style={styles.categoryRow}>
-                      <View style={styles.categoryInfo}>
-                        <Text style={[styles.categoryName, { color: themeColors.text, fontWeight: "800", fontSize: 15 }]}>{item.category}</Text>
-                        <Text style={[styles.categoryAmount, { color: themeColors.text, fontWeight: "800" }]}>
-                          {formatCurrency(item.amount)} ({Math.round(item.percentage)}%)
-                        </Text>
-                      </View>
-                      <View style={[styles.progressTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
-                        <View 
-                          style={[
-                            styles.progressFill, 
-                            { 
-                              width: `${item.percentage}%`,
-                              backgroundColor: themeColors.primary
+                {analysisCategoryData.map((item) => {
+                  const categoryKey = getCategoryKey(item.category);
+                  const limit = categoryLimits[categoryKey] || 0;
+                  const hasLimit = limit > 0;
+                  const isLimitExceeded = hasLimit && item.amount > limit;
+                  
+                  const progressPercent = hasLimit 
+                    ? Math.min((item.amount / limit) * 100, 100) 
+                    : item.percentage;
+                  
+                  const barColor = isLimitExceeded ? "#D32F2F" : themeColors.primary;
+                  const amountColor = isLimitExceeded ? "#D32F2F" : themeColors.text;
+
+                  return (
+                    <View key={item.category} style={{ gap: 6 }}>
+                      <View style={styles.categoryRow}>
+                        <View style={styles.categoryInfo}>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                            <Text style={[styles.categoryName, { color: themeColors.text, fontWeight: "800", fontSize: 14 }]}>{item.category}</Text>
+                            {isLimitExceeded && (
+                              <View style={{ backgroundColor: "rgba(211, 47, 47, 0.1)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                <Text style={{ fontSize: 9, fontWeight: "900", color: "#D32F2F" }}>⚠️ {language === "tr" ? "AŞILDI" : "EXCEEDED"}</Text>
+                              </View>
+                            )}
+                          </View>
+                          <Text style={[styles.categoryAmount, { color: amountColor, fontWeight: "800", fontSize: 13 }]}>
+                            {hasLimit 
+                              ? `${formatCurrency(item.amount)} / ${formatCurrency(limit)}`
+                              : `${formatCurrency(item.amount)} (${Math.round(item.percentage)}%)`
                             }
-                          ]} 
-                        />
+                          </Text>
+                        </View>
+                        <View style={[styles.progressTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
+                          <View 
+                            style={[
+                              styles.progressFill, 
+                              { 
+                                width: `${progressPercent}%`,
+                                backgroundColor: barColor
+                              }
+                            ]} 
+                          />
+                        </View>
                       </View>
-                    </View>
 
                     {/* Subcategories Breakdown */}
                     {item.subcategories && item.subcategories.length > 0 && (
@@ -934,8 +1126,9 @@ export default function HomeDashboardScreen() {
                       </View>
                     )}
                   </View>
-                ))}
-              </View>
+                );
+              })}
+            </View>
             )}
           </View>
         </View>
@@ -1030,6 +1223,85 @@ export default function HomeDashboardScreen() {
           </Pressable>
         </View>
 
+        {/* Savings Challenges Card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", gap: 12, paddingVertical: 14 }]}>
+          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>
+            🏆 {language === "tr" ? "Meydan Okumalar" : "Savings Challenges"}
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 10 }}>
+            {challenges.map((challenge) => {
+              const borderCol = challenge.isFailed
+                ? "rgba(211, 47, 47, 0.4)"
+                : (challenge.isCompleted ? "#00DF89" : themeColors.border);
+              
+              const progressVal = challenge.isFailed ? 1.0 : challenge.progress;
+              const barFillColor = challenge.isFailed 
+                ? "#D32F2F" 
+                : (challenge.isCompleted ? "#00DF89" : themeColors.primary);
+
+              return (
+                <View 
+                  key={challenge.id} 
+                  style={{
+                    width: 240,
+                    borderRadius: 20,
+                    borderWidth: 1.2,
+                    borderColor: borderCol,
+                    padding: 14,
+                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.01)"
+                  }}
+                >
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <View style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: challenge.isFailed 
+                        ? "rgba(211, 47, 47, 0.08)"
+                        : (challenge.isCompleted ? "rgba(0, 223, 137, 0.1)" : "rgba(0,0,0,0.05)"),
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}>
+                      <Feather 
+                        name={challenge.icon as any} 
+                        size={16} 
+                        color={challenge.isFailed 
+                          ? "#D32F2F"
+                          : (challenge.isCompleted ? "#00DF89" : themeColors.text)} 
+                      />
+                    </View>
+                    
+                    {challenge.isCompleted && (
+                      <View style={{ backgroundColor: "rgba(0, 223, 137, 0.12)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 9, fontWeight: "900", color: "#00DF89" }}>✨ {language === "tr" ? "TAMAMLANDI" : "COMPLETED"}</Text>
+                      </View>
+                    )}
+                    {challenge.isFailed && (
+                      <View style={{ backgroundColor: "rgba(211, 47, 47, 0.1)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 9, fontWeight: "900", color: "#D32F2F" }}>❌ {language === "tr" ? "BAŞARISIZ" : "FAILED"}</Text>
+                      </View>
+                    )}
+                    {!challenge.isCompleted && !challenge.isFailed && (
+                      <Text style={{ fontSize: 10, fontWeight: "800", color: themeColors.textMuted }}>
+                        {challenge.progressText}
+                      </Text>
+                    )}
+                  </View>
+
+                  <Text style={{ fontSize: 13, fontWeight: "900", color: themeColors.text, marginBottom: 2 }}>{challenge.title}</Text>
+                  <Text style={{ fontSize: 11, color: themeColors.textMuted, lineHeight: 15, height: 45, fontWeight: "600" }} numberOfLines={3}>
+                    {challenge.desc}
+                  </Text>
+
+                  <View style={{ height: 6, borderRadius: 3, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)", overflow: "hidden", marginTop: 8 }}>
+                    <View style={{ width: `${progressVal * 100}%`, height: "100%", backgroundColor: barFillColor, borderRadius: 3 }} />
+                  </View>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {/* Settings Toggle Card */}
         <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", paddingVertical: 8 }]}>
           <View style={styles.settingRow}>
@@ -1119,6 +1391,24 @@ export default function HomeDashboardScreen() {
               </Pressable>
             </View>
           </View>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              setIsCategoryLimitsModalVisible(true);
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="sliders" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
+                {language === "tr" ? "Kategori Limitleri" : "Category Limits"}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
+          </Pressable>
         </View>
 
         {/* Support & Information Card */}
@@ -1259,6 +1549,13 @@ export default function HomeDashboardScreen() {
           visible={isNotificationsVisible}
           onClose={() => setIsNotificationsVisible(false)}
           notifications={notifications}
+        />
+
+        <CategoryLimitsModal
+          visible={isCategoryLimitsModalVisible}
+          onClose={() => setIsCategoryLimitsModalVisible(false)}
+          categoryLimits={categoryLimits}
+          setCategoryLimit={setCategoryLimit}
         />
 
         <SavingsGoalEditModal
@@ -1744,6 +2041,18 @@ function getProgress(value: number, limit: number) {
   return Math.min(Math.max(value / limit, 0), 1);
 }
 
+function getCategoryKey(category?: string): string {
+  if (!category) return "other";
+  const normalized = category.toLowerCase().trim();
+  if (normalized.includes("market") || normalized.includes("supermarket")) return "market";
+  if (normalized.includes("sağlık") || normalized.includes("health") || normalized.includes("eczane") || normalized.includes("ilaç") || normalized.includes("ilac")) return "health";
+  if (normalized.includes("ulaşım") || normalized.includes("transit") || normalized.includes("taksi") || normalized.includes("araç") || normalized.includes("arac") || normalized.includes("lastik")) return "transport";
+  if (normalized.includes("yemek") || normalized.includes("dining") || normalized.includes("restoran") || normalized.includes("cafe") || normalized.includes("kahve")) return "dining";
+  if (normalized.includes("giyim") || normalized.includes("clothing") || normalized.includes("moda") || normalized.includes("pantolon")) return "clothing";
+  if (normalized.includes("eğlence") || normalized.includes("entertainment") || normalized.includes("sosyal") || normalized.includes("netflix") || normalized.includes("sinema")) return "entertainment";
+  return "other";
+}
+
 function buildExpenseRows(expenses: Expense[]) {
   const seenIds = new Map<string, number>();
 
@@ -1902,6 +2211,125 @@ function NotificationsModal({
           </ScrollView>
         </View>
       </View>
+    </Modal>
+  );
+}
+
+function CategoryLimitsModal({
+  visible,
+  onClose,
+  categoryLimits,
+  setCategoryLimit
+}: {
+  visible: boolean;
+  onClose: () => void;
+  categoryLimits: Record<string, number>;
+  setCategoryLimit: (key: string, amount: number) => void;
+}) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+  const language = useFinanceStore((state) => state.language);
+  const currency = useFinanceStore((state) => state.currency);
+  
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
+  const categories = [
+    { key: "market", label: language === "tr" ? "Market" : "Supermarket", icon: "shopping-cart" },
+    { key: "dining", label: language === "tr" ? "Yemek" : "Dining / Cafe", icon: "coffee" },
+    { key: "transport", label: language === "tr" ? "Ulaşım" : "Transit / Car", icon: "truck" },
+    { key: "clothing", label: language === "tr" ? "Giyim" : "Clothing / Fashion", icon: "tag" },
+    { key: "entertainment", label: language === "tr" ? "Eğlence" : "Leisure / Social", icon: "film" },
+    { key: "health", label: language === "tr" ? "Sağlık" : "Health / Medical", icon: "activity" },
+    { key: "other", label: language === "tr" ? "Diğer" : "Other / General", icon: "help-circle" }
+  ];
+
+  const [localLimits, setLocalLimits] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (visible) {
+      const initial: Record<string, string> = {};
+      categories.forEach((cat) => {
+        const val = categoryLimits[cat.key];
+        initial[cat.key] = val && val > 0 ? String(val) : "";
+      });
+      setLocalLimits(initial);
+    }
+  }, [visible, categoryLimits]);
+
+  const handleSave = () => {
+    categories.forEach((cat) => {
+      const rawVal = localLimits[cat.key] || "";
+      const parsed = parseAmount(rawVal);
+      setCategoryLimit(cat.key, parsed);
+    });
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: 460, maxHeight: "90%" }]}>
+          <View style={styles.sheetHandle} />
+          
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: 12 }}>
+            <View style={{ flex: 1, marginRight: 10 }}>
+              <Text style={[styles.sheetTitle, { color: themeColors.primary }]}>
+                {language === "tr" ? "Kategori Limitleri" : "Category Limits"}
+              </Text>
+              <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>
+                {language === "tr" ? "Kategorilere özel aylık harcama limitleri tanımlayın." : "Define specific monthly budget limits per category."}
+              </Text>
+            </View>
+            <Pressable 
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+              onPress={onClose}
+            >
+              <Feather name="x" size={16} color={themeColors.text} />
+            </Pressable>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingBottom: 16 }}>
+            <View style={[styles.formGroup, { backgroundColor: themeColors.surface, borderColor: themeColors.border, gap: 10, paddingVertical: 10 }]}>
+              {categories.map((cat, idx) => (
+                <View key={cat.key}>
+                  <View style={[styles.formRow, { height: 48 }]}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <Feather name={cat.icon as any} size={18} color={themeColors.textMuted} />
+                      <Text style={[styles.formLabel, { color: themeColors.text, fontWeight: "700" }]}>{cat.label}</Text>
+                    </View>
+                    <TextInput
+                      value={localLimits[cat.key] || ""}
+                      onChangeText={(txt) => setLocalLimits(prev => ({ ...prev, [cat.key]: txt }))}
+                      keyboardType="decimal-pad"
+                      placeholder="Limitsiz"
+                      placeholderTextColor="#9CA19E"
+                      style={[styles.formInput, { color: themeColors.text, fontWeight: "700", textAlign: "right", flex: 1, height: 40 }]}
+                    />
+                  </View>
+                  {idx < categories.length - 1 && <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+
+          <View style={[styles.sheetActions, { marginTop: 10 }]}>
+            <Pressable style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]} onPress={onClose}>
+              <Text style={styles.cancelButtonText}>{t("sheetCancelBtn")}</Text>
+            </Pressable>
+            <Pressable style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>{t("sheetSaveBtn")}</Text>
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

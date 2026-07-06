@@ -50,6 +50,8 @@ type FinanceState = {
   setLanguage: (lang: "tr" | "en") => void;
   currency: "TRY" | "USD" | "EUR";
   setCurrency: (currency: "TRY" | "USD" | "EUR") => void;
+  categoryLimits: Record<string, number>;
+  setCategoryLimit: (categoryKey: string, amount: number) => void;
 };
 
 const initialIncomes: Income[] = [
@@ -142,6 +144,15 @@ export const useFinanceStore = create<FinanceState>()(
       isHapticsEnabled: true,
       setIsHapticsEnabled: (isHapticsEnabled) => set({ isHapticsEnabled }),
       language: "tr",
+      categoryLimits: {},
+      setCategoryLimit: (categoryKey, amount) => {
+        set((state) => ({
+          categoryLimits: {
+            ...state.categoryLimits,
+            [categoryKey]: Math.max(amount, 0)
+          }
+        }));
+      },
       setLanguage: (language) => {
         set({ language });
         get().setCurrency(language === "tr" ? "TRY" : "USD");
@@ -181,6 +192,12 @@ export const useFinanceStore = create<FinanceState>()(
           dailyTarget: convert(oldGoal.dailyTarget)
         };
 
+        const oldCategoryLimits = get().categoryLimits || {};
+        const categoryLimits: Record<string, number> = {};
+        Object.entries(oldCategoryLimits).forEach(([key, val]) => {
+          categoryLimits[key] = convert(val);
+        });
+
         const { selectedPeriod } = get();
         const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod);
 
@@ -189,7 +206,8 @@ export const useFinanceStore = create<FinanceState>()(
           incomes,
           expenses,
           savingsGoal: next.savingsGoal,
-          plan: next.plan
+          plan: next.plan,
+          categoryLimits
         });
       },
       setIncomes: (incomes) => {
