@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -23,6 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useVoiceExpenseInput } from "@/hooks/useVoiceExpenseInput";
 import { Expense, Period } from "@/models/finance";
 import { useFinanceStore } from "@/store/financeStore";
+import { parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod } from "@/utils/finance";
@@ -141,6 +143,86 @@ export default function HomeDashboardScreen() {
   const [isDirectVoiceActive, setIsDirectVoiceActive] = useState(false);
   const [draftTranscript, setDraftTranscript] = useState("");
   const [toastConfig, setToastConfig] = useState<{ visible: boolean; message: string; subtext?: string } | null>(null);
+
+  // Listen for incoming deep links for Siri / Kestirmeler (Shortcuts) integration
+  useEffect(() => {
+    // Check if app was opened via deep link initially
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink(url);
+      }
+    });
+
+    // Listen to incoming deep links while app is open/backgrounded
+    const subscription = Linking.addEventListener("url", (event) => {
+      handleDeepLink(event.url);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  function handleDeepLink(url: string) {
+    try {
+      console.log("[deep-link] incoming url:", url);
+      if (!url.startsWith("birikimyap://")) {
+        return;
+      }
+      
+      const routePath = url.replace("birikimyap://", "");
+      const [path, queryString] = routePath.split("?");
+      
+      if (path === "voice") {
+        let textParam = "";
+        if (queryString) {
+          const params = queryString.split("&");
+          for (const param of params) {
+            const [key, value] = param.split("=");
+            if (key === "text" && value) {
+              textParam = decodeURIComponent(value);
+              break;
+            }
+          }
+        }
+        
+        if (textParam && textParam.trim()) {
+          const voiceResult = parseTurkishExpense(textParam);
+          if (voiceResult.amount && voiceResult.amount > 0) {
+            const finalCategory = voiceResult.category.trim() || "Diğer";
+            const finalSubcategory = voiceResult.subcategory.trim() || (language === "tr" ? "Genel" : "General");
+            
+            const expense = {
+              id: `deeplink-expense-${Date.now()}-${Math.random()}`,
+              label: voiceResult.label.trim() || finalCategory,
+              subtitle: finalSubcategory,
+              amount: voiceResult.amount,
+              period: "daily" as const,
+              isFixed: false,
+              category: finalCategory,
+              note: voiceResult.label.trim() || finalCategory,
+              occurredAt: new Date().toISOString()
+            };
+            
+            addExpense(expense);
+            triggerHaptic();
+            
+            setToastConfig({
+              visible: true,
+              message: `${formatCurrency(voiceResult.amount)} ${t("toastAdded")}`,
+              subtext: `${expense.label} ${t("toastAddedSub")}`
+            });
+          }
+        } else {
+          // Open direct voice overlay if no text parameter
+          setIsDirectVoiceActive(true);
+          triggerHaptic();
+        }
+      }
+    } catch (err) {
+      console.error("[deep-link] error parsing url:", err);
+    }
+  }
 
   const {
     isListening: isVoiceListening,
