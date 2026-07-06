@@ -160,25 +160,7 @@ export default function SavingsGoalScreen() {
             </View>
           </View>
 
-          <Text style={styles.goalTitle}>
-            {language === "tr" ? "Birikim hedefi (opsiyonel)" : "Savings goal (optional)"}
-          </Text>
-          <FlatList
-            data={[
-              { id: "emergency", title: language === "tr" ? "Acil durum" : "Emergency", subtitle: language === "tr" ? "Güvende hisset" : "Feel secure", icon: "shield" },
-              { id: "vacation", title: language === "tr" ? "Tatil" : "Vacation", subtitle: language === "tr" ? "Mola zamanı" : "Break time", icon: "sun" },
-              { id: "phone", title: language === "tr" ? "Yeni telefon" : "New phone", subtitle: language === "tr" ? "Kendine ödül" : "Reward yourself", icon: "smartphone" },
-              { id: "car", title: language === "tr" ? "Araba" : "Car", subtitle: language === "tr" ? "Özgürlüğe doğru" : "Towards freedom", icon: "truck" },
-              { id: "home", title: language === "tr" ? "Ev" : "Home", subtitle: language === "tr" ? "Hayalindeki ev" : "Your dream home", icon: "home" }
-            ]}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.goalList}
-            renderItem={({ item }) => (
-              <GoalCardItem goal={item} selectedGoal={selectedGoal} onSelect={setSelectedGoal} />
-            )}
-          />
+
         </ScrollView>
 
         <View style={styles.footer}>
@@ -202,36 +184,7 @@ export default function SavingsGoalScreen() {
   );
 }
 
-function GoalCardItem({
-  goal,
-  selectedGoal,
-  onSelect
-}: {
-  goal: GoalCard;
-  selectedGoal: string;
-  onSelect: (goalTitle: string) => void;
-}) {
-  const isSelected = selectedGoal === goal.title;
 
-  return (
-    <Pressable
-      onPress={() => onSelect(goal.title)}
-      style={({ pressed }) => [styles.goalCard, isSelected && styles.goalCardSelected, pressed && styles.pressed]}
-    >
-      <View style={[styles.goalIconWrap, isSelected && styles.goalIconSelected]}>
-        <Feather name={goal.icon} size={24} color={isSelected ? colors.white : colors.primary} />
-      </View>
-      <Text style={[styles.goalCardTitle, isSelected && styles.goalCardTitleSelected]}>{goal.title}</Text>
-      <Text style={[styles.goalCardSubtitle, isSelected && styles.goalCardSubtitleSelected]}>{goal.subtitle}</Text>
-      
-      {isSelected ? (
-        <View style={styles.selectionDot}>
-          <Feather name="check" size={10} color={colors.white} />
-        </View>
-      ) : null}
-    </Pressable>
-  );
-}
 
 function Slider({ value, max, step, onChange }: { value: number; max: number; step: number; onChange: (value: number) => void }) {
   const language = useFinanceStore((state) => state.language);
