@@ -142,7 +142,10 @@ export const useFinanceStore = create<FinanceState>()(
       isHapticsEnabled: true,
       setIsHapticsEnabled: (isHapticsEnabled) => set({ isHapticsEnabled }),
       language: "tr",
-      setLanguage: (language) => set({ language }),
+      setLanguage: (language) => {
+        set({ language });
+        get().setCurrency(language === "tr" ? "TRY" : "USD");
+      },
       currency: "TRY",
       setCurrency: (newCurrency) => {
         const prevCurrency = get().currency;
