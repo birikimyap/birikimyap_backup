@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  Vibration,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,12 +28,36 @@ const googleMark = require("../../pgn/google-mark.png");
 
 export default function LoginScreen() {
   const language = useFinanceStore((state) => state.language);
+  const setLanguage = useFinanceStore((state) => state.setLanguage);
+  const isHapticsEnabled = useFinanceStore((state) => state.isHapticsEnabled);
   const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
+  const triggerHaptic = () => {
+    if (isHapticsEnabled) {
+      Vibration.vibrate(10);
+    }
+  };
 
   const continueToApp = () => router.push("/intro");
 
   return (
     <SafeAreaView style={styles.safe}>
+      <View style={styles.headerLangContainer}>
+        <View style={styles.langSelectorWrap}>
+          <Pressable 
+            style={[styles.langBtn, language === "tr" && styles.langBtnActive]} 
+            onPress={() => { triggerHaptic(); setLanguage("tr"); }}
+          >
+            <Text style={[styles.langText, language === "tr" && styles.langTextActive]}>TR</Text>
+          </Pressable>
+          <Pressable 
+            style={[styles.langBtn, language === "en" && styles.langBtnActive]} 
+            onPress={() => { triggerHaptic(); setLanguage("en"); }}
+          >
+            <Text style={[styles.langText, language === "en" && styles.langTextActive]}>EN</Text>
+          </Pressable>
+        </View>
+      </View>
       <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -262,5 +287,39 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "700",
     color: colors.primary
+  },
+  headerLangContainer: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    zIndex: 10
+  },
+  langSelectorWrap: {
+    flexDirection: "row",
+    backgroundColor: "rgba(13,50,40,0.05)",
+    borderRadius: 20,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: "rgba(13,50,40,0.06)"
+  },
+  langBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  langBtnActive: {
+    backgroundColor: colors.primary
+  },
+  langText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.primaryMuted
+  },
+  langTextActive: {
+    color: colors.white
   }
 });
