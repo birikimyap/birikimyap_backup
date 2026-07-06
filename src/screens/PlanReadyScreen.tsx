@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFinanceStore } from "@/store/financeStore";
 import { colors, radius } from "@/theme";
 import { formatCurrency } from "@/utils/currency";
+import { translations } from "@/utils/translations";
 
 const mascot = require("../../pgn/mascot-cutout.png");
 
@@ -15,6 +16,9 @@ const waveBars = Array.from({ length: 12 }, (_, index) => ({
 }));
 
 export default function PlanReadyScreen() {
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
   const plan = useFinanceStore((state) => state.plan);
   const savingsGoal = useFinanceStore((state) => state.savingsGoal);
 
@@ -23,7 +27,7 @@ export default function PlanReadyScreen() {
   const dailyLimit = plan.limits.daily;
   const weeklyLimit = plan.limits.weekly;
   const monthlyLimit = plan.limits.monthly;
-  const goalType = savingsGoal.selectedGoal || savingsGoal.title || "Birikim hedefi";
+  const goalType = savingsGoal.selectedGoal || savingsGoal.title || (language === "tr" ? "Birikim hedefi" : "Savings goal");
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -39,19 +43,43 @@ export default function PlanReadyScreen() {
             ))}
           </View>
           <Image source={mascot} style={styles.mascot} resizeMode="contain" />
-          <Text style={styles.title}>Planın hazır! 🎉</Text>
-          <Text style={styles.subtitle}>Gelir, gider ve birikim hedefine göre sana özel harcama limitlerini oluşturduk.</Text>
+          <Text style={styles.title}>{language === "tr" ? "Planın hazır! 🎉" : "Your plan is ready! 🎉"}</Text>
+          <Text style={styles.subtitle}>
+            {language === "tr"
+              ? "Gelir, gider ve birikim hedefine göre sana özel harcama limitlerini oluşturduk."
+              : "We've created custom spending limits for you based on your income, expenses, and savings goals."}
+          </Text>
         </View>
 
         <View style={styles.mainCard}>
-          <Text style={styles.mainCardLabel}>Bu ay harcayabileceğin toplam tutar</Text>
+          <Text style={styles.mainCardLabel}>
+            {language === "tr" ? "Bu ay harcayabileceğin toplam tutar" : "Total amount you can spend this month"}
+          </Text>
           <Text style={styles.mainAmount}>{formatCurrency(spendableMonthlyBudget)}</Text>
         </View>
 
         <View style={styles.limitGrid}>
-          <LimitCard title="Günlük limit" value={dailyLimit} caption="Her gün harcama limitin" icon="calendar" tone="green" />
-          <LimitCard title="Haftalık limit" value={weeklyLimit} caption="Her hafta harcama limitin" icon="calendar" tone="orange" />
-          <LimitCard title="Aylık limit" value={monthlyLimit} caption="Bu ayki toplam limitin" icon="calendar" tone="purple" />
+          <LimitCard 
+            title={language === "tr" ? "Günlük limit" : "Daily limit"} 
+            value={dailyLimit} 
+            caption={language === "tr" ? "Her gün harcama limitin" : "Your spending limit every day"} 
+            icon="calendar" 
+            tone="green" 
+          />
+          <LimitCard 
+            title={language === "tr" ? "Haftalık limit" : "Weekly limit"} 
+            value={weeklyLimit} 
+            caption={language === "tr" ? "Her hafta harcama limitin" : "Your spending limit every week"} 
+            icon="calendar" 
+            tone="orange" 
+          />
+          <LimitCard 
+            title={language === "tr" ? "Aylık limit" : "Monthly limit"} 
+            value={monthlyLimit} 
+            caption={language === "tr" ? "Bu ayki toplam limitin" : "Your total limit this month"} 
+            icon="calendar" 
+            tone="purple" 
+          />
         </View>
 
         <View style={styles.savingsCard}>
@@ -59,21 +87,27 @@ export default function PlanReadyScreen() {
             <Feather name="target" size={28} color="#D06D1E" />
           </View>
           <View style={styles.savingsCopy}>
-            <Text style={styles.savingsTitle}>Birikim hedefin</Text>
+            <Text style={styles.savingsTitle}>{t("savingsGoalTitle")}</Text>
             <Text style={styles.savingsAmount}>{formatCurrency(selectedSavings)}</Text>
-            <Text style={styles.savingsCaption}>{goalType} için ay sonuna kadar seni takip edeceğiz.</Text>
+            <Text style={styles.savingsCaption}>
+              {language === "tr"
+                ? `${goalType} için ay sonuna kadar seni takip edeceğiz.`
+                : `We will track your progress for ${goalType} until the end of the month.`}
+            </Text>
           </View>
         </View>
 
         <Pressable onPress={() => router.replace("/home")} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
           <Feather name="star" size={25} color="#F2D38A" />
-          <Text style={styles.ctaText}>Finans panelime git</Text>
+          <Text style={styles.ctaText}>{language === "tr" ? "Finans panelime git" : "Go to my dashboard"}</Text>
           <Feather name="arrow-right" size={29} color={colors.white} />
         </Pressable>
 
         <View style={styles.securityRow}>
           <Feather name="lock" size={15} color="#9AA19D" />
-          <Text style={styles.securityText}>Verilerin 256-bit SSL ile korunur ve güvenle saklanır.</Text>
+          <Text style={styles.securityText}>
+            {language === "tr" ? "Verilerin güvenle saklanır." : "Your data is stored securely."}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>

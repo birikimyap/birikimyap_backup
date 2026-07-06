@@ -13,6 +13,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, spacing, typography } from "@/theme";
+import { useFinanceStore } from "@/store/financeStore";
+import { translations } from "@/utils/translations";
 
 type LoginButtonProps = {
   title: string;
@@ -24,6 +26,9 @@ const mascot = require("../../pgn/mascot-cutout.png");
 const googleMark = require("../../pgn/google-mark.png");
 
 export default function LoginScreen() {
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
   const continueToApp = () => router.push("/intro");
 
   return (
@@ -36,21 +41,30 @@ export default function LoginScreen() {
         >
           <View style={styles.hero}>
             <Image source={mascot} style={styles.mascot} resizeMode="contain" />
-            <Text style={styles.title}>Birikim Yap</Text>
-            <Text style={styles.subtitle}>Paranı daha kolay yönet,{"\n"}hedeflerine daha hızlı ulaş.</Text>
+            <Text style={styles.title}>{t("loginTitle")}</Text>
+            <Text style={styles.subtitle}>
+              {language === "tr" ? "Paranı daha kolay yönet,\nhedeflerine daha hızlı ulaş." : "Manage your money easily,\nreach your goals faster."}
+            </Text>
           </View>
 
           <View style={styles.actions}>
-            <LoginButton title="Apple ile devam et" kind="apple" onPress={continueToApp} />
-            <LoginButton title="Google ile devam et" kind="google" onPress={continueToApp} />
-            <LoginButton title="E-posta ile devam et" kind="email" onPress={continueToApp} />
+            <LoginButton title={language === "tr" ? "Apple ile devam et" : "Continue with Apple"} kind="apple" onPress={continueToApp} />
+            <LoginButton title={language === "tr" ? "Google ile devam et" : "Continue with Google"} kind="google" onPress={continueToApp} />
+            <LoginButton title={language === "tr" ? "E-posta ile devam et" : "Continue with Email"} kind="email" onPress={continueToApp} />
           </View>
 
           <View style={styles.legalBlock}>
-            <Text style={styles.legalText}>
-              Devam ederek <Text style={styles.legalLink}>Kullanım Şartları</Text> ve{"\n"}
-              <Text style={styles.legalLink}>Gizlilik Politikası</Text>’nı kabul etmiş olursun.
-            </Text>
+            {language === "tr" ? (
+              <Text style={styles.legalText}>
+                Devam ederek <Text style={styles.legalLink}>Kullanım Şartları</Text> ve{"\n"}
+                <Text style={styles.legalLink}>Gizlilik Politikası</Text>’nı kabul etmiş olursun.
+              </Text>
+            ) : (
+              <Text style={styles.legalText}>
+                By continuing, you agree to our <Text style={styles.legalLink}>Terms of Use</Text> and{"\n"}
+                <Text style={styles.legalLink}>Privacy Policy</Text>.
+              </Text>
+            )}
           </View>
 
           <View style={styles.trustRow}>
@@ -63,8 +77,8 @@ export default function LoginScreen() {
           </View>
 
           <Pressable onPress={continueToApp} style={({ pressed }) => [styles.loginPrompt, pressed && styles.pressedText]}>
-            <Text style={styles.loginMuted}>Zaten hesabın var mı? </Text>
-            <Text style={styles.loginLink}>Giriş yap</Text>
+            <Text style={styles.loginMuted}>{language === "tr" ? "Zaten hesabın var mı? " : "Already have an account? "}</Text>
+            <Text style={styles.loginLink}>{language === "tr" ? "Giriş yap" : "Log in"}</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -20,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFinanceStore } from "@/store/financeStore";
 import { colors, radius } from "@/theme";
 import { parseAmount } from "@/utils/currency";
+import { translations } from "@/utils/translations";
 
 type EditableIncomeRow = {
   id: string;
@@ -74,6 +75,28 @@ export default function IncomeSetupScreen() {
   const hasHydrated = useFinanceStore((state) => state.hasHydrated);
   const storedIncomes = useFinanceStore((state) => state.incomes);
   const setIncomes = useFinanceStore((state) => state.setIncomes);
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
+  const translateDefaultLabel = (id: string, field: "title" | "subtitle", val: string) => {
+    if (val !== "Maaş" && val !== "Freelance" && val !== "Ek gelir" && 
+        val !== "Düzenli gelir" && val !== "Serbest çalışma" && val !== "Yatırım, kira vb." &&
+        val !== "Salary" && val !== "Regular income" && val !== "Freelance work" && 
+        val !== "Extra income" && val !== "Investments, rent etc.") {
+      return val;
+    }
+    if (language === "tr") {
+      if (id === "salary") return field === "title" ? "Maaş" : "Düzenli gelir";
+      if (id === "freelance") return field === "title" ? "Freelance" : "Serbest çalışma";
+      if (id === "extra") return field === "title" ? "Ek gelir" : "Yatırım, kira vb.";
+    } else {
+      if (id === "salary") return field === "title" ? "Salary" : "Regular income";
+      if (id === "freelance") return field === "title" ? "Freelance" : "Freelance work";
+      if (id === "extra") return field === "title" ? "Extra income" : "Investments, rent etc.";
+    }
+    return val;
+  };
+
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [defaultRows, setDefaultRows] = useState<EditableIncomeRow[]>(
     defaultIncomeRows.map((row) => {
@@ -81,8 +104,8 @@ export default function IncomeSetupScreen() {
 
       return {
         id: row.id,
-        title: storedIncome?.label ?? row.title,
-        subtitle: storedIncome?.subtitle ?? row.subtitle,
+        title: translateDefaultLabel(row.id, "title", storedIncome?.label ?? row.title),
+        subtitle: translateDefaultLabel(row.id, "subtitle", storedIncome?.subtitle ?? row.subtitle),
         amount: storedIncome?.amount ? String(storedIncome.amount) : ""
       };
     })
@@ -91,8 +114,8 @@ export default function IncomeSetupScreen() {
     const usedIds = new Set(defaultIncomeRowIds);
     return storedIncomes.filter((income) => !defaultIncomeRowIds.has(income.id)).map((income) => ({
       id: getUniqueRowId(income.id, "custom-income", usedIds),
-      title: income.label || "Yeni gelir",
-      subtitle: income.subtitle || "Ek gelir kaynağı",
+      title: income.label || (language === "tr" ? "Yeni gelir" : "New income"),
+      subtitle: income.subtitle || (language === "tr" ? "Ek gelir kaynağı" : "Extra income source"),
       amount: income.amount ? String(income.amount) : ""
     }));
   });
@@ -100,15 +123,15 @@ export default function IncomeSetupScreen() {
   const buildIncomeRows = (nextDefaultRows: EditableIncomeRow[], nextCustomRows: EditableIncomeRow[]) => [
     ...nextDefaultRows.map((row, index) => ({
       id: row.id,
-      label: row.title.trim() || defaultIncomeRows[index].title,
-      subtitle: row.subtitle.trim() || "Açıklama",
+      label: row.title.trim() || translateDefaultLabel(row.id, "title", defaultIncomeRows[index].title),
+      subtitle: row.subtitle.trim() || translateDefaultLabel(row.id, "subtitle", defaultIncomeRows[index].subtitle),
       amount: parseAmount(row.amount),
       period: "monthly" as const
     })),
     ...nextCustomRows.map((row) => ({
       id: row.id,
-      label: row.title.trim() || "Gelir adı",
-      subtitle: row.subtitle.trim() || "Açıklama",
+      label: row.title.trim() || (language === "tr" ? "Gelir adı" : "Income name"),
+      subtitle: row.subtitle.trim() || (language === "tr" ? "Açıklama" : "Description"),
       amount: parseAmount(row.amount),
       period: "monthly" as const
     }))
@@ -139,8 +162,8 @@ export default function IncomeSetupScreen() {
 
         return {
           id: row.id,
-          title: storedIncome?.label ?? row.title,
-          subtitle: storedIncome?.subtitle ?? row.subtitle,
+          title: translateDefaultLabel(row.id, "title", storedIncome?.label ?? row.title),
+          subtitle: translateDefaultLabel(row.id, "subtitle", storedIncome?.subtitle ?? row.subtitle),
           amount: storedIncome?.amount ? String(storedIncome.amount) : ""
         };
       })
@@ -150,8 +173,8 @@ export default function IncomeSetupScreen() {
     setCustomRows(
       storedIncomes.filter((income) => !defaultIncomeRowIds.has(income.id)).map((income) => ({
         id: getUniqueRowId(income.id, "custom-income", usedIds),
-        title: income.label || "Yeni gelir",
-        subtitle: income.subtitle || "Ek gelir kaynağı",
+        title: income.label || (language === "tr" ? "Yeni gelir" : "New income"),
+        subtitle: income.subtitle || (language === "tr" ? "Ek gelir kaynağı" : "Extra income source"),
         amount: income.amount ? String(income.amount) : ""
       }))
     );
@@ -273,7 +296,7 @@ export default function IncomeSetupScreen() {
         renderLeftActions={() => (
           <Pressable onPress={() => removeCustomIncome(item.id)} style={({ pressed }) => [styles.deleteAction, pressed && styles.deleteActionPressed]}>
             <Feather name="trash-2" size={20} color={colors.white} />
-            <Text style={styles.deleteActionText}>Sil</Text>
+            <Text style={styles.deleteActionText}>{t("delete")}</Text>
           </Pressable>
         )}
       >
@@ -302,12 +325,16 @@ export default function IncomeSetupScreen() {
                 <Text style={[styles.sparkle, styles.sparkleRight]}>✦</Text>
                 <Image source={mascot} style={[styles.mascot, isKeyboardVisible && styles.mascotKeyboard]} resizeMode="contain" />
               </View>
-              <Text style={[styles.title, isKeyboardVisible && styles.titleKeyboard]}>Gelirlerini gir</Text>
-              <Text style={[styles.subtitle, isKeyboardVisible && styles.subtitleKeyboard]}>Gelirlerini ekle, sana özel harcama planını oluşturalım.</Text>
+              <Text style={[styles.title, isKeyboardVisible && styles.titleKeyboard]}>
+                {language === "tr" ? "Gelirlerini gir" : "Enter your incomes"}
+              </Text>
+              <Text style={[styles.subtitle, isKeyboardVisible && styles.subtitleKeyboard]}>
+                {language === "tr" ? "Gelirlerini ekle, sana özel harcama planını oluşturalım." : "Add your incomes, let us create your custom spending plan."}
+              </Text>
             </View>
 
             <View style={styles.form}>
-              <Text style={styles.sectionTitle}>Aylık gelirlerin</Text>
+              <Text style={styles.sectionTitle}>{t("incomeSubtitle")}</Text>
               <FlatList
                 ref={listRef}
                 data={rows}
@@ -326,7 +353,7 @@ export default function IncomeSetupScreen() {
 
               <Pressable onPress={addCustomIncome} style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
                 <Feather name="plus-circle" size={24} color={colors.primary} />
-                <Text style={styles.addButtonText}>Yeni gelir ekle</Text>
+                <Text style={styles.addButtonText}>{t("incomeAddBtn")}</Text>
               </Pressable>
             </View>
 
@@ -334,13 +361,15 @@ export default function IncomeSetupScreen() {
               <>
                 <Pressable onPress={saveAndContinue} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
                   <View style={styles.ctaSpacer} />
-                  <Text style={styles.ctaText}>Devam et</Text>
+                  <Text style={styles.ctaText}>{t("incomeNextBtn")}</Text>
                   <Feather name="arrow-right" size={26} color={colors.white} style={styles.ctaIcon} />
                 </Pressable>
 
                 <View style={styles.securityRow}>
                   <Feather name="lock" size={15} color="#8B928E" />
-                  <Text style={styles.securityText}>Verilerin güvenle saklanır.</Text>
+                  <Text style={styles.securityText}>
+                    {language === "tr" ? "Verilerin güvenle saklanır." : "Your data is stored securely."}
+                  </Text>
                 </View>
               </>
             )}
@@ -352,6 +381,8 @@ export default function IncomeSetupScreen() {
 }
 
 function IncomeRow({ title, subtitle, icon, tone, amount, onChangeText, onChangeTitle, onChangeSubtitle, onFocus }: IncomeRowProps) {
+  const language = useFinanceStore((state) => state.language);
+
   return (
     <View style={styles.incomeCard}>
       <View style={[styles.iconBox, styles[`${tone}IconBox`]]}>
@@ -362,7 +393,7 @@ function IncomeRow({ title, subtitle, icon, tone, amount, onChangeText, onChange
           value={title}
           onChangeText={onChangeTitle}
           onFocus={onFocus}
-          placeholder="Gelir adı"
+          placeholder={language === "tr" ? "Gelir adı" : "Income name"}
           placeholderTextColor="#9CA19E"
           style={styles.incomeTitleInput}
         />
@@ -370,7 +401,7 @@ function IncomeRow({ title, subtitle, icon, tone, amount, onChangeText, onChange
           value={subtitle}
           onChangeText={onChangeSubtitle}
           onFocus={onFocus}
-          placeholder="Açıklama"
+          placeholder={language === "tr" ? "Açıklama" : "Description"}
           placeholderTextColor="#9CA19E"
           style={styles.incomeSubtitleInput}
         />

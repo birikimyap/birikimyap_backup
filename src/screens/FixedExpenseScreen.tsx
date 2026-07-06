@@ -20,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFinanceStore } from "@/store/financeStore";
 import { colors, radius } from "@/theme";
 import { parseAmount } from "@/utils/currency";
+import { translations } from "@/utils/translations";
 
 type EditableExpenseRow = {
   id: string;
@@ -76,6 +77,28 @@ export default function FixedExpenseScreen() {
   const storedExpenses = useFinanceStore((state) => state.expenses);
   const setFixedExpenses = useFinanceStore((state) => state.setFixedExpenses);
   const storedFixedExpenses = storedExpenses.filter((expense) => expense.isFixed);
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
+  const translateDefaultLabel = (id: string, field: "title" | "subtitle", val: string) => {
+    if (val !== "Kira" && val !== "Ev veya iş yeri kirası" && val !== "Faturalar" && 
+        val !== "Elektrik, su, doğalgaz vb." && val !== "Ulaşım" && val !== "Toplu taşıma, akaryakıt vb." &&
+        val !== "Rent" && val !== "Home or work rent" && val !== "Bills" && 
+        val !== "Electricity, water, natural gas etc." && val !== "Transportation" && val !== "Public transport, fuel etc.") {
+      return val;
+    }
+    if (language === "tr") {
+      if (id === "rent") return field === "title" ? "Kira" : "Ev veya iş yeri kirası";
+      if (id === "bills") return field === "title" ? "Faturalar" : "Elektrik, su, doğalgaz vb.";
+      if (id === "transport") return field === "title" ? "Ulaşım" : "Toplu taşıma, akaryakıt vb.";
+    } else {
+      if (id === "rent") return field === "title" ? "Rent" : "Home or work rent";
+      if (id === "bills") return field === "title" ? "Bills" : "Electricity, water, natural gas etc.";
+      if (id === "transport") return field === "title" ? "Transportation" : "Public transport, fuel etc.";
+    }
+    return val;
+  };
+
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [defaultRows, setDefaultRows] = useState<EditableExpenseRow[]>(
     defaultExpenseRows.map((row) => {
@@ -83,8 +106,8 @@ export default function FixedExpenseScreen() {
 
       return {
         id: row.id,
-        title: storedExpense?.label ?? row.title,
-        subtitle: storedExpense?.subtitle ?? row.subtitle,
+        title: translateDefaultLabel(row.id, "title", storedExpense?.label ?? row.title),
+        subtitle: translateDefaultLabel(row.id, "subtitle", storedExpense?.subtitle ?? row.subtitle),
         amount: storedExpense?.amount ? String(storedExpense.amount) : ""
       };
     })
@@ -93,8 +116,8 @@ export default function FixedExpenseScreen() {
     const usedIds = new Set(defaultExpenseRowIds);
     return storedFixedExpenses.filter((expense) => !defaultExpenseRowIds.has(expense.id)).map((expense) => ({
       id: getUniqueRowId(expense.id, "custom-expense", usedIds),
-      title: expense.label || "Yeni gider",
-      subtitle: expense.subtitle || "Sabit gider",
+      title: expense.label || (language === "tr" ? "Yeni gider" : "New expense"),
+      subtitle: expense.subtitle || (language === "tr" ? "Sabit gider" : "Fixed expense"),
       amount: expense.amount ? String(expense.amount) : ""
     }));
   });
@@ -102,16 +125,16 @@ export default function FixedExpenseScreen() {
   const buildExpenseRows = (nextDefaultRows: EditableExpenseRow[], nextCustomRows: EditableExpenseRow[]) => [
     ...nextDefaultRows.map((row, index) => ({
       id: row.id,
-      label: row.title.trim() || defaultExpenseRows[index].title,
-      subtitle: row.subtitle.trim() || "Açıklama",
+      label: row.title.trim() || translateDefaultLabel(row.id, "title", defaultExpenseRows[index].title),
+      subtitle: row.subtitle.trim() || translateDefaultLabel(row.id, "subtitle", defaultExpenseRows[index].subtitle),
       amount: parseAmount(row.amount),
       period: "monthly" as const,
       isFixed: true
     })),
     ...nextCustomRows.map((row) => ({
       id: row.id,
-      label: row.title.trim() || "Gider adı",
-      subtitle: row.subtitle.trim() || "Açıklama",
+      label: row.title.trim() || (language === "tr" ? "Gider adı" : "Expense name"),
+      subtitle: row.subtitle.trim() || (language === "tr" ? "Açıklama" : "Description"),
       amount: parseAmount(row.amount),
       period: "monthly" as const,
       isFixed: true
@@ -144,8 +167,8 @@ export default function FixedExpenseScreen() {
 
         return {
           id: row.id,
-          title: storedExpense?.label ?? row.title,
-          subtitle: storedExpense?.subtitle ?? row.subtitle,
+          title: translateDefaultLabel(row.id, "title", storedExpense?.label ?? row.title),
+          subtitle: translateDefaultLabel(row.id, "subtitle", storedExpense?.subtitle ?? row.subtitle),
           amount: storedExpense?.amount ? String(storedExpense.amount) : ""
         };
       })
@@ -155,8 +178,8 @@ export default function FixedExpenseScreen() {
     setCustomRows(
       fixedExpenses.filter((expense) => !defaultExpenseRowIds.has(expense.id)).map((expense) => ({
         id: getUniqueRowId(expense.id, "custom-expense", usedIds),
-        title: expense.label || "Yeni gider",
-        subtitle: expense.subtitle || "Sabit gider",
+        title: expense.label || (language === "tr" ? "Yeni gider" : "New expense"),
+        subtitle: expense.subtitle || (language === "tr" ? "Sabit gider" : "Fixed expense"),
         amount: expense.amount ? String(expense.amount) : ""
       }))
     );
@@ -278,7 +301,7 @@ export default function FixedExpenseScreen() {
         renderLeftActions={() => (
           <Pressable onPress={() => removeCustomExpense(item.id)} style={({ pressed }) => [styles.deleteAction, pressed && styles.deleteActionPressed]}>
             <Feather name="trash-2" size={20} color={colors.white} />
-            <Text style={styles.deleteActionText}>Sil</Text>
+            <Text style={styles.deleteActionText}>{t("delete")}</Text>
           </Pressable>
         )}
       >
@@ -307,12 +330,16 @@ export default function FixedExpenseScreen() {
                 <Text style={[styles.sparkle, styles.sparkleRight]}>✦</Text>
                 <Image source={mascot} style={[styles.mascot, isKeyboardVisible && styles.mascotKeyboard]} resizeMode="contain" />
               </View>
-              <Text style={[styles.title, isKeyboardVisible && styles.titleKeyboard]}>Sabit giderlerini gir</Text>
-              <Text style={[styles.subtitle, isKeyboardVisible && styles.subtitleKeyboard]}>Düzenli giderlerini ekle, gerçek harcama limitini hesaplayalım.</Text>
+              <Text style={[styles.title, isKeyboardVisible && styles.titleKeyboard]}>
+                {language === "tr" ? "Sabit giderlerini gir" : "Enter fixed expenses"}
+              </Text>
+              <Text style={[styles.subtitle, isKeyboardVisible && styles.subtitleKeyboard]}>
+                {language === "tr" ? "Düzenli giderlerini ekle, gerçek harcama limitini hesaplayalım." : "Add your regular expenses, let us calculate your real spend limits."}
+              </Text>
             </View>
 
             <View style={styles.form}>
-              <Text style={styles.sectionTitle}>Aylık sabit giderlerin</Text>
+              <Text style={styles.sectionTitle}>{t("fixedExpenseTitle")}</Text>
               <FlatList
                 ref={listRef}
                 data={rows}
@@ -331,7 +358,7 @@ export default function FixedExpenseScreen() {
 
               <Pressable onPress={addCustomExpense} style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
                 <Feather name="plus-circle" size={24} color={expenseAccent} />
-                <Text style={styles.addButtonText}>Yeni gider ekle</Text>
+                <Text style={styles.addButtonText}>{t("fixedExpenseAddBtn")}</Text>
               </Pressable>
             </View>
 
@@ -339,13 +366,15 @@ export default function FixedExpenseScreen() {
               <>
                 <Pressable onPress={saveAndContinue} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
                   <View style={styles.ctaSpacer} />
-                  <Text style={styles.ctaText}>Devam et</Text>
+                  <Text style={styles.ctaText}>{t("incomeNextBtn")}</Text>
                   <Feather name="arrow-right" size={26} color={colors.white} style={styles.ctaIcon} />
                 </Pressable>
 
                 <View style={styles.securityRow}>
                   <Feather name="lock" size={15} color="#8B928E" />
-                  <Text style={styles.securityText}>Verilerin güvenle saklanır.</Text>
+                  <Text style={styles.securityText}>
+                    {language === "tr" ? "Verilerin güvenle saklanır." : "Your data is stored securely."}
+                  </Text>
                 </View>
               </>
             )}
@@ -357,6 +386,8 @@ export default function FixedExpenseScreen() {
 }
 
 function ExpenseAmountRow({ title, subtitle, icon, tone, amount, onChangeText, onChangeTitle, onChangeSubtitle, onFocus }: ExpenseRowProps) {
+  const language = useFinanceStore((state) => state.language);
+
   return (
     <View style={styles.expenseCard}>
       <View style={[styles.iconBox, styles[`${tone}IconBox`]]}>
@@ -367,7 +398,7 @@ function ExpenseAmountRow({ title, subtitle, icon, tone, amount, onChangeText, o
           value={title}
           onChangeText={onChangeTitle}
           onFocus={onFocus}
-          placeholder="Gider adı"
+          placeholder={language === "tr" ? "Gider adı" : "Expense name"}
           placeholderTextColor="#9CA19E"
           style={styles.expenseTitleInput}
         />
@@ -375,7 +406,7 @@ function ExpenseAmountRow({ title, subtitle, icon, tone, amount, onChangeText, o
           value={subtitle}
           onChangeText={onChangeSubtitle}
           onFocus={onFocus}
-          placeholder="Açıklama"
+          placeholder={language === "tr" ? "Açıklama" : "Description"}
           placeholderTextColor="#9CA19E"
           style={styles.expenseSubtitleInput}
         />

@@ -4,6 +4,8 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, radius, spacing } from "@/theme";
+import { useFinanceStore } from "@/store/financeStore";
+import { translations } from "@/utils/translations";
 
 type FeatureItem = {
   id: string;
@@ -14,26 +16,31 @@ type FeatureItem = {
 
 const mascot = require("../../pgn/mascot-cutout.png");
 
-const features: FeatureItem[] = [
-  {
-    id: "income-expense",
-    title: "Gelir ve giderlerini ekle",
-    icon: "credit-card"
-  },
-  {
-    id: "savings-goal",
-    title: "Birikim hedefini belirle",
-    icon: "target"
-  },
-  {
-    id: "voice-expense",
-    title: "Sesli harcama ekle",
-    icon: "mic",
-    highlighted: true
-  }
-];
+// Static configuration removed to support dynamic translations
 
 export default function IntroFeatureScreen() {
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
+  const features: FeatureItem[] = [
+    {
+      id: "income-expense",
+      title: language === "tr" ? "Gelir ve giderlerini ekle" : "Add income and expenses",
+      icon: "credit-card"
+    },
+    {
+      id: "savings-goal",
+      title: language === "tr" ? "Birikim hedefini belirle" : "Set your savings goal",
+      icon: "target"
+    },
+    {
+      id: "voice-expense",
+      title: language === "tr" ? "Sesli harcama ekle" : "Add voice expense",
+      icon: "mic",
+      highlighted: true
+    }
+  ];
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
@@ -49,9 +56,13 @@ export default function IntroFeatureScreen() {
             <Image source={mascot} style={styles.mascot} resizeMode="contain" />
           </View>
 
-          <Text style={styles.heading}>Paranı yönetmek artık daha kolay</Text>
+          <Text style={styles.heading}>
+            {language === "tr" ? "Paranı yönetmek artık daha kolay" : "Managing money is now easier"}
+          </Text>
           <Text style={styles.subtitle}>
-            Gelirini, giderini ve birikim hedefini gir; sana özel harcama limitini oluşturalım.
+            {language === "tr" 
+              ? "Gelirini, giderini ve birikim hedefini gir; sana özel harcama limitini oluşturalım." 
+              : "Enter your income, expense and savings goal; let us create your personalized budget limits."}
           </Text>
         </View>
 
@@ -66,7 +77,7 @@ export default function IntroFeatureScreen() {
           style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
         >
           <View style={styles.ctaSpacer} />
-          <Text style={styles.ctaText}>Başlayalım</Text>
+          <Text style={styles.ctaText}>{language === "tr" ? "Başlayalım" : "Let's Start"}</Text>
           <Feather name="arrow-right" size={26} color={colors.white} style={styles.ctaIcon} />
         </Pressable>
       </ScrollView>
@@ -75,6 +86,8 @@ export default function IntroFeatureScreen() {
 }
 
 function FeatureCard({ feature }: { feature: FeatureItem }) {
+  const language = useFinanceStore((state) => state.language);
+  
   return (
     <View style={[styles.featureRow, feature.highlighted && styles.featureRowHighlighted]}>
       <View style={[styles.iconBox, feature.highlighted && styles.iconBoxHighlighted]}>
@@ -83,13 +96,15 @@ function FeatureCard({ feature }: { feature: FeatureItem }) {
       <View style={styles.featureCopy}>
         {feature.highlighted ? (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>YENİ</Text>
+            <Text style={styles.badgeText}>{language === "tr" ? "YENİ" : "NEW"}</Text>
           </View>
         ) : null}
         <Text style={styles.featureTitle}>{feature.title}</Text>
         {feature.highlighted ? (
           <Text style={styles.exampleText}>
-            Örneğin: ‘120 lira kahve harcadım’ dediğinde otomatik kaydedilir.
+            {language === "tr" 
+              ? "Örneğin: ‘120 lira kahve harcadım’ dediğinde otomatik kaydedilir." 
+              : "For example: When you say 'spent 120 dollars on coffee', it is saved automatically."}
           </Text>
         ) : null}
       </View>

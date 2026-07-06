@@ -26,6 +26,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod } from "@/utils/finance";
+import { translations } from "@/utils/translations";
 
 const mascot = require("../../pgn/mascot-cutout.png");
 
@@ -37,41 +38,7 @@ const voiceWaveBars = [
   { id: "voice-sheet-wave-5", value: 4 }
 ];
 
-const periods: Array<{ value: Period; label: string; icon: keyof typeof Feather.glyphMap }> = [
-  { value: "daily", label: "Bugün", icon: "calendar" },
-  { value: "weekly", label: "Bu hafta", icon: "calendar" },
-  { value: "monthly", label: "Bu ay", icon: "calendar" }
-];
-
-const periodCopy = {
-  daily: {
-    main: "Bugün harcayabileceğin",
-    limit: "Limit",
-    spent: "Harcanan",
-    remaining: "Kalan",
-    limitCaption: "Günlük limit",
-    spentCaption: "Toplam harcanan",
-    remainingCaption: "Kalan limit"
-  },
-  weekly: {
-    main: "Bu hafta harcayabileceğin",
-    limit: "Limit",
-    spent: "Harcanan",
-    remaining: "Kalan",
-    limitCaption: "Haftalık limit",
-    spentCaption: "Toplam harcanan",
-    remainingCaption: "Kalan limit"
-  },
-  monthly: {
-    main: "Bu ay harcayabileceğin",
-    limit: "Limit",
-    spent: "Harcanan",
-    remaining: "Kalan",
-    limitCaption: "Aylık limit",
-    spentCaption: "Toplam harcanan",
-    remainingCaption: "Kalan limit"
-  }
-} satisfies Record<Period, Record<string, string>>;
+// Static configurations removed to enable dynamic translations
 
 
 export default function HomeDashboardScreen() {
@@ -88,6 +55,54 @@ export default function HomeDashboardScreen() {
   const totalFixedExpenses = useFinanceStore((state) => state.getTotalFixedExpenses());
   const setIsDarkMode = useFinanceStore((state) => state.setIsDarkMode);
   const setIsHapticsEnabled = useFinanceStore((state) => state.setIsHapticsEnabled);
+  const language = useFinanceStore((state) => state.language);
+  const setLanguage = useFinanceStore((state) => state.setLanguage);
+
+  const t = (key: keyof typeof translations["tr"], variables?: Record<string, string>): string => {
+    let str: string = translations[language][key] || key;
+    if (variables) {
+      Object.entries(variables).forEach(([k, v]) => {
+        str = str.replace(`{{${k}}}`, v);
+      });
+    }
+    return str;
+  };
+
+  const periods: Array<{ value: Period; label: string; icon: keyof typeof Feather.glyphMap }> = [
+    { value: "daily", label: language === "tr" ? "Bugün" : "Today", icon: "calendar" },
+    { value: "weekly", label: language === "tr" ? "Bu hafta" : "This week", icon: "calendar" },
+    { value: "monthly", label: language === "tr" ? "Bu ay" : "This month", icon: "calendar" }
+  ];
+
+  const periodCopy = {
+    daily: {
+      main: language === "tr" ? "Bugün harcayabileceğin" : "Spendable today",
+      limit: language === "tr" ? "Limit" : "Limit",
+      spent: language === "tr" ? "Harcanan" : "Spent",
+      remaining: language === "tr" ? "Kalan" : "Remaining",
+      limitCaption: language === "tr" ? "Günlük limit" : "Daily limit",
+      spentCaption: language === "tr" ? "Toplam harcanan" : "Total spent",
+      remainingCaption: language === "tr" ? "Kalan limit" : "Remaining limit"
+    },
+    weekly: {
+      main: language === "tr" ? "Bu hafta harcayabileceğin" : "Spendable this week",
+      limit: language === "tr" ? "Limit" : "Limit",
+      spent: language === "tr" ? "Harcanan" : "Spent",
+      remaining: language === "tr" ? "Kalan" : "Remaining",
+      limitCaption: language === "tr" ? "Haftalık limit" : "Weekly limit",
+      spentCaption: language === "tr" ? "Toplam harcanan" : "Total spent",
+      remainingCaption: language === "tr" ? "Kalan limit" : "Remaining limit"
+    },
+    monthly: {
+      main: language === "tr" ? "Bu ay harcayabileceğin" : "Spendable this month",
+      limit: language === "tr" ? "Limit" : "Limit",
+      spent: language === "tr" ? "Harcanan" : "Spent",
+      remaining: language === "tr" ? "Kalan" : "Remaining",
+      limitCaption: language === "tr" ? "Aylık limit" : "Monthly limit",
+      spentCaption: language === "tr" ? "Toplam harcanan" : "Total spent",
+      remainingCaption: language === "tr" ? "Kalan limit" : "Remaining limit"
+    }
+  };
   
   const [isSheetVisible, setIsSheetVisible] = useState(false);
   const [recentListHeight, setRecentListHeight] = useState(0);
@@ -194,8 +209,8 @@ export default function HomeDashboardScreen() {
 
         setToastConfig({
           visible: true,
-          message: `${formatCurrency(numericAmount)} Harcama Eklendi`,
-          subtext: `${expense.label} başarıyla kaydedildi! 🎯`
+          message: `${formatCurrency(numericAmount)} ${t("toastAdded")}`,
+          subtext: `${expense.label} ${t("toastAddedSub")}`
         });
         setIsDirectVoiceActive(false);
       } else {
@@ -314,8 +329,8 @@ export default function HomeDashboardScreen() {
       <View style={styles.tabContentContainer}>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
-            <Text style={[styles.greeting, { color: themeColors.text }]}>Hoş geldin, Gürkan 👋</Text>
-            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>Bugün finansal hedeflerine bir adım daha yaklaştın.</Text>
+            <Text style={[styles.greeting, { color: themeColors.text }]}>{t("welcomeUser")}</Text>
+            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
           </View>
           <Pressable 
             style={({ pressed }) => [
@@ -334,18 +349,20 @@ export default function HomeDashboardScreen() {
           <View style={styles.heroCopy}>
             <View style={styles.goalBadge}>
               <Text style={styles.goalBadgeIcon}>🎯</Text>
-              <Text style={styles.goalBadgeText}>BİRİKİM HEDEFİN</Text>
+              <Text style={styles.goalBadgeText}>{t("savingsGoalTitle").toUpperCase()}</Text>
             </View>
-            <Text style={styles.heroSubtitle}>Hedefin</Text>
+            <Text style={styles.heroSubtitle}>{language === "tr" ? "Hedefin" : "Your Goal"}</Text>
             <Text style={styles.heroAmount}>{formatCurrency(goalTargetAmount)}</Text>
             <View style={styles.savedAmountBlock}>
-              <Text style={styles.savedAmountTitle}>Bugüne kadar biriktirdiğin</Text>
+              <Text style={styles.savedAmountTitle}>{language === "tr" ? "Bugüne kadar biriktirdiğin" : "Accumulated so far"}</Text>
               <Text style={styles.savedAmountValue}>{formatCurrency(goalSavedAmount)}</Text>
             </View>
             <View style={styles.heroProgressTrack}>
               <View style={[styles.heroProgressFill, { width: `${goalProgress * 100}%` }]} />
             </View>
-            <Text style={styles.heroPercentText}>Hedefin %{goalProgressPercent}’i tamamlandı</Text>
+            <Text style={styles.heroPercentText}>
+              {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
+            </Text>
           </View>
           <View style={styles.heroMascot}>
             <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
@@ -387,7 +404,7 @@ export default function HomeDashboardScreen() {
               <View style={styles.addIconWrap}>
                 <Feather name="plus" size={18} color={colors.primary} />
               </View>
-              <Text style={styles.addText}>Harcama Ekle</Text>
+              <Text style={styles.addText}>{t("addExpenseBtn")}</Text>
             </LinearGradient>
           </Pressable>
 
@@ -402,7 +419,7 @@ export default function HomeDashboardScreen() {
               <View style={styles.voiceIconWrap}>
                 <Feather name="mic" size={18} color="#DF7A12" />
               </View>
-              <Text style={styles.voiceText}>Sesli Ekle</Text>
+              <Text style={styles.voiceText}>{t("voiceAddBtn")}</Text>
             </LinearGradient>
           </Pressable>
         </View>
@@ -433,8 +450,8 @@ export default function HomeDashboardScreen() {
 
         <View style={styles.recentSection}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>Son harcamalar</Text>
-            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>Toplam miktar: {formatCurrency(recentTotal)}</Text>
+            <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>{t("recentSectionTitle")}</Text>
+            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>{t("recentSectionTotal")}: {formatCurrency(recentTotal)}</Text>
           </View>
 
           <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
@@ -451,8 +468,8 @@ export default function HomeDashboardScreen() {
               ListEmptyComponent={
                 <View style={[styles.emptyExpenses, { backgroundColor: themeColors.surface }]}>
                   <Feather name="inbox" size={28} color={themeColors.textMuted} />
-                  <Text style={[styles.emptyExpensesText, { color: themeColors.text }]}>Henüz harcama eklemedin.</Text>
-                  <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>Harcamalarını ekleyerek takibini kolayca yapabilirsin.</Text>
+                  <Text style={[styles.emptyExpensesText, { color: themeColors.text }]}>{t("emptyExpenses")}</Text>
+                  <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>{t("emptyExpensesSub")}</Text>
                 </View>
               }
               renderItem={({ item, index }) => (
@@ -494,8 +511,8 @@ export default function HomeDashboardScreen() {
       <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
-            <Text style={[styles.greeting, { color: themeColors.text }]}>Harcama Analizi</Text>
-            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>Bu dönem yaptığın harcamaların dağılımı.</Text>
+            <Text style={[styles.greeting, { color: themeColors.text }]}>{t("analysisTitle")}</Text>
+            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("analysisSubtitle")}</Text>
           </View>
         </View>
 
@@ -511,7 +528,7 @@ export default function HomeDashboardScreen() {
               setAnalysisPeriod("weekly");
             }}
           >
-            <Text style={[styles.segmentText, { color: analysisPeriod === "weekly" ? themeColors.text : themeColors.textMuted }]}>Haftalık</Text>
+            <Text style={[styles.segmentText, { color: analysisPeriod === "weekly" ? themeColors.text : themeColors.textMuted }]}>{t("analysisPeriodWeekly")}</Text>
           </Pressable>
           <Pressable 
             style={[
@@ -523,14 +540,14 @@ export default function HomeDashboardScreen() {
               setAnalysisPeriod("monthly");
             }}
           >
-            <Text style={[styles.segmentText, { color: analysisPeriod === "monthly" ? themeColors.text : themeColors.textMuted }]}>Aylık</Text>
+            <Text style={[styles.segmentText, { color: analysisPeriod === "monthly" ? themeColors.text : themeColors.textMuted }]}>{t("analysisPeriodMonthly")}</Text>
           </Pressable>
         </View>
 
         {/* Dynamic Trend Bar Chart */}
         <View style={[styles.analysisCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
           <Text style={[styles.analysisCardTitle, { color: themeColors.text }]}>
-            {analysisPeriod === "weekly" ? "Son 7 Günlük Gidişat" : "Aylık Gidişat (Haftalık)"}
+            {analysisPeriod === "weekly" ? t("analysisChartWeeklyTitle") : t("analysisChartMonthlyTitle")}
           </Text>
           <View style={styles.chartRow}>
             {activeChartData.map((day, idx) => (
@@ -557,10 +574,10 @@ export default function HomeDashboardScreen() {
           <View style={[styles.insightCard, { backgroundColor: isDarkMode ? "rgba(20,60,40,0.14)" : "#EAF5F0", borderColor: themeColors.border }]}>
             <View style={styles.insightHeader}>
               <Feather name="info" size={16} color={themeColors.primary} />
-              <Text style={[styles.insightTitle, { color: themeColors.primary }]}>Akıllı Finans Önerisi</Text>
+              <Text style={[styles.insightTitle, { color: themeColors.primary }]}>{t("analysisAiTipTitle")}</Text>
             </View>
             <Text style={[styles.insightBody, { color: themeColors.text }]}>
-              Bu dönem en fazla harcamayı <Text style={{ fontWeight: "800" }}>{highestCategory}</Text> kategorisinde yaptınız. Birikim hedefinize ulaşmak için bu alandaki harcamalanızı biraz dengelemeyi düşünebilirsiniz.
+              {t("analysisAiTipBody", { category: highestCategory })}
             </Text>
           </View>
         )}
@@ -568,16 +585,16 @@ export default function HomeDashboardScreen() {
         {/* Categories breakdown */}
         <View style={styles.recentSection}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>Kategorilere Göre</Text>
-            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>Toplam: {formatCurrency(recentTotal)}</Text>
+            <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>{t("analysisCategoryHeader")}</Text>
+            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>{t("analysisCategoryTotal")}: {formatCurrency(recentTotal)}</Text>
           </View>
 
           <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, padding: 16, flex: 1, minHeight: 220 }]}>
             {analysisCategoryData.length === 0 ? (
               <View style={styles.emptyExpenses}>
                 <Feather name="bar-chart-2" size={28} color={themeColors.textMuted} />
-                <Text style={[styles.emptyExpensesText, { color: themeColors.text }]}>Gösterilecek veri yok.</Text>
-                <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>Harcama ekledikçe kategorisel analiz burada belirecektir.</Text>
+                <Text style={[styles.emptyExpensesText, { color: themeColors.text }]}>{t("analysisNoData")}</Text>
+                <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>{t("analysisNoDataSub")}</Text>
               </View>
             ) : (
               <View style={{ gap: 16 }}>
@@ -615,8 +632,8 @@ export default function HomeDashboardScreen() {
       <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
-            <Text style={[styles.greeting, { color: themeColors.text }]}>Profil & Ayarlar</Text>
-            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>Uygulama ayarlarını ve bütçe limitlerini yönet.</Text>
+            <Text style={[styles.greeting, { color: themeColors.text }]}>{t("profileTitle")}</Text>
+            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("profileSubtitle")}</Text>
           </View>
         </View>
 
@@ -633,17 +650,17 @@ export default function HomeDashboardScreen() {
 
         {/* Budget summary card */}
         <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", gap: 14, paddingVertical: 16 }]}>
-          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>Bütçe Özetin</Text>
+          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>{t("profileBudgetSummary")}</Text>
           
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Aylık Toplam Gelir</Text>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileIncomeLabel")}</Text>
             <Text style={[styles.profileBudgetVal, { color: themeColors.primary, fontWeight: "800" }]}>{formatCurrency(totalIncome)}</Text>
           </View>
           
           <View style={[styles.expenseDivider, { backgroundColor: themeColors.border, marginVertical: 2 }]} />
           
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Sabit Giderler</Text>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileFixedExpenseLabel")}</Text>
             <Text style={[styles.profileBudgetVal, { color: "#DF7A12", fontWeight: "800" }]}>{formatCurrency(totalFixedExpenses)}</Text>
           </View>
 
@@ -657,7 +674,7 @@ export default function HomeDashboardScreen() {
                 router.push("/income-setup");
               }}
             >
-              <Text style={[styles.profileSubActionButtonText, { color: themeColors.primary }]}>Gelirleri Düzenle</Text>
+              <Text style={[styles.profileSubActionButtonText, { color: themeColors.primary }]}>{t("profileEditIncomeBtn")}</Text>
             </Pressable>
             <Pressable 
               style={({ pressed }) => [styles.profileSubActionButton, pressed && styles.pressed]}
@@ -666,24 +683,24 @@ export default function HomeDashboardScreen() {
                 router.push("/fixed-expense");
               }}
             >
-              <Text style={[styles.profileSubActionButtonText, { color: "#DF7A12" }]}>Giderleri Düzenle</Text>
+              <Text style={[styles.profileSubActionButtonText, { color: "#DF7A12" }]}>{t("profileEditExpenseBtn")}</Text>
             </Pressable>
           </View>
         </View>
 
         {/* Savings Goal Management Card */}
         <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", gap: 10, paddingVertical: 14 }]}>
-          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>Birikim Hedefin</Text>
+          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>{t("profileSavingsGoalHeader")}</Text>
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Hedef Adı</Text>
-            <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{savingsGoal.title || "Belirtilmedi"}</Text>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileGoalName")}</Text>
+            <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{savingsGoal.title || (language === "tr" ? "Belirtilmedi" : "Unspecified")}</Text>
           </View>
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Hedef Tutar</Text>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileGoalTarget")}</Text>
             <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{formatCurrency(savingsGoal.targetAmount)}</Text>
           </View>
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Biriken Tutar</Text>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileGoalSaved")}</Text>
             <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{formatCurrency(savingsGoal.currentAmount)}</Text>
           </View>
           
@@ -701,7 +718,7 @@ export default function HomeDashboardScreen() {
               setIsGoalModalVisible(true);
             }}
           >
-            <Text style={[styles.profileEditButtonText, { color: themeColors.primary }]}>Birikim Hedefini Düzenle</Text>
+            <Text style={[styles.profileEditButtonText, { color: themeColors.primary }]}>{t("profileEditGoalBtn")}</Text>
           </Pressable>
         </View>
 
@@ -710,7 +727,7 @@ export default function HomeDashboardScreen() {
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
               <Feather name="moon" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Karanlık Mod (Dark Mode)</Text>
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>{t("profileSettingDarkMode")}</Text>
             </View>
             <Switch
               value={isDarkMode}
@@ -728,7 +745,7 @@ export default function HomeDashboardScreen() {
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
               <Feather name="activity" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Titreşim Geri Bildirimi</Text>
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>{t("profileSettingHaptics")}</Text>
             </View>
             <Switch
               value={isHapticsEnabled}
@@ -740,6 +757,29 @@ export default function HomeDashboardScreen() {
               thumbColor={colors.white}
             />
           </View>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconWrap}>
+              <Feather name="globe" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>{t("profileSettingLanguage")}</Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 6 }}>
+              <Pressable 
+                onPress={() => { triggerHaptic(); setLanguage("tr"); }}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "tr" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "800", color: language === "tr" ? colors.white : themeColors.text }}>TR</Text>
+              </Pressable>
+              <Pressable 
+                onPress={() => { triggerHaptic(); setLanguage("en"); }}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "en" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "800", color: language === "en" ? colors.white : themeColors.text }}>EN</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
 
         {/* Support & Information Card */}
@@ -750,14 +790,14 @@ export default function HomeDashboardScreen() {
               triggerHaptic();
               setToastConfig({
                 visible: true,
-                message: "Destek Adresi Kopyalandı",
-                subtext: "support@birikimyap.com adresine mail atabilirsiniz! 📬"
+                message: t("sheetContactToast"),
+                subtext: t("sheetContactToastSub")
               });
             }}
           >
             <View style={styles.settingIconWrap}>
               <Feather name="mail" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Bize Ulaşın</Text>
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>{t("profileSettingContact")}</Text>
             </View>
             <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
           </Pressable>
@@ -773,7 +813,7 @@ export default function HomeDashboardScreen() {
           >
             <View style={styles.settingIconWrap}>
               <Feather name="help-circle" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Sıkça Sorulan Sorular (SSS)</Text>
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>{t("profileSettingFaq")}</Text>
             </View>
             <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
           </Pressable>
@@ -789,7 +829,7 @@ export default function HomeDashboardScreen() {
           >
             <View style={styles.settingIconWrap}>
               <Feather name="info" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>Uygulama Hakkında</Text>
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>{t("profileSettingAbout")}</Text>
             </View>
             <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
           </Pressable>
@@ -806,7 +846,7 @@ export default function HomeDashboardScreen() {
           >
             <View style={styles.settingIconWrap}>
               <Feather name="trash-2" size={20} color={themeColors.danger} />
-              <Text style={[styles.settingLabel, { color: themeColors.danger }]}>Tüm Verileri Sıfırla</Text>
+              <Text style={[styles.settingLabel, { color: themeColors.danger }]}>{t("profileSettingReset")}</Text>
             </View>
             <Feather name="chevron-right" size={20} color={themeColors.danger} />
           </Pressable>
@@ -827,19 +867,19 @@ export default function HomeDashboardScreen() {
         <View style={[styles.tabBar, { backgroundColor: isDarkMode ? "rgba(20,30,27,0.96)" : "rgba(255,254,250,0.96)", borderColor: themeColors.border }]}>
           <TabItem 
             icon="home" 
-            label="Ana sayfa" 
+            label={language === "tr" ? "Ana sayfa" : "Home"} 
             active={currentTab === "home"} 
             onPress={() => { triggerHaptic(); setCurrentTab("home"); }} 
           />
           <TabItem 
             icon="pie-chart" 
-            label="Analiz" 
+            label={language === "tr" ? "Analiz" : "Analysis"} 
             active={currentTab === "analysis"} 
             onPress={() => { triggerHaptic(); setCurrentTab("analysis"); }} 
           />
           <TabItem 
             icon="user" 
-            label="Profil" 
+            label={language === "tr" ? "Profil" : "Profile"} 
             active={currentTab === "profile"} 
             onPress={() => { triggerHaptic(); setCurrentTab("profile"); }} 
           />
@@ -916,8 +956,8 @@ export default function HomeDashboardScreen() {
             setIsResetConfirmVisible(false);
             setToastConfig({
               visible: true,
-              message: "Veriler Sıfırlandı",
-              subtext: "Tüm uygulama verileri başarıyla sıfırlandı! 🧹"
+              message: t("resetToastMessage"),
+              subtext: t("resetToastSub")
             });
           }}
         />
@@ -927,12 +967,12 @@ export default function HomeDashboardScreen() {
           <Animated.View style={[styles.directVoiceOverlay, { opacity: overlayOpacity }]}>
             <Pressable style={StyleSheet.absoluteFill} onPress={() => setIsDirectVoiceActive(false)} />
             <View style={styles.directVoiceContent}>
-              <Text style={styles.directVoiceTitle}>Dinliyorum...</Text>
-              <Text style={styles.directVoiceSubtitle}>"120 lira market" gibi konuşabilirsin.</Text>
+              <Text style={styles.directVoiceTitle}>{t("siriListening")}</Text>
+              <Text style={styles.directVoiceSubtitle}>{t("siriSubtitle")}</Text>
               
               <View style={styles.directVoiceTranscriptBox}>
                 <Text style={styles.directVoiceTranscriptText}>
-                  {voiceTranscript || "Sizi dinliyorum..."}
+                  {voiceTranscript || t("siriPlaceholder")}
                 </Text>
               </View>
 
@@ -995,6 +1035,11 @@ function VoiceExpenseSheet({
   draftTranscript: string;
   setDraftTranscript: (text: string) => void;
 }) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
   const [spokenText, setSpokenText] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
@@ -1106,14 +1151,14 @@ function VoiceExpenseSheet({
         <Pressable style={styles.sheetBackdrop} onPress={closeSheet} />
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Harcama Ekle</Text>
-          <Text style={styles.sheetSubtitle}>Harcamanı konuşarak veya yazarak hızlıca ekleyebilirsin.</Text>
+          <Text style={styles.sheetTitle}>{t("sheetTitle")}</Text>
+          <Text style={styles.sheetSubtitle}>{t("sheetSubtitle")}</Text>
 
           <View style={styles.speechBubbleContainer}>
             <TextInput
               value={transcript}
               onChangeText={setTranscript}
-              placeholder={isListening ? "Dinleniyor..." : "Konuş veya yaz... (Örn: 150 lira market)"}
+              placeholder={isListening ? t("sheetListening") : t("sheetInputPlaceholder")}
               placeholderTextColor="#9CA19E"
               style={styles.speechBubbleInput}
               multiline
@@ -1148,7 +1193,7 @@ function VoiceExpenseSheet({
                 </View>
               ) : (
                 <Text style={styles.micHelperText}>
-                  {error || (permissionStatus === "unsupported" ? "Expo Go'da konuşma yazarak eklenir." : "Mikrofona basarak konuşun.")}
+                  {error || (permissionStatus === "unsupported" ? t("sheetHelperTextUnsupported") : t("sheetHelperTextVoice"))}
                 </Text>
               )}
             </View>
@@ -1156,7 +1201,7 @@ function VoiceExpenseSheet({
 
           <View style={styles.formGroup}>
             <View style={styles.formRow}>
-              <Text style={styles.formLabel}>Tutar (₺)</Text>
+              <Text style={styles.formLabel}>{t("sheetLabelAmount")}</Text>
               <TextInput
                 value={amount}
                 onChangeText={setAmount}
@@ -1168,22 +1213,22 @@ function VoiceExpenseSheet({
             </View>
             <View style={styles.formDivider} />
             <View style={styles.formRow}>
-              <Text style={styles.formLabel}>Kategori</Text>
+              <Text style={styles.formLabel}>{t("sheetLabelCategory")}</Text>
               <TextInput
                 value={category}
                 onChangeText={setCategory}
-                placeholder="Belirtilmedi"
+                placeholder={t("sheetCategoryPlaceholder")}
                 placeholderTextColor="#9CA19E"
                 style={styles.formInput}
               />
             </View>
             <View style={styles.formDivider} />
             <View style={styles.formRow}>
-              <Text style={styles.formLabel}>Açıklama</Text>
+              <Text style={styles.formLabel}>{t("sheetLabelNote")}</Text>
               <TextInput
                 value={note}
                 onChangeText={setNote}
-                placeholder="Harcama notu"
+                placeholder={t("sheetNotePlaceholder")}
                 placeholderTextColor="#9CA19E"
                 style={styles.formInput}
               />
@@ -1192,10 +1237,10 @@ function VoiceExpenseSheet({
 
           <View style={styles.sheetActions}>
             <Pressable style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]} onPress={closeSheet}>
-              <Text style={styles.cancelButtonText}>İptal</Text>
+              <Text style={styles.cancelButtonText}>{t("sheetCancelBtn")}</Text>
             </Pressable>
             <Pressable style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]} onPress={saveExpense}>
-              <Text style={styles.saveButtonText}>Kaydet</Text>
+              <Text style={styles.saveButtonText}>{t("sheetSaveBtn")}</Text>
             </Pressable>
           </View>
         </View>
@@ -1348,6 +1393,8 @@ function SavingsGoalEditModal({
 }) {
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   const themeColors = isDarkMode ? darkColors : lightColors;
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -1355,23 +1402,23 @@ function SavingsGoalEditModal({
         <Pressable style={styles.sheetBackdrop} onPress={onClose} />
         <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
           <View style={styles.sheetHandle} />
-          <Text style={[styles.sheetTitle, { color: themeColors.primary }]}>Hedefi Düzenle</Text>
-          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>Birikim hedefini ve biriken miktarını güncelle.</Text>
+          <Text style={[styles.sheetTitle, { color: themeColors.primary }]}>{t("editGoalHeader")}</Text>
+          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{t("editGoalSub")}</Text>
 
           <View style={[styles.formGroup, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginTop: 20 }]}>
             <View style={styles.formRow}>
-              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>Hedef Adı</Text>
+              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("editGoalNameLabel")}</Text>
               <TextInput
                 value={title}
                 onChangeText={setTitle}
-                placeholder="Örn: Acil durum fonu"
+                placeholder={language === "tr" ? "Örn: Acil durum fonu" : "e.g. Emergency fund"}
                 placeholderTextColor="#9CA19E"
                 style={[styles.formInput, { color: themeColors.text }]}
               />
             </View>
             <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
             <View style={styles.formRow}>
-              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>Hedef Tutar (₺)</Text>
+              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("editGoalTargetLabel")}</Text>
               <TextInput
                 value={targetAmount}
                 onChangeText={setTargetAmount}
@@ -1383,7 +1430,7 @@ function SavingsGoalEditModal({
             </View>
             <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
             <View style={styles.formRow}>
-              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>Biriken Tutar (₺)</Text>
+              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("editGoalSavedLabel")}</Text>
               <TextInput
                 value={currentAmount}
                 onChangeText={setCurrentAmount}
@@ -1397,10 +1444,10 @@ function SavingsGoalEditModal({
 
           <View style={styles.sheetActions}>
             <Pressable style={({ pressed }) => [styles.cancelButton, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#EFE8DD" }, pressed && styles.pressed]} onPress={onClose}>
-              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>İptal</Text>
+              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>{t("cancel")}</Text>
             </Pressable>
             <Pressable style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]} onPress={onSave}>
-              <Text style={styles.saveButtonText}>Kaydet</Text>
+              <Text style={styles.saveButtonText}>{t("save")}</Text>
             </Pressable>
           </View>
         </View>
@@ -1412,6 +1459,9 @@ function SavingsGoalEditModal({
 function AboutModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   const themeColors = isDarkMode ? darkColors : lightColors;
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.sheetBackdrop}>
@@ -1420,13 +1470,11 @@ function AboutModal({ visible, onClose }: { visible: boolean; onClose: () => voi
           <View style={[styles.dialogAvatar, { backgroundColor: themeColors.primary }]}>
             <Text style={{ fontSize: 32 }}>🐷</Text>
           </View>
-          <Text style={[styles.dialogTitle, { color: themeColors.text }]}>Birikim Yap</Text>
-          <Text style={[styles.dialogVersion, { color: themeColors.textMuted }]}>Sürüm 1.0.0 (Expo Build)</Text>
-          <Text style={[styles.dialogBody, { color: themeColors.text }]}>
-            Birikim Yap, harcamalarınızı sesli veya manuel olarak hızlıca eklemenize ve aylık bütçe limitlerinizi gelişmiş grafik analizlerle takip etmenize olanak sağlayan akıllı finansal asistanınızdır.
-          </Text>
+          <Text style={[styles.dialogTitle, { color: themeColors.text }]}>{t("aboutTitle")}</Text>
+          <Text style={[styles.dialogVersion, { color: themeColors.textMuted }]}>{t("aboutVersion")}</Text>
+          <Text style={[styles.dialogBody, { color: themeColors.text }]}>{t("aboutBody")}</Text>
           <Pressable style={({ pressed }) => [styles.dialogButton, pressed && styles.pressed]} onPress={onClose}>
-            <Text style={styles.dialogButtonText}>Kapat</Text>
+            <Text style={styles.dialogButtonText}>{t("close")}</Text>
           </Pressable>
         </View>
       </View>
@@ -1437,19 +1485,27 @@ function AboutModal({ visible, onClose }: { visible: boolean; onClose: () => voi
 function FaqModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   const themeColors = isDarkMode ? darkColors : lightColors;
-  const faqs = [
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
+  const faqs = language === "tr" ? [
     { q: "Sesli harcama ekleme nasıl çalışır?", a: "Anasayfadaki 'Sesli Ekle' butonuna basıp '150 lira market' gibi doğal bir cümle kurduğunuzda, yapay zeka tutarı ve kategoriyi otomatik ayrıştırır." },
     { q: "Verilerim güvende mi?", a: "Tüm finansal verileriniz ve bütçe planlarınız tamamen cihazınızda (yerel depolamada) saklanır. Dışarıya hiçbir veri aktarılmaz." },
     { q: "Limitler nasıl hesaplanıyor?", a: "Aylık gelirinizden sabit giderlerinizi ve hedef birikim miktarınızı çıkarttıktan sonra kalan bütçeyi gün/hafta/ay bazında bölerek harcama limitlerinizi hesaplar." }
+  ] : [
+    { q: "How does voice expense input work?", a: "When you tap the 'Voice Add' button and speak naturally like '150 dollars grocery', the AI automatically parses the amount and category." },
+    { q: "Is my data secure?", a: "All your financial data and budget plans are stored entirely on your device (local storage). No data is transmitted externally." },
+    { q: "How are limits calculated?", a: "After deducting your monthly fixed expenses and target savings goal from your monthly income, it divides the remaining budget to determine daily, weekly, and monthly limit thresholds." }
   ];
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
         <Pressable style={styles.sheetBackdrop} onPress={onClose} />
         <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: 450 }]}>
           <View style={styles.sheetHandle} />
-          <Text style={[styles.sheetTitle, { color: themeColors.primary }]}>Sıkça Sorulan Sorular</Text>
-          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>Uygulama kullanımı hakkında hızlı cevaplar.</Text>
+          <Text style={[styles.sheetTitle, { color: themeColors.primary }]}>{t("faqTitle")}</Text>
+          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{t("faqSubtitle")}</Text>
           
           <View style={{ gap: 14, marginTop: 20 }}>
             {faqs.map((faq, index) => (
@@ -1461,7 +1517,7 @@ function FaqModal({ visible, onClose }: { visible: boolean; onClose: () => void 
           </View>
 
           <Pressable style={({ pressed }) => [styles.cancelButton, { width: "100%", marginTop: 24, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#EFE8DD" }, pressed && styles.pressed]} onPress={onClose}>
-            <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>Kapat</Text>
+            <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>{t("close")}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -1472,6 +1528,9 @@ function FaqModal({ visible, onClose }: { visible: boolean; onClose: () => void 
 function ResetConfirmModal({ visible, onClose, onConfirm }: { visible: boolean; onClose: () => void; onConfirm: () => void }) {
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   const themeColors = isDarkMode ? darkColors : lightColors;
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.sheetBackdrop}>
@@ -1480,16 +1539,14 @@ function ResetConfirmModal({ visible, onClose, onConfirm }: { visible: boolean; 
           <View style={[styles.dialogAvatar, { backgroundColor: "#FFCDD2" }]}>
             <Feather name="alert-triangle" size={28} color="#D32F2F" />
           </View>
-          <Text style={[styles.dialogTitle, { color: themeColors.danger }]}>Verileri Sıfırla?</Text>
-          <Text style={[styles.dialogBody, { color: themeColors.text, textAlign: "center" }]}>
-            Tüm harcamalarınız, gelir bilgileriniz ve birikim hedefleriniz tamamen sıfırlanacaktır. Bu işlem geri alınamaz!
-          </Text>
+          <Text style={[styles.dialogTitle, { color: themeColors.danger }]}>{t("resetTitle")}</Text>
+          <Text style={[styles.dialogBody, { color: themeColors.text, textAlign: "center" }]}>{t("resetBody")}</Text>
           <View style={styles.dialogActions}>
             <Pressable style={({ pressed }) => [styles.dialogCancelButton, pressed && styles.pressed]} onPress={onClose}>
-              <Text style={[styles.dialogCancelText, { color: themeColors.text }]}>Vazgeç</Text>
+              <Text style={[styles.dialogCancelText, { color: themeColors.text }]}>{t("resetCancel")}</Text>
             </Pressable>
             <Pressable style={({ pressed }) => [styles.dialogConfirmButton, pressed && styles.pressed]} onPress={onConfirm}>
-              <Text style={styles.dialogConfirmText}>Sıfırla</Text>
+              <Text style={styles.dialogConfirmText}>{t("resetConfirm")}</Text>
             </Pressable>
           </View>
         </View>

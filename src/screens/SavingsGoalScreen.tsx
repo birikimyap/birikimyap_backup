@@ -8,6 +8,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { colors, radius } from "@/theme";
 import { formatCurrency } from "@/utils/currency";
 import { getMonthlyRemaining, getTotalFixedExpenses, getTotalIncome } from "@/utils/finance";
+import { translations } from "@/utils/translations";
 
 const mascot = require("../../pgn/mascot-cutout.png");
 
@@ -19,11 +20,19 @@ const goalCards = [
   { id: "home", title: "Ev", subtitle: "Hayalindeki ev", icon: "home" }
 ] as const;
 
-type GoalCard = (typeof goalCards)[number];
+type GoalCard = {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: any;
+};
 
 const sliderStep = 500;
 
 export default function SavingsGoalScreen() {
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
   const incomes = useFinanceStore((state) => state.incomes);
   const expenses = useFinanceStore((state) => state.expenses);
   const planMonthlyRemaining = useFinanceStore((state) => state.plan.monthlyRemaining);
@@ -36,7 +45,7 @@ export default function SavingsGoalScreen() {
   const monthlyRemaining = calculatedMonthlyRemaining;
   const initialSavings = Math.min(savingsGoal.monthlyContribution || Math.min(monthlyRemaining, 5000), monthlyRemaining);
   const [selectedSavings, setSelectedSavings] = useState(initialSavings);
-  const [selectedGoal, setSelectedGoal] = useState(savingsGoal.selectedGoal || savingsGoal.title || "Acil durum");
+  const [selectedGoal, setSelectedGoal] = useState(savingsGoal.selectedGoal || savingsGoal.title || (language === "tr" ? "Acil durum" : "Emergency"));
 
   console.log({
     incomes,
@@ -85,8 +94,12 @@ export default function SavingsGoalScreen() {
               <Text style={[styles.sparkle, styles.sparkleRight]}>✦</Text>
               <Image source={mascot} style={styles.mascot} resizeMode="contain" />
             </View>
-            <Text style={styles.title}>Bu ay ne kadar biriktirmek istiyorsun?</Text>
-            <Text style={styles.subtitle}>Gelir ve giderlerine göre planını birlikte oluşturalım.</Text>
+            <Text style={styles.title}>
+              {language === "tr" ? "Bu ay ne kadar biriktirmek istiyorsun?" : "How much do you want to save this month?"}
+            </Text>
+            <Text style={styles.subtitle}>
+              {language === "tr" ? "Gelir ve giderlerine göre planını birlikte oluşturalım." : "Let's create your plan based on your income and expenses."}
+            </Text>
           </View>
 
           <View style={styles.budgetCard}>
@@ -95,16 +108,24 @@ export default function SavingsGoalScreen() {
             </View>
             <View style={styles.budgetCopy}>
               <View style={styles.cardTitleRow}>
-                <Text style={styles.cardLabel}>Sana kalan aylık bütçe</Text>
+                <Text style={styles.cardLabel}>
+                  {language === "tr" ? "Sana kalan aylık bütçe" : "Your remaining monthly budget"}
+                </Text>
               </View>
               <Text style={styles.budgetAmount}>{formatCurrency(monthlyRemaining)}</Text>
-              <Text style={styles.cardBody}>Bu ay kullanabileceğin net harcama limiti.</Text>
+              <Text style={styles.cardBody}>
+                {language === "tr" ? "Bu ay kullanabileceğin net harcama limiti." : "Net spending limit available for this month."}
+              </Text>
             </View>
           </View>
 
           <View style={styles.sliderIntro}>
-            <Text style={styles.sectionTitle}>Birikim Oranı</Text>
-            <Text style={styles.helperText}>Slider’ı hareket ettirerek birikim hedefini belirle.</Text>
+            <Text style={styles.sectionTitle}>
+              {language === "tr" ? "Birikim Oranı" : "Savings Rate"}
+            </Text>
+            <Text style={styles.helperText}>
+              {language === "tr" ? "Slider’ı hareket ettirerek birikim hedefini belirle." : "Determine your savings goal by moving the slider."}
+            </Text>
           </View>
 
           <View style={styles.sliderCard}>
@@ -112,7 +133,9 @@ export default function SavingsGoalScreen() {
               <Text style={styles.selectedAmount}>{formatCurrency(selectedSavings)}</Text>
               <View style={styles.percentBadge}>
                 <Feather name="shield" size={14} color={colors.primary} />
-                <Text style={styles.percentText}>Kalanın %{percentage}’si</Text>
+                <Text style={styles.percentText}>
+                  {language === "tr" ? `Kalanın %${percentage}’si` : `${percentage}% of remaining`}
+                </Text>
               </View>
             </View>
             <Slider max={monthlyRemaining} step={sliderStep} value={selectedSavings} onChange={updateSelectedSavings} />
@@ -123,15 +146,29 @@ export default function SavingsGoalScreen() {
 
             <View style={styles.sliderInfoRow}>
               <Feather name="trending-up" size={16} color="#E87516" />
-              <Text style={styles.sliderInfoText}>
-                Bu hedefle ay sonunda <Text style={styles.sliderInfoHighlight}>{formatCurrency(selectedSavings)}</Text> biriktirebilirsin.
-              </Text>
+              {language === "tr" ? (
+                <Text style={styles.sliderInfoText}>
+                  Bu hedefle ay sonunda <Text style={styles.sliderInfoHighlight}>{formatCurrency(selectedSavings)}</Text> biriktirebilirsin.
+                </Text>
+              ) : (
+                <Text style={styles.sliderInfoText}>
+                  With this goal, you can save <Text style={styles.sliderInfoHighlight}>{formatCurrency(selectedSavings)}</Text> by the end of the month.
+                </Text>
+              )}
             </View>
           </View>
 
-          <Text style={styles.goalTitle}>Birikim hedefi (opsiyonel)</Text>
+          <Text style={styles.goalTitle}>
+            {language === "tr" ? "Birikim hedefi (opsiyonel)" : "Savings goal (optional)"}
+          </Text>
           <FlatList
-            data={goalCards}
+            data={[
+              { id: "emergency", title: language === "tr" ? "Acil durum" : "Emergency", subtitle: language === "tr" ? "Güvende hisset" : "Feel secure", icon: "shield" },
+              { id: "vacation", title: language === "tr" ? "Tatil" : "Vacation", subtitle: language === "tr" ? "Mola zamanı" : "Break time", icon: "sun" },
+              { id: "phone", title: language === "tr" ? "Yeni telefon" : "New phone", subtitle: language === "tr" ? "Kendine ödül" : "Reward yourself", icon: "smartphone" },
+              { id: "car", title: language === "tr" ? "Araba" : "Car", subtitle: language === "tr" ? "Özgürlüğe doğru" : "Towards freedom", icon: "truck" },
+              { id: "home", title: language === "tr" ? "Ev" : "Home", subtitle: language === "tr" ? "Hayalindeki ev" : "Your dream home", icon: "home" }
+            ]}
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item.id}
@@ -145,13 +182,17 @@ export default function SavingsGoalScreen() {
         <View style={styles.footer}>
           <Pressable onPress={saveAndContinue} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
             <View style={styles.ctaSpacer} />
-            <Text style={styles.ctaText}>Planımı oluştur</Text>
+            <Text style={styles.ctaText}>
+              {language === "tr" ? "Planımı oluştur" : "Create my plan"}
+            </Text>
             <Feather name="arrow-right" size={28} color={colors.white} style={styles.ctaIcon} />
           </Pressable>
 
           <View style={styles.securityRow}>
             <Feather name="lock" size={15} color="#9AA19D" />
-            <Text style={styles.securityText}>Verilerin 256-bit SSL ile korunur ve güvenle saklanır.</Text>
+            <Text style={styles.securityText}>
+              {language === "tr" ? "Verilerin güvenle saklanır." : "Your data is stored securely."}
+            </Text>
           </View>
         </View>
       </View>
