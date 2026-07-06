@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { router } from "expo-router";
 import {
   Animated,
   FlatList,
@@ -79,10 +80,19 @@ export default function HomeDashboardScreen() {
   const plan = useFinanceStore((state) => state.plan);
   const setSelectedPeriod = useFinanceStore((state) => state.setSelectedPeriod);
   const addExpense = useFinanceStore((state) => state.addExpense);
+  const setSavingsGoal = useFinanceStore((state) => state.setSavingsGoal);
+  
   const [isSheetVisible, setIsSheetVisible] = useState(false);
   const [recentListHeight, setRecentListHeight] = useState(0);
   const [recentContentHeight, setRecentContentHeight] = useState(0);
   const recentScrollY = useRef(new Animated.Value(0)).current;
+
+  // Analysis period & modal states
+  const [analysisPeriod, setAnalysisPeriod] = useState<"weekly" | "monthly">("weekly");
+  const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
+  const [tempGoalTitle, setTempGoalTitle] = useState("");
+  const [tempGoalTarget, setTempGoalTarget] = useState("");
+  const [tempGoalSaved, setTempGoalSaved] = useState("");
 
   // Tab state
   const [currentTab, setCurrentTab] = useState<"home" | "analysis" | "profile">("home");
@@ -252,6 +262,40 @@ export default function HomeDashboardScreen() {
       label,
       amount: dailySpend[index],
       percentage: (dailySpend[index] / maxSpend) * 100
+    }));
+  }, [expenses]);
+
+  // Monthly spending by weeks for Analysis tab bar chart
+  const analysisMonthlyData = useMemo(() => {
+    const weeks = ["1. Hft", "2. Hft", "3. Hft", "4. Hft"];
+    const weeklySpend = Array(4).fill(0);
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    expenses.forEach((exp) => {
+      if (exp.isFixed || !exp.occurredAt) return;
+      const date = new Date(exp.occurredAt);
+      if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+        const day = date.getDate();
+        if (day <= 7) {
+          weeklySpend[0] += exp.amount;
+        } else if (day <= 14) {
+          weeklySpend[1] += exp.amount;
+        } else if (day <= 21) {
+          weeklySpend[2] += exp.amount;
+        } else {
+          weeklySpend[3] += exp.amount;
+        }
+      }
+    });
+
+    const maxSpend = Math.max(...weeklySpend, 1);
+
+    return weeks.map((label, index) => ({
+      label,
+      amount: weeklySpend[index],
+      percentage: (weeklySpend[index] / maxSpend) * 100
     }));
   }, [expenses]);
 
@@ -433,6 +477,9 @@ export default function HomeDashboardScreen() {
   }
 
   function renderAnalysisTab() {
+    const activeChartData = analysisPeriod === "weekly" ? analysisWeeklyData : analysisMonthlyData;
+    const highestCategory = analysisCategoryData[0]?.category || "Yok";
+
     return (
       <View style={styles.tabContentContainer}>
         <View style={styles.header}>
@@ -442,11 +489,41 @@ export default function HomeDashboardScreen() {
           </View>
         </View>
 
-        {/* Weekly Trend Bar Chart */}
+        {/* Period Selector Segment Row */}
+        <View style={[styles.segmentContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.04)" : "rgba(13,50,40,0.03)" }]}>
+          <Pressable 
+            style={[
+              styles.segmentButton, 
+              analysisPeriod === "weekly" && [styles.segmentButtonActive, { backgroundColor: themeColors.surface }]
+            ]}
+            onPress={() => {
+              triggerHaptic();
+              setAnalysisPeriod("weekly");
+            }}
+          >
+            <Text style={[styles.segmentText, { color: analysisPeriod === "weekly" ? themeColors.text : themeColors.textMuted }]}>Haftalık</Text>
+          </Pressable>
+          <Pressable 
+            style={[
+              styles.segmentButton, 
+              analysisPeriod === "monthly" && [styles.segmentButtonActive, { backgroundColor: themeColors.surface }]
+            ]}
+            onPress={() => {
+              triggerHaptic();
+              setAnalysisPeriod("monthly");
+            }}
+          >
+            <Text style={[styles.segmentText, { color: analysisPeriod === "monthly" ? themeColors.text : themeColors.textMuted }]}>Aylık</Text>
+          </Pressable>
+        </View>
+
+        {/* Dynamic Trend Bar Chart */}
         <View style={[styles.analysisCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
-          <Text style={[styles.analysisCardTitle, { color: themeColors.text }]}>Son 7 Günlük Eğilim</Text>
+          <Text style={[styles.analysisCardTitle, { color: themeColors.text }]}>
+            {analysisPeriod === "weekly" ? "Son 7 Günlük Gidişat" : "Aylık Gidişat (Haftalık)"}
+          </Text>
           <View style={styles.chartRow}>
-            {analysisWeeklyData.map((day, idx) => (
+            {activeChartData.map((day, idx) => (
               <View key={idx} style={styles.chartCol}>
                 <View style={[styles.chartBarTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
                   <View 
@@ -465,6 +542,19 @@ export default function HomeDashboardScreen() {
           </View>
         </View>
 
+        {/* AI Insight Card */}
+        {analysisCategoryData.length > 0 && (
+          <View style={[styles.insightCard, { backgroundColor: isDarkMode ? "rgba(20,60,40,0.14)" : "#EAF5F0", borderColor: themeColors.border }]}>
+            <View style={styles.insightHeader}>
+              <Feather name="info" size={16} color={themeColors.primary} />
+              <Text style={[styles.insightTitle, { color: themeColors.primary }]}>Akıllı Finans Önerisi</Text>
+            </View>
+            <Text style={[styles.insightBody, { color: themeColors.text }]}>
+              Bu dönem en fazla harcamayı <Text style={{ fontWeight: "800" }}>{highestCategory}</Text> kategorisinde yaptınız. Birikim hedefinize ulaşmak için bu alandaki harcamalarınızı biraz dengelemeyi düşünebilirsiniz.
+            </Text>
+          </View>
+        )}
+
         {/* Categories breakdown */}
         <View style={styles.recentSection}>
           <View style={styles.sectionHeader}>
@@ -472,7 +562,7 @@ export default function HomeDashboardScreen() {
             <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>Toplam: {formatCurrency(recentTotal)}</Text>
           </View>
 
-          <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, padding: 16, flex: 1, minHeight: 280 }]}>
+          <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, padding: 16, flex: 1, minHeight: 220 }]}>
             {analysisCategoryData.length === 0 ? (
               <View style={styles.emptyExpenses}>
                 <Feather name="bar-chart-2" size={28} color={themeColors.textMuted} />
@@ -555,6 +645,63 @@ export default function HomeDashboardScreen() {
             <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Sabit Giderler</Text>
             <Text style={[styles.profileBudgetVal, { color: "#DF7A12", fontWeight: "800" }]}>{formatCurrency(totalFixedExpenses)}</Text>
           </View>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border, marginVertical: 2 }]} />
+
+          <View style={styles.profileActionsRow}>
+            <Pressable 
+              style={({ pressed }) => [styles.profileSubActionButton, pressed && styles.pressed]}
+              onPress={() => {
+                triggerHaptic();
+                router.push("/income-setup");
+              }}
+            >
+              <Text style={[styles.profileSubActionButtonText, { color: themeColors.primary }]}>Gelirleri Düzenle</Text>
+            </Pressable>
+            <Pressable 
+              style={({ pressed }) => [styles.profileSubActionButton, pressed && styles.pressed]}
+              onPress={() => {
+                triggerHaptic();
+                router.push("/fixed-expense");
+              }}
+            >
+              <Text style={[styles.profileSubActionButtonText, { color: "#DF7A12" }]}>Giderleri Düzenle</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Savings Goal Management Card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", gap: 10, paddingVertical: 14 }]}>
+          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>Birikim Hedefin</Text>
+          <View style={styles.profileBudgetRow}>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Hedef Adı</Text>
+            <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{savingsGoal.title || "Belirtilmedi"}</Text>
+          </View>
+          <View style={styles.profileBudgetRow}>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Hedef Tutar</Text>
+            <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{formatCurrency(savingsGoal.targetAmount)}</Text>
+          </View>
+          <View style={styles.profileBudgetRow}>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>Biriken Tutar</Text>
+            <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{formatCurrency(savingsGoal.currentAmount)}</Text>
+          </View>
+          
+          <Pressable 
+            style={({ pressed }) => [
+              styles.profileEditButton, 
+              { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(13,50,40,0.06)" },
+              pressed && styles.pressed
+            ]}
+            onPress={() => {
+              triggerHaptic();
+              setTempGoalTitle(savingsGoal.title || "");
+              setTempGoalTarget(String(savingsGoal.targetAmount || ""));
+              setTempGoalSaved(String(savingsGoal.currentAmount || ""));
+              setIsGoalModalVisible(true);
+            }}
+          >
+            <Text style={[styles.profileEditButtonText, { color: themeColors.primary }]}>Birikim Hedefini Düzenle</Text>
+          </Pressable>
         </View>
 
         {/* Settings Toggle Card */}
@@ -636,6 +783,30 @@ export default function HomeDashboardScreen() {
           }}
           draftTranscript={draftTranscript}
           setDraftTranscript={setDraftTranscript}
+        />
+
+        <SavingsGoalEditModal
+          visible={isGoalModalVisible}
+          onClose={() => setIsGoalModalVisible(false)}
+          title={tempGoalTitle}
+          setTitle={setTempGoalTitle}
+          targetAmount={tempGoalTarget}
+          setTargetAmount={setTempGoalTarget}
+          currentAmount={tempGoalSaved}
+          setCurrentAmount={setTempGoalSaved}
+          onSave={() => {
+            const parsedTarget = parseAmount(tempGoalTarget);
+            const parsedSaved = parseAmount(tempGoalSaved);
+            setSavingsGoal({
+              ...savingsGoal,
+              title: tempGoalTitle.trim() || "Birikim Hedefi",
+              selectedGoal: tempGoalTitle.trim() || "Birikim Hedefi",
+              targetAmount: parsedTarget,
+              currentAmount: parsedSaved,
+              monthlyContribution: Math.min(savingsGoal.monthlyContribution, Math.max(parsedTarget - parsedSaved, 0))
+            });
+            setIsGoalModalVisible(false);
+          }}
         />
 
         {/* Siri Direct Voice Overlay */}
@@ -1039,6 +1210,90 @@ function formatExpenseDate(value?: string) {
   }
 
   return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
+}
+
+function SavingsGoalEditModal({
+  visible,
+  onClose,
+  title,
+  setTitle,
+  targetAmount,
+  setTargetAmount,
+  currentAmount,
+  setCurrentAmount,
+  onSave
+}: {
+  visible: boolean;
+  onClose: () => void;
+  title: string;
+  setTitle: (val: string) => void;
+  targetAmount: string;
+  setTargetAmount: (val: string) => void;
+  currentAmount: string;
+  setCurrentAmount: (val: string) => void;
+  onSave: () => void;
+}) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <View style={styles.sheetHandle} />
+          <Text style={[styles.sheetTitle, { color: themeColors.primary }]}>Hedefi Düzenle</Text>
+          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>Birikim hedefini ve biriken miktarını güncelle.</Text>
+
+          <View style={[styles.formGroup, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginTop: 20 }]}>
+            <View style={styles.formRow}>
+              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>Hedef Adı</Text>
+              <TextInput
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Örn: Acil durum fonu"
+                placeholderTextColor="#9CA19E"
+                style={[styles.formInput, { color: themeColors.text }]}
+              />
+            </View>
+            <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
+            <View style={styles.formRow}>
+              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>Hedef Tutar (₺)</Text>
+              <TextInput
+                value={targetAmount}
+                onChangeText={setTargetAmount}
+                keyboardType="decimal-pad"
+                placeholder="0,00"
+                placeholderTextColor="#9CA19E"
+                style={[styles.formInput, { color: themeColors.text, fontWeight: "700" }]}
+              />
+            </View>
+            <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
+            <View style={styles.formRow}>
+              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>Biriken Tutar (₺)</Text>
+              <TextInput
+                value={currentAmount}
+                onChangeText={setCurrentAmount}
+                keyboardType="decimal-pad"
+                placeholder="0,00"
+                placeholderTextColor="#9CA19E"
+                style={[styles.formInput, { color: themeColors.text, fontWeight: "700" }]}
+              />
+            </View>
+          </View>
+
+          <View style={styles.sheetActions}>
+            <Pressable style={({ pressed }) => [styles.cancelButton, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#EFE8DD" }, pressed && styles.pressed]} onPress={onClose}>
+              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>İptal</Text>
+            </Pressable>
+            <Pressable style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]} onPress={onSave}>
+              <Text style={styles.saveButtonText}>Kaydet</Text>
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -2090,5 +2345,70 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 14,
     fontWeight: "700"
+  },
+  segmentContainer: {
+    flexDirection: "row",
+    marginTop: 14,
+    borderRadius: 14,
+    padding: 3,
+    gap: 4
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  segmentButtonActive: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 1
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  insightCard: {
+    marginTop: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 14,
+    gap: 6
+  },
+  insightHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
+  insightTitle: {
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  insightBody: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "600"
+  },
+  profileActionsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: 12,
+    marginTop: 8
+  },
+  profileSubActionButton: {
+    flex: 1,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(13,50,40,0.04)",
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  profileSubActionButtonText: {
+    fontSize: 13,
+    fontWeight: "800"
   }
 });
