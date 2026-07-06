@@ -48,6 +48,8 @@ type FinanceState = {
   setIsHapticsEnabled: (enabled: boolean) => void;
   language: "tr" | "en";
   setLanguage: (lang: "tr" | "en") => void;
+  currency: "TRY" | "USD" | "EUR";
+  setCurrency: (currency: "TRY" | "USD" | "EUR") => void;
 };
 
 const initialIncomes: Income[] = [
@@ -141,6 +143,8 @@ export const useFinanceStore = create<FinanceState>()(
       setIsHapticsEnabled: (isHapticsEnabled) => set({ isHapticsEnabled }),
       language: "tr",
       setLanguage: (language) => set({ language }),
+      currency: "TRY",
+      setCurrency: (currency) => set({ currency }),
       setIncomes: (incomes) => {
         const normalizedIncomes = incomes.map(normalizeIncome);
         const { expenses, savingsGoal, selectedPeriod } = get();

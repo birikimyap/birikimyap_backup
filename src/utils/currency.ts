@@ -1,9 +1,18 @@
 import { useFinanceStore } from "@/store/financeStore";
 
 export const formatCurrency = (value: number) => {
-  const language = useFinanceStore.getState().language;
-  const currencySign = language === "tr" ? "₺" : "$";
-  const locale = language === "tr" ? "tr-TR" : "en-US";
+  const currency = useFinanceStore.getState().currency || "TRY";
+  let currencySign = "₺";
+  let locale = "tr-TR";
+  
+  if (currency === "USD") {
+    currencySign = "$";
+    locale = "en-US";
+  } else if (currency === "EUR") {
+    currencySign = "€";
+    locale = "de-DE";
+  }
+  
   return `${currencySign}${new Intl.NumberFormat(locale).format(Math.max(value, 0))}`;
 };
 

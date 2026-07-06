@@ -418,7 +418,9 @@ function IncomeRow({ title, subtitle, icon, tone, amount, onChangeText, onChange
           keyboardType="decimal-pad"
           style={styles.amountInput}
         />
-        <Text style={styles.currency}>{language === "tr" ? "₺" : "$"}</Text>
+        <Text style={styles.currency}>
+          {useFinanceStore.getState().currency === "USD" ? "$" : useFinanceStore.getState().currency === "EUR" ? "€" : "₺"}
+        </Text>
       </View>
     </View>
   );

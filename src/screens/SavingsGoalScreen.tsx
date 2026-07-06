@@ -221,7 +221,9 @@ function Slider({ value, max, step, onChange }: { value: number; max: number; st
       <View style={styles.sliderTrack} />
       <View style={[styles.sliderFill, { width: `${progress * 100}%` }]} />
       <View style={[styles.sliderThumb, { left: `${progress * 100}%` }]}>
-        <Text style={styles.sliderThumbText}>{language === "tr" ? "₺" : "$"}</Text>
+        <Text style={styles.sliderThumbText}>
+          {useFinanceStore.getState().currency === "USD" ? "$" : useFinanceStore.getState().currency === "EUR" ? "€" : "₺"}
+        </Text>
       </View>
     </View>
   );

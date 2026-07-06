@@ -59,6 +59,8 @@ export default function HomeDashboardScreen() {
   const language = useFinanceStore((state) => state.language);
   const mascot = language === "tr" ? mascotTR : mascotEN;
   const setLanguage = useFinanceStore((state) => state.setLanguage);
+  const currency = useFinanceStore((state) => state.currency);
+  const setCurrency = useFinanceStore((state) => state.setCurrency);
 
   const t = (key: keyof typeof translations["tr"], variables?: Record<string, string>): string => {
     let str: string = translations[language][key] || key;
@@ -779,6 +781,37 @@ export default function HomeDashboardScreen() {
                 style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "en" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
               >
                 <Text style={{ fontSize: 12, fontWeight: "800", color: language === "en" ? colors.white : themeColors.text }}>EN</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconWrap}>
+              <Feather name="dollar-sign" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
+                {language === "tr" ? "Para Birimi" : "Currency"}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 6 }}>
+              <Pressable 
+                onPress={() => { triggerHaptic(); setCurrency("TRY"); }}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "TRY" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "800", color: currency === "TRY" ? colors.white : themeColors.text }}>₺ (TL)</Text>
+              </Pressable>
+              <Pressable 
+                onPress={() => { triggerHaptic(); setCurrency("USD"); }}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "USD" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "800", color: currency === "USD" ? colors.white : themeColors.text }}>$ (USD)</Text>
+              </Pressable>
+              <Pressable 
+                onPress={() => { triggerHaptic(); setCurrency("EUR"); }}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "EUR" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "800", color: currency === "EUR" ? colors.white : themeColors.text }}>€ (EUR)</Text>
               </Pressable>
             </View>
           </View>
