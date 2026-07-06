@@ -142,7 +142,7 @@ export default function HomeDashboardScreen() {
   // Custom states for Siri Voice Overlay and Toast
   const [isDirectVoiceActive, setIsDirectVoiceActive] = useState(false);
   const [draftTranscript, setDraftTranscript] = useState("");
-  const [toastConfig, setToastConfig] = useState<{ visible: boolean; message: string; subtext?: string } | null>(null);
+  const [toastConfig, setToastConfig] = useState<{ visible: boolean; message: string; subtext?: string; type?: "success" | "warning" } | null>(null);
 
   // Listen for incoming deep links for Siri / Kestirmeler (Shortcuts) integration
   useEffect(() => {
@@ -205,12 +205,25 @@ export default function HomeDashboardScreen() {
             };
             
             addExpense(expense);
-            triggerHaptic();
             
+            const wouldExceed = expense.amount > selectedPeriodRemaining;
+            if (wouldExceed) {
+              if (isHapticsEnabled) {
+                Vibration.vibrate([0, 50, 80, 50]);
+              }
+            } else {
+              triggerHaptic();
+            }
+
             setToastConfig({
               visible: true,
-              message: `${formatCurrency(voiceResult.amount)} ${t("toastAdded")}`,
-              subtext: `${expense.label} ${t("toastAddedSub")}`
+              message: wouldExceed 
+                ? (language === "tr" ? "Limit Aşıldı! ⚠️" : "Limit Exceeded! ⚠️")
+                : `${formatCurrency(expense.amount)} ${t("toastAdded")}`,
+              subtext: wouldExceed
+                ? (language === "tr" ? `${expense.label} bütçe sınırınızı aştı.` : `${expense.label} went over your budget limit.`)
+                : `${expense.label} ${t("toastAddedSub")}`,
+              type: wouldExceed ? "warning" : "success"
             });
           }
         } else {
@@ -292,11 +305,25 @@ export default function HomeDashboardScreen() {
           occurredAt: new Date().toISOString()
         };
         addExpense(expense);
+        
+        const wouldExceed = numericAmount > selectedPeriodRemaining;
+        if (wouldExceed) {
+          if (isHapticsEnabled) {
+            Vibration.vibrate([0, 50, 80, 50]);
+          }
+        } else {
+          triggerHaptic();
+        }
 
         setToastConfig({
           visible: true,
-          message: `${formatCurrency(numericAmount)} ${t("toastAdded")}`,
-          subtext: `${expense.label} ${t("toastAddedSub")}`
+          message: wouldExceed 
+            ? (language === "tr" ? "Limit Aşıldı! ⚠️" : "Limit Exceeded! ⚠️")
+            : `${formatCurrency(numericAmount)} ${t("toastAdded")}`,
+          subtext: wouldExceed
+            ? (language === "tr" ? `${expense.label} bütçe sınırınızı aştı.` : `${expense.label} went over your budget limit.`)
+            : `${expense.label} ${t("toastAddedSub")}`,
+          type: wouldExceed ? "warning" : "success"
         });
         setIsDirectVoiceActive(false);
       } else {
@@ -1123,6 +1150,26 @@ export default function HomeDashboardScreen() {
           onSave={(expense) => {
             addExpense(expense);
             setIsSheetVisible(false);
+            
+            const wouldExceed = expense.amount > selectedPeriodRemaining;
+            if (wouldExceed) {
+              if (isHapticsEnabled) {
+                Vibration.vibrate([0, 50, 80, 50]);
+              }
+            } else {
+              triggerHaptic();
+            }
+
+            setToastConfig({
+              visible: true,
+              message: wouldExceed 
+                ? (language === "tr" ? "Limit Aşıldı! ⚠️" : "Limit Exceeded! ⚠️")
+                : `${formatCurrency(expense.amount)} ${t("toastAdded")}`,
+              subtext: wouldExceed
+                ? (language === "tr" ? `${expense.label} bütçe sınırınızı aştı.` : `${expense.label} went over your budget limit.`)
+                : `${expense.label} ${t("toastAddedSub")}`,
+              type: wouldExceed ? "warning" : "success"
+            });
           }}
           draftTranscript={draftTranscript}
           setDraftTranscript={setDraftTranscript}
@@ -1246,6 +1293,7 @@ export default function HomeDashboardScreen() {
           <ToastBanner 
             message={toastConfig.message} 
             subtext={toastConfig.subtext} 
+            type={toastConfig.type}
             onHide={() => setToastConfig(null)} 
           />
         )}
@@ -1484,30 +1532,56 @@ function VoiceExpenseSheet({
 function ToastBanner({
   message,
   subtext,
+  type = "success",
   onHide
 }: {
   message: string;
   subtext?: string;
+  type?: "success" | "warning";
   onHide: () => void;
 }) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   const slideAnim = useRef(new Animated.Value(-100)).current;
 
   useEffect(() => {
     Animated.sequence([
       Animated.timing(slideAnim, { toValue: 50, duration: 400, useNativeDriver: true }),
-      Animated.delay(2200),
+      Animated.delay(2400),
       Animated.timing(slideAnim, { toValue: -100, duration: 300, useNativeDriver: true })
     ]).start(() => onHide());
   }, [slideAnim]);
 
+  const isWarning = type === "warning";
+  const bg = isWarning 
+    ? (isDarkMode ? "#2D1917" : "#FDF2F2") 
+    : (isDarkMode ? "#172E26" : "#E8F5E9");
+  
+  const border = isWarning 
+    ? "rgba(211, 47, 47, 0.4)" 
+    : "rgba(46, 125, 50, 0.3)";
+  
+  const text = isWarning ? "#D32F2F" : (isDarkMode ? "#FFFFFF" : "#1B5E20");
+  const subtextCol = isWarning ? "rgba(211, 47, 47, 0.7)" : (isDarkMode ? "rgba(255, 255, 255, 0.7)" : "#2E7D32");
+
   return (
-    <Animated.View style={[styles.toastCapsule, { transform: [{ translateY: slideAnim }] }]}>
-      <View style={styles.toastCheckmark}>
-        <Feather name="check" size={16} color={colors.white} />
+    <Animated.View style={[
+      styles.toastCapsule, 
+      { 
+        transform: [{ translateY: slideAnim }],
+        backgroundColor: bg,
+        borderColor: border,
+        borderWidth: 1
+      }
+    ]}>
+      <View style={[
+        styles.toastCheckmark, 
+        { backgroundColor: isWarning ? "#D32F2F" : "#2E7D32" }
+      ]}>
+        <Feather name={isWarning ? "alert-triangle" : "check"} size={16} color={colors.white} />
       </View>
       <View style={styles.toastCopy}>
-        <Text style={styles.toastMessage}>{message}</Text>
-        {subtext && <Text style={styles.toastSubtext}>{subtext}</Text>}
+        <Text style={[styles.toastMessage, { color: text }]}>{message}</Text>
+        {subtext && <Text style={[styles.toastSubtext, { color: subtextCol }]}>{subtext}</Text>}
       </View>
     </Animated.View>
   );
@@ -1526,14 +1600,29 @@ function SummaryMetric({
 }) {
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   const themeColors = isDarkMode ? darkColors : lightColors;
-  const tint = tone === "green" ? themeColors.primary : "#DF7A12";
+  
+  const isNegative = title.toLowerCase().includes("kalan") || title.toLowerCase().includes("remaining") ? amount < 0 : false;
+  
+  let tint = tone === "green" ? themeColors.primary : "#DF7A12";
+  let activeIcon = icon;
+  
+  if (isNegative) {
+    tint = "#D32F2F"; // Red alarm!
+    activeIcon = "alert-triangle"; // Warning icon
+  }
+  
   return (
     <View style={styles.metric}>
-      <View style={[styles.metricIcon, tone === "orange" && styles.metricIconOrange, isDarkMode && { backgroundColor: "rgba(255,255,255,0.06)" }]}>
-        <Feather name={icon} size={20} color={tint} />
+      <View style={[
+        styles.metricIcon, 
+        tone === "orange" && styles.metricIconOrange, 
+        isDarkMode && { backgroundColor: "rgba(255,255,255,0.06)" },
+        isNegative && { backgroundColor: "rgba(211, 47, 47, 0.08)" }
+      ]}>
+        <Feather name={activeIcon} size={20} color={tint} />
       </View>
       <Text style={[styles.metricTitle, { color: themeColors.textMuted }]}>{title}</Text>
-      <Text style={[styles.metricAmount, { color: tint }]} numberOfLines={1} adjustsFontSizeToFit>
+      <Text style={[styles.metricAmount, { color: tint, fontWeight: isNegative ? "900" : "800" }]} numberOfLines={1} adjustsFontSizeToFit>
         {formatCurrency(amount)}
       </Text>
     </View>
