@@ -250,23 +250,41 @@ export default function HomeDashboardScreen() {
 
   // Category total spend parser for Analysis tab
   const analysisCategoryData = useMemo(() => {
-    const totals: Record<string, number> = {};
+    const totals: Record<string, { total: number; subs: Record<string, number> }> = {};
     let totalAll = 0;
     
     periodExpenses.forEach((exp) => {
-      const cat = exp.category || exp.subtitle || "Diğer";
-      totals[cat] = (totals[cat] || 0) + exp.amount;
+      const cat = exp.category || "Diğer";
+      const sub = exp.subtitle || (language === "tr" ? "Genel" : "General");
+      
+      if (!totals[cat]) {
+        totals[cat] = { total: 0, subs: {} };
+      }
+      
+      totals[cat].total += exp.amount;
+      totals[cat].subs[sub] = (totals[cat].subs[sub] || 0) + exp.amount;
       totalAll += exp.amount;
     });
 
     return Object.entries(totals)
-      .map(([category, amount]) => ({
-        category,
-        amount,
-        percentage: totalAll > 0 ? (amount / totalAll) * 100 : 0
-      }))
+      .map(([category, data]) => {
+        const subcategories = Object.entries(data.subs)
+          .map(([subName, subAmount]) => ({
+            name: subName,
+            amount: subAmount,
+            percentage: data.total > 0 ? (subAmount / data.total) * 100 : 0
+          }))
+          .sort((a, b) => b.amount - a.amount);
+
+        return {
+          category,
+          amount: data.total,
+          percentage: totalAll > 0 ? (data.total / totalAll) * 100 : 0,
+          subcategories
+        };
+      })
       .sort((a, b) => b.amount - a.amount);
-  }, [periodExpenses]);
+  }, [periodExpenses, language]);
 
   // Weekly daily spend trend for Analysis tab bar chart
   const analysisWeeklyData = useMemo(() => {
@@ -509,7 +527,9 @@ export default function HomeDashboardScreen() {
                       </View>
                       <View style={styles.expenseCopy}>
                         <Text style={[styles.expenseTitle, { color: themeColors.text }]}>{item.expense.label}</Text>
-                        <Text style={[styles.expenseCategory, { color: themeColors.textMuted }]}>{item.expense.category || item.expense.subtitle || "Harcama"}</Text>
+                        <Text style={[styles.expenseCategory, { color: themeColors.textMuted }]}>
+                          {item.expense.category}{item.expense.subtitle && item.expense.subtitle !== item.expense.category ? ` • ${item.expense.subtitle}` : ""}
+                        </Text>
                       </View>
                       <View style={styles.expenseMeta}>
                         <Text style={[styles.expenseAmount, { color: themeColors.text }]}>{formatCurrency(item.expense.amount)}</Text>
@@ -627,26 +647,44 @@ export default function HomeDashboardScreen() {
                 <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>{t("analysisNoDataSub")}</Text>
               </View>
             ) : (
-              <View style={{ gap: 16 }}>
+              <View style={{ gap: 20 }}>
                 {analysisCategoryData.map((item) => (
-                  <View key={item.category} style={styles.categoryRow}>
-                    <View style={styles.categoryInfo}>
-                      <Text style={[styles.categoryName, { color: themeColors.text }]}>{item.category}</Text>
-                      <Text style={[styles.categoryAmount, { color: themeColors.text }]}>
-                        {formatCurrency(item.amount)} ({Math.round(item.percentage)}%)
-                      </Text>
+                  <View key={item.category} style={{ gap: 6 }}>
+                    <View style={styles.categoryRow}>
+                      <View style={styles.categoryInfo}>
+                        <Text style={[styles.categoryName, { color: themeColors.text, fontWeight: "800", fontSize: 15 }]}>{item.category}</Text>
+                        <Text style={[styles.categoryAmount, { color: themeColors.text, fontWeight: "800" }]}>
+                          {formatCurrency(item.amount)} ({Math.round(item.percentage)}%)
+                        </Text>
+                      </View>
+                      <View style={[styles.progressTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
+                        <View 
+                          style={[
+                            styles.progressFill, 
+                            { 
+                              width: `${item.percentage}%`,
+                              backgroundColor: themeColors.primary
+                            }
+                          ]} 
+                        />
+                      </View>
                     </View>
-                    <View style={[styles.progressTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
-                      <View 
-                        style={[
-                          styles.progressFill, 
-                          { 
-                            width: `${item.percentage}%`,
-                            backgroundColor: themeColors.primary
-                          }
-                        ]} 
-                      />
-                    </View>
+
+                    {/* Subcategories Breakdown */}
+                    {item.subcategories && item.subcategories.length > 0 && (
+                      <View style={{ paddingLeft: 12, gap: 5, marginTop: 2 }}>
+                        {item.subcategories.map((sub) => (
+                          <View key={sub.name} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                            <Text style={{ fontSize: 12, color: themeColors.textMuted, fontWeight: "600" }}>
+                              • {sub.name}
+                            </Text>
+                            <Text style={{ fontSize: 12, color: themeColors.text, fontWeight: "600" }}>
+                              {formatCurrency(sub.amount)} ({Math.round(sub.percentage)}%)
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
                   </View>
                 ))}
               </View>
