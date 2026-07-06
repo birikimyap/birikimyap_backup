@@ -839,60 +839,52 @@ export default function HomeDashboardScreen() {
   function renderProfileTab() {
     return (
       <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-        <View style={styles.header}>
+        {/* Header with integrated User Profile */}
+        <View style={[styles.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
           <View style={styles.greetingWrap}>
-            <Text style={[styles.greeting, { color: themeColors.text }]}>{t("profileTitle")}</Text>
+            <Text style={[styles.greeting, { color: themeColors.text }]}>Gürkan 👋</Text>
             <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("profileSubtitle")}</Text>
           </View>
-        </View>
-
-        {/* User Card */}
-        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
-          <View style={[styles.profileAvatar, { backgroundColor: themeColors.primary }]}>
-            <Text style={styles.profileAvatarText}>G</Text>
-          </View>
-          <View style={styles.profileMeta}>
-            <Text style={[styles.profileName, { color: themeColors.text }]}>Gürkan</Text>
-            <Text style={[styles.profileEmail, { color: themeColors.textMuted }]}>gurkan@birikimyap.com</Text>
+          <View style={[styles.profileAvatarHeader, { backgroundColor: themeColors.primary }]}>
+            <Text style={styles.profileAvatarHeaderText}>G</Text>
           </View>
         </View>
 
-        {/* Budget summary card */}
-        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", gap: 14, paddingVertical: 16 }]}>
-          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>{t("profileBudgetSummary")}</Text>
-          
-          <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileIncomeLabel")}</Text>
-            <Text style={[styles.profileBudgetVal, { color: themeColors.primary, fontWeight: "800" }]}>{formatCurrency(totalIncome)}</Text>
-          </View>
-          
-          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border, marginVertical: 2 }]} />
-          
-          <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileFixedExpenseLabel")}</Text>
-            <Text style={[styles.profileBudgetVal, { color: "#DF7A12", fontWeight: "800" }]}>{formatCurrency(totalFixedExpenses)}</Text>
-          </View>
-
-          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border, marginVertical: 2 }]} />
-
-          <View style={styles.profileActionsRow}>
+        {/* Compact Side-by-Side Budget Summary Card */}
+        <View style={[styles.profileCardCompact, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+          <View style={styles.profileBudgetCol}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: themeColors.primary }} />
+              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted }]}>{t("profileIncomeLabel")}</Text>
+            </View>
+            <Text style={[styles.profileBudgetValCompact, { color: themeColors.primary }]}>{formatCurrency(totalIncome)}</Text>
             <Pressable 
-              style={({ pressed }) => [styles.profileSubActionButton, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.profileMiniBtn, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)" }, pressed && styles.pressed]}
               onPress={() => {
                 triggerHaptic();
                 router.push("/income-setup");
               }}
             >
-              <Text style={[styles.profileSubActionButtonText, { color: themeColors.primary }]}>{t("profileEditIncomeBtn")}</Text>
+              <Text style={[styles.profileMiniBtnText, { color: themeColors.primary }]}>{t("profileEditIncomeBtn")}</Text>
             </Pressable>
+          </View>
+
+          <View style={[styles.profileVerticalDivider, { backgroundColor: themeColors.border }]} />
+
+          <View style={styles.profileBudgetCol}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#DF7A12" }} />
+              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted }]}>{t("profileFixedExpenseLabel")}</Text>
+            </View>
+            <Text style={[styles.profileBudgetValCompact, { color: "#DF7A12" }]}>{formatCurrency(totalFixedExpenses)}</Text>
             <Pressable 
-              style={({ pressed }) => [styles.profileSubActionButton, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.profileMiniBtn, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(223,122,18,0.06)" }, pressed && styles.pressed]}
               onPress={() => {
                 triggerHaptic();
                 router.push("/fixed-expense");
               }}
             >
-              <Text style={[styles.profileSubActionButtonText, { color: "#DF7A12" }]}>{t("profileEditExpenseBtn")}</Text>
+              <Text style={[styles.profileMiniBtnText, { color: "#DF7A12" }]}>{t("profileEditExpenseBtn")}</Text>
             </Pressable>
           </View>
         </View>
@@ -2760,6 +2752,71 @@ const styles = StyleSheet.create({
     borderRadius: 4
   },
   // Profile Styles
+  profileAvatarHeader: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2
+  },
+  profileAvatarHeaderText: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: "900"
+  },
+  profileCardCompact: {
+    marginTop: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1
+  },
+  profileBudgetCol: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  profileVerticalDivider: {
+    width: 1,
+    height: "90%",
+    alignSelf: "center",
+    marginHorizontal: 12
+  },
+  profileMiniBtn: {
+    marginTop: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  profileMiniBtnText: {
+    fontSize: 11,
+    fontWeight: "800",
+    lineHeight: 14
+  },
+  profileBudgetLabelCompact: {
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 16
+  },
+  profileBudgetValCompact: {
+    fontSize: 16,
+    fontWeight: "900",
+    marginTop: 2,
+    lineHeight: 21
+  },
   profileCard: {
     marginTop: 16,
     borderRadius: 24,
