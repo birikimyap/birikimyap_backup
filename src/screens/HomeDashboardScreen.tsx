@@ -26,6 +26,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod } from "@/utils/finance";
+import { getSmartFinancialInsight } from "@/utils/aiInsights";
 import { translations } from "@/utils/translations";
 
 const mascotTR = require("../../pgn/mascot-cutout.png");
@@ -620,17 +621,70 @@ export default function HomeDashboardScreen() {
         </View>
 
         {/* AI Insight Card */}
-        {analysisCategoryData.length > 0 && (
-          <View style={[styles.insightCard, { backgroundColor: isDarkMode ? "rgba(20,60,40,0.14)" : "#EAF5F0", borderColor: themeColors.border }]}>
-            <View style={styles.insightHeader}>
-              <Feather name="info" size={16} color={themeColors.primary} />
-              <Text style={[styles.insightTitle, { color: themeColors.primary }]}>{t("analysisAiTipTitle")}</Text>
+        {analysisCategoryData.length > 0 && (() => {
+          const insight = getSmartFinancialInsight(highestCategory, recentTotal, selectedPeriodRemaining, language);
+          return (
+            <View style={[
+              styles.insightCard, 
+              { 
+                backgroundColor: isDarkMode ? "rgba(20,60,40,0.18)" : "#F2F8F5", 
+                borderColor: isDarkMode ? "rgba(20,60,40,0.4)" : "#D3E8DF",
+                borderWidth: 1.5,
+                padding: 16,
+                borderRadius: 24,
+                shadowColor: themeColors.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: isDarkMode ? 0.04 : 0.02,
+                shadowRadius: 10,
+                elevation: 1
+              }
+            ]}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View style={styles.insightHeader}>
+                  <Feather name="zap" size={16} color={themeColors.primary} />
+                  <Text style={[styles.insightTitle, { color: themeColors.primary, fontSize: 14 }]}>{insight.title}</Text>
+                </View>
+                <View style={{
+                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.06)",
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  borderRadius: 8
+                }}>
+                  <Text style={{ fontSize: 9, fontWeight: "900", color: themeColors.primary, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    {insight.badge}
+                  </Text>
+                </View>
+              </View>
+              
+              <Text style={[styles.insightBody, { color: themeColors.text, marginTop: 4, fontSize: 12, lineHeight: 18, fontWeight: "600" }]}>
+                {insight.body}
+              </Text>
+
+              {insight.tips && insight.tips.length > 0 && (
+                <View style={{ marginTop: 10, gap: 8 }}>
+                  {insight.tips.map((tip, idx) => (
+                    <View key={idx} style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
+                      <View style={{
+                        marginTop: 2,
+                        width: 16,
+                        height: 16,
+                        borderRadius: 8,
+                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}>
+                        <Feather name="check" size={10} color={themeColors.primary} />
+                      </View>
+                      <Text style={{ flex: 1, fontSize: 11, lineHeight: 16, color: themeColors.textMuted, fontWeight: "600" }}>
+                        {tip}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
-            <Text style={[styles.insightBody, { color: themeColors.text }]}>
-              {t("analysisAiTipBody", { category: highestCategory })}
-            </Text>
-          </View>
-        )}
+          );
+        })()}
 
         {/* Categories breakdown */}
         <View style={styles.recentSection}>
