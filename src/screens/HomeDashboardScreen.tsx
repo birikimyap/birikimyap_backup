@@ -10,6 +10,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Switch,
   Text,
@@ -490,7 +491,7 @@ export default function HomeDashboardScreen() {
     const highestCategory = analysisCategoryData[0]?.category || "Yok";
 
     return (
-      <View style={styles.tabContentContainer}>
+      <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
             <Text style={[styles.greeting, { color: themeColors.text }]}>Harcama Analizi</Text>
@@ -559,7 +560,7 @@ export default function HomeDashboardScreen() {
               <Text style={[styles.insightTitle, { color: themeColors.primary }]}>Akıllı Finans Önerisi</Text>
             </View>
             <Text style={[styles.insightBody, { color: themeColors.text }]}>
-              Bu dönem en fazla harcamayı <Text style={{ fontWeight: "800" }}>{highestCategory}</Text> kategorisinde yaptınız. Birikim hedefinize ulaşmak için bu alandaki harcamalarınızı biraz dengelemeyi düşünebilirsiniz.
+              Bu dönem en fazla harcamayı <Text style={{ fontWeight: "800" }}>{highestCategory}</Text> kategorisinde yaptınız. Birikim hedefinize ulaşmak için bu alandaki harcamalanızı biraz dengelemeyi düşünebilirsiniz.
             </Text>
           </View>
         )}
@@ -579,12 +580,9 @@ export default function HomeDashboardScreen() {
                 <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>Harcama ekledikçe kategorisel analiz burada belirecektir.</Text>
               </View>
             ) : (
-              <FlatList
-                data={analysisCategoryData}
-                keyExtractor={(item) => item.category}
-                showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <View style={styles.categoryRow}>
+              <View style={{ gap: 16 }}>
+                {analysisCategoryData.map((item) => (
+                  <View key={item.category} style={styles.categoryRow}>
                     <View style={styles.categoryInfo}>
                       <Text style={[styles.categoryName, { color: themeColors.text }]}>{item.category}</Text>
                       <Text style={[styles.categoryAmount, { color: themeColors.text }]}>
@@ -603,19 +601,18 @@ export default function HomeDashboardScreen() {
                       />
                     </View>
                   </View>
-                )}
-                ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-              />
+                ))}
+              </View>
             )}
           </View>
         </View>
-      </View>
+      </ScrollView>
     );
   }
 
   function renderProfileTab() {
     return (
-      <View style={styles.tabContentContainer}>
+      <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
             <Text style={[styles.greeting, { color: themeColors.text }]}>Profil & Ayarlar</Text>
@@ -814,7 +811,7 @@ export default function HomeDashboardScreen() {
             <Feather name="chevron-right" size={20} color={themeColors.danger} />
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
     );
   }
 
