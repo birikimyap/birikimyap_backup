@@ -435,85 +435,93 @@ export default function HomeDashboardScreen() {
           </View>
 
           <View style={[
-            styles.periodWrap, 
-            { 
-              backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#ECE7DD",
-              borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0,
-              borderBottomWidth: 0,
-              marginTop: 10
-            }
-          ]}>
-            {periods.map((period) => {
-              const isSelected = selectedPeriod === period.value;
-              return (
-                <Pressable
-                  key={period.value}
-                  onPress={() => {
-                    triggerHaptic();
-                    setSelectedPeriod(period.value);
-                  }}
-                  style={({ pressed }) => [
-                    styles.periodItem, 
-                    isSelected && [styles.periodItemSelected, { backgroundColor: themeColors.primary }], 
-                    !isSelected && { backgroundColor: themeColors.surface, borderColor: themeColors.border },
-                    pressed && styles.pressed
-                  ]}
-                >
-                  <Feather name={period.icon} size={20} color={isSelected ? colors.white : themeColors.text} />
-                  <Text style={[styles.periodText, { color: isSelected ? colors.white : themeColors.text }]}>{period.label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View style={[
             styles.expenseCard, 
             { 
               backgroundColor: themeColors.surface, 
               borderColor: themeColors.border,
-              borderTopLeftRadius: 0,
-              borderTopRightRadius: 0,
-              marginTop: 0
+              paddingHorizontal: 0,
+              paddingVertical: 0,
+              marginTop: 12
             }
           ]}>
-            <FlatList
-              data={periodExpenseRows}
-              keyExtractor={(item) => item.renderId}
-              nestedScrollEnabled={true}
-              showsVerticalScrollIndicator={false}
-              onLayout={(event) => setRecentListHeight(event.nativeEvent.layout.height)}
-              onContentSizeChange={(_, height) => setRecentContentHeight(height)}
-              onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: recentScrollY } } }], { useNativeDriver: false })}
-              scrollEventThrottle={16}
-              contentContainerStyle={periodExpenseRows.length === 0 ? styles.emptyExpenseListContent : styles.expenseListContent}
-              ListEmptyComponent={
-                <View style={[styles.emptyExpenses, { backgroundColor: themeColors.surface }]}>
-                  <Feather name="inbox" size={28} color={themeColors.textMuted} />
-                  <Text style={[styles.emptyExpensesText, { color: themeColors.text }]}>{t("emptyExpenses")}</Text>
-                  <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>{t("emptyExpensesSub")}</Text>
-                </View>
+            {/* The Integrated Segment Header */}
+            <View style={[
+              styles.cardSegmentHeader, 
+              { 
+                backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "rgba(13, 50, 40, 0.02)",
+                borderBottomColor: themeColors.border
               }
-              renderItem={({ item, index }) => (
-                <View>
-                  <View style={styles.expenseRow}>
-                    <View style={[styles.expenseIcon, { backgroundColor: themeColors.primary }]}>
-                      <Text style={styles.expenseBadge}>{getExpenseBadge(item.expense)}</Text>
-                    </View>
-                    <View style={styles.expenseCopy}>
-                      <Text style={[styles.expenseTitle, { color: themeColors.text }]}>{item.expense.label}</Text>
-                      <Text style={[styles.expenseCategory, { color: themeColors.textMuted }]}>{item.expense.category || item.expense.subtitle || "Harcama"}</Text>
-                    </View>
-                    <View style={styles.expenseMeta}>
-                      <Text style={[styles.expenseAmount, { color: themeColors.text }]}>{formatCurrency(item.expense.amount)}</Text>
-                      <Text style={[styles.expenseDate, { color: themeColors.textMuted }]}>{formatExpenseDate(item.expense.occurredAt)}</Text>
-                    </View>
-                    <Feather name="chevron-right" size={24} color={themeColors.textMuted} />
+            ]}>
+              {periods.map((period) => {
+                const isSelected = selectedPeriod === period.value;
+                return (
+                  <Pressable
+                    key={period.value}
+                    onPress={() => {
+                      triggerHaptic();
+                      setSelectedPeriod(period.value);
+                    }}
+                    style={({ pressed }) => [
+                      styles.cardSegmentItem, 
+                      isSelected && [
+                        styles.cardSegmentActive, 
+                        { 
+                          backgroundColor: isDarkMode ? "#1C2521" : colors.white,
+                          shadowColor: "#000"
+                        }
+                      ],
+                      pressed && styles.pressed
+                    ]}
+                  >
+                    <Feather name={period.icon} size={15} color={isSelected ? themeColors.primary : themeColors.textMuted} />
+                    <Text style={[styles.cardSegmentText, { color: isSelected ? themeColors.primary : themeColors.textMuted }]}>
+                      {period.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* List inner content with layout padding */}
+            <View style={{ paddingHorizontal: 14, paddingTop: 6, flex: 1 }}>
+              <FlatList
+                data={periodExpenseRows}
+                keyExtractor={(item) => item.renderId}
+                nestedScrollEnabled={true}
+                showsVerticalScrollIndicator={false}
+                onLayout={(event) => setRecentListHeight(event.nativeEvent.layout.height)}
+                onContentSizeChange={(_, height) => setRecentContentHeight(height)}
+                onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: recentScrollY } } }], { useNativeDriver: false })}
+                scrollEventThrottle={16}
+                contentContainerStyle={periodExpenseRows.length === 0 ? styles.emptyExpenseListContent : styles.expenseListContent}
+                ListEmptyComponent={
+                  <View style={[styles.emptyExpenses, { backgroundColor: themeColors.surface }]}>
+                    <Feather name="inbox" size={28} color={themeColors.textMuted} />
+                    <Text style={[styles.emptyExpensesText, { color: themeColors.text }]}>{t("emptyExpenses")}</Text>
+                    <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>{t("emptyExpensesSub")}</Text>
                   </View>
-                  {index < periodExpenseRows.length - 1 && <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />}
-                </View>
-              )}
-            />
+                }
+                renderItem={({ item, index }) => (
+                  <View>
+                    <View style={styles.expenseRow}>
+                      <View style={[styles.expenseIcon, { backgroundColor: themeColors.primary }]}>
+                        <Text style={styles.expenseBadge}>{getExpenseBadge(item.expense)}</Text>
+                      </View>
+                      <View style={styles.expenseCopy}>
+                        <Text style={[styles.expenseTitle, { color: themeColors.text }]}>{item.expense.label}</Text>
+                        <Text style={[styles.expenseCategory, { color: themeColors.textMuted }]}>{item.expense.category || item.expense.subtitle || "Harcama"}</Text>
+                      </View>
+                      <View style={styles.expenseMeta}>
+                        <Text style={[styles.expenseAmount, { color: themeColors.text }]}>{formatCurrency(item.expense.amount)}</Text>
+                        <Text style={[styles.expenseDate, { color: themeColors.textMuted }]}>{formatExpenseDate(item.expense.occurredAt)}</Text>
+                      </View>
+                      <Feather name="chevron-right" size={24} color={themeColors.textMuted} />
+                    </View>
+                    {index < periodExpenseRows.length - 1 && <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />}
+                  </View>
+                )}
+              />
+            </View>
             {isRecentListScrollable ? (
               <View pointerEvents="none" style={[styles.customScrollTrack, { backgroundColor: themeColors.border }]}>
                 <Animated.View style={[styles.customScrollThumb, { backgroundColor: themeColors.primary, transform: [{ translateY: customScrollThumbTranslateY }] }]} />
@@ -2820,5 +2828,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     fontWeight: "600"
+  },
+  // Card Segment Header Styles
+  cardSegmentHeader: {
+    flexDirection: "row",
+    padding: 5,
+    borderBottomWidth: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    gap: 4
+  },
+  cardSegmentItem: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    borderRadius: 18,
+    gap: 6
+  },
+  cardSegmentActive: {
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2
+  },
+  cardSegmentText: {
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18
   }
 });
