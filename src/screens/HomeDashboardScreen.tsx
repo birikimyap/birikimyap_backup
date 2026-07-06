@@ -626,36 +626,66 @@ export default function HomeDashboardScreen() {
             style={[
               styles.insightCard, 
               { 
-                borderColor: isDarkMode ? "rgba(24, 74, 52, 0.28)" : "#D1E8DD",
+                borderColor: isDarkMode ? "rgba(24, 74, 52, 0.32)" : "#D1E8DD",
                 borderWidth: 1.2,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
+                paddingLeft: 22,
+                paddingRight: 16,
+                paddingVertical: 16,
                 borderRadius: 20,
                 shadowColor: themeColors.primary,
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: isDarkMode ? 0.03 : 0.015,
-                shadowRadius: 8,
-                elevation: 1
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: isDarkMode ? 0.05 : 0.025,
+                shadowRadius: 12,
+                elevation: 2,
+                overflow: "hidden"
               }
             ]}
           >
+            {/* Left Vertical Glowing Accent Bar */}
+            <LinearGradient
+              colors={["#00DF89", themeColors.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 5
+              }}
+            />
+
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <View style={styles.insightHeader}>
-                <Feather name="zap" size={16} color={themeColors.primary} />
-                <Text style={[styles.insightTitle, { color: themeColors.primary }]}>{t("analysisAiTipTitle")}</Text>
+                <View style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.1)" : "rgba(13, 50, 40, 0.06)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: 2
+                }}>
+                  <Feather name="zap" size={13} color={isDarkMode ? "#00DF89" : themeColors.primary} />
+                </View>
+                <Text style={[styles.insightTitle, { color: themeColors.primary, fontSize: 14, fontWeight: "900" }]}>
+                  {t("analysisAiTipTitle")}
+                </Text>
               </View>
               <View style={{
-                backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.06)",
-                paddingHorizontal: 7,
-                paddingVertical: 2,
-                borderRadius: 6
+                backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.12)" : "rgba(13,50,40,0.06)",
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: isDarkMode ? "rgba(0, 223, 137, 0.15)" : "transparent"
               }}>
-                <Text style={{ fontSize: 9, fontWeight: "900", color: themeColors.primary, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  {language === "tr" ? "YAPAY ZEKA" : "AI"}
+                <Text style={{ fontSize: 9, fontWeight: "900", color: isDarkMode ? "#00DF89" : themeColors.primary, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  ✨ {language === "tr" ? "YAPAY ZEKA" : "AI INSIGHT"}
                 </Text>
               </View>
             </View>
-            <Text style={[styles.insightBody, { color: themeColors.text, marginTop: 6, lineHeight: 18, fontSize: 13, fontWeight: "600" }]}>
+            <Text style={[styles.insightBody, { color: themeColors.text, marginTop: 8, lineHeight: 19, fontSize: 13, fontWeight: "600" }]}>
               {t("analysisAiTipBody", { category: highestCategory })}
             </Text>
           </LinearGradient>
