@@ -81,6 +81,10 @@ export default function HomeDashboardScreen() {
   const setSelectedPeriod = useFinanceStore((state) => state.setSelectedPeriod);
   const addExpense = useFinanceStore((state) => state.addExpense);
   const setSavingsGoal = useFinanceStore((state) => state.setSavingsGoal);
+  const totalIncome = useFinanceStore((state) => state.getTotalIncome());
+  const totalFixedExpenses = useFinanceStore((state) => state.getTotalFixedExpenses());
+  const setIsDarkMode = useFinanceStore((state) => state.setIsDarkMode);
+  const setIsHapticsEnabled = useFinanceStore((state) => state.setIsHapticsEnabled);
   
   const [isSheetVisible, setIsSheetVisible] = useState(false);
   const [recentListHeight, setRecentListHeight] = useState(0);
@@ -605,11 +609,6 @@ export default function HomeDashboardScreen() {
   }
 
   function renderProfileTab() {
-    const totalIncome = useFinanceStore((state) => state.getTotalIncome());
-    const totalFixedExpenses = useFinanceStore((state) => state.getTotalFixedExpenses());
-    const setIsDarkMode = useFinanceStore((state) => state.setIsDarkMode);
-    const setIsHapticsEnabled = useFinanceStore((state) => state.setIsHapticsEnabled);
-
     return (
       <View style={styles.tabContentContainer}>
         <View style={styles.header}>
