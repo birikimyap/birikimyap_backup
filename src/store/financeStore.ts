@@ -144,7 +144,51 @@ export const useFinanceStore = create<FinanceState>()(
       language: "tr",
       setLanguage: (language) => set({ language }),
       currency: "TRY",
-      setCurrency: (currency) => set({ currency }),
+      setCurrency: (newCurrency) => {
+        const prevCurrency = get().currency;
+        if (prevCurrency === newCurrency) return;
+
+        const convert = (val: number) => {
+          const EXCHANGE_RATES = {
+            TRY: 1,
+            USD: 33.0,
+            EUR: 36.0
+          };
+          const valueInTry = val * EXCHANGE_RATES[prevCurrency];
+          const rawConverted = valueInTry / EXCHANGE_RATES[newCurrency];
+          return Math.round(rawConverted * 100) / 100;
+        };
+
+        const incomes = get().incomes.map((income) => ({
+          ...income,
+          amount: convert(income.amount)
+        }));
+
+        const expenses = get().expenses.map((expense) => ({
+          ...expense,
+          amount: convert(expense.amount)
+        }));
+
+        const oldGoal = get().savingsGoal;
+        const savingsGoal = {
+          ...oldGoal,
+          targetAmount: convert(oldGoal.targetAmount),
+          currentAmount: convert(oldGoal.currentAmount),
+          monthlyContribution: convert(oldGoal.monthlyContribution),
+          dailyTarget: convert(oldGoal.dailyTarget)
+        };
+
+        const { selectedPeriod } = get();
+        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod);
+
+        set({
+          currency: newCurrency,
+          incomes,
+          expenses,
+          savingsGoal: next.savingsGoal,
+          plan: next.plan
+        });
+      },
       setIncomes: (incomes) => {
         const normalizedIncomes = incomes.map(normalizeIncome);
         const { expenses, savingsGoal, selectedPeriod } = get();
