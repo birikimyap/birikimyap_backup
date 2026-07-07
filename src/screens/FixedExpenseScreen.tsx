@@ -233,6 +233,7 @@ export default function FixedExpenseScreen() {
   };
 
   const addCustomExpense = () => {
+    Keyboard.dismiss();
     hasUserEditedRows.current = true;
     const newRow = {
         id: createRowId("custom-expense"),
@@ -352,6 +353,7 @@ export default function FixedExpenseScreen() {
                 ItemSeparatorComponent={() => <View style={styles.rowSeparator} />}
                 showsVerticalScrollIndicator={rows.length > 4}
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 getItemLayout={(_, index) => ({ length: rowHeight, offset: rowHeight * index, index })}
                 onScrollToIndexFailed={({ index }) => {
                   requestAnimationFrame(() => listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 }));
@@ -403,6 +405,8 @@ function ExpenseAmountRow({ title, subtitle, icon, tone, amount, onChangeText, o
           placeholder={language === "tr" ? "Gider adı" : "Expense name"}
           placeholderTextColor="#9CA19E"
           style={styles.expenseTitleInput}
+          returnKeyType="done"
+          onSubmitEditing={Keyboard.dismiss}
         />
         <TextInput
           value={subtitle}
@@ -411,6 +415,8 @@ function ExpenseAmountRow({ title, subtitle, icon, tone, amount, onChangeText, o
           placeholder={language === "tr" ? "Açıklama" : "Description"}
           placeholderTextColor="#9CA19E"
           style={styles.expenseSubtitleInput}
+          returnKeyType="done"
+          onSubmitEditing={Keyboard.dismiss}
         />
       </View>
       <View style={styles.amountBox}>

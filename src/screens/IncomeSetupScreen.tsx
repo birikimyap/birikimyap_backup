@@ -228,6 +228,7 @@ export default function IncomeSetupScreen() {
   };
 
   const addCustomIncome = () => {
+    Keyboard.dismiss();
     hasUserEditedRows.current = true;
     const newRow = {
         id: createRowId("custom-income"),
@@ -347,6 +348,7 @@ export default function IncomeSetupScreen() {
                 ItemSeparatorComponent={() => <View style={styles.rowSeparator} />}
                 showsVerticalScrollIndicator={rows.length > 4}
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 getItemLayout={(_, index) => ({ length: rowHeight, offset: rowHeight * index, index })}
                 onScrollToIndexFailed={({ index }) => {
                   requestAnimationFrame(() => listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 }));
@@ -398,6 +400,8 @@ function IncomeRow({ title, subtitle, icon, tone, amount, onChangeText, onChange
           placeholder={language === "tr" ? "Gelir adı" : "Income name"}
           placeholderTextColor="#9CA19E"
           style={styles.incomeTitleInput}
+          returnKeyType="done"
+          onSubmitEditing={Keyboard.dismiss}
         />
         <TextInput
           value={subtitle}
@@ -406,6 +410,8 @@ function IncomeRow({ title, subtitle, icon, tone, amount, onChangeText, onChange
           placeholder={language === "tr" ? "Açıklama" : "Description"}
           placeholderTextColor="#9CA19E"
           style={styles.incomeSubtitleInput}
+          returnKeyType="done"
+          onSubmitEditing={Keyboard.dismiss}
         />
       </View>
       <View style={styles.amountBox}>
