@@ -23,8 +23,8 @@ type LoginButtonProps = {
   onPress: () => void;
 };
 
-const mascotTR = require("../../pgn/mascot-cutout.jpg");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 const googleMark = require("../../pgn/google-mark.png");
 
 export default function LoginScreen() {
@@ -67,10 +67,7 @@ export default function LoginScreen() {
           contentContainerStyle={styles.content}
         >
           <View style={styles.hero}>
-            <View style={styles.mascotStage}>
-              <View style={styles.softOval} />
-              <Image source={mascot} style={styles.mascot} resizeMode="contain" />
-            </View>
+            <Image source={mascot} style={styles.mascot} resizeMode="contain" />
             <Text style={styles.title}>{t("loginTitle")}</Text>
             <Text style={styles.subtitle}>
               {language === "tr" ? "Paranı daha kolay yönet,\nhedeflerine daha hızlı ulaş." : "Manage your money easily,\nreach your goals faster."}
@@ -159,24 +156,10 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center"
   },
-  mascotStage: {
-    width: 240,
-    height: 180,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12
-  },
   mascot: {
-    width: 170,
-    height: 170
-  },
-  softOval: {
-    position: "absolute",
-    bottom: 6,
-    width: 140,
-    height: 36,
-    borderRadius: 70,
-    backgroundColor: "rgba(13, 50, 40, 0.08)"
+    width: 184,
+    height: 190,
+    marginBottom: 16
   },
   title: {
     fontSize: 36,

@@ -15,8 +15,8 @@ type FeatureItem = {
   highlighted?: boolean;
 };
 
-const mascotTR = require("../../pgn/mascot-cutout.jpg");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 
 // Static configuration removed to support dynamic translations
 
@@ -145,10 +145,10 @@ const styles = StyleSheet.create({
   },
   softOval: {
     position: "absolute",
-    bottom: 6,
-    width: 140,
-    height: 36,
-    borderRadius: 70,
+    bottom: 4,
+    width: 190,
+    height: 80,
+    borderRadius: 100,
     backgroundColor: "rgba(13, 50, 40, 0.08)"
   },
   mascot: {

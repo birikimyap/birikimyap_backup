@@ -10,8 +10,8 @@ import { formatCurrency } from "@/utils/currency";
 import { getMonthlyRemaining, getTotalFixedExpenses, getTotalIncome } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 
-const mascotTR = require("../../pgn/mascot-cutout.jpg");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 
 const goalCards = [
   { id: "emergency", title: "Acil durum", subtitle: "Güvende hisset", icon: "shield" },
@@ -92,7 +92,6 @@ export default function SavingsGoalScreen() {
 
           <View style={styles.hero}>
             <View style={styles.mascotStage}>
-              <View style={styles.softOval} />
               <Text style={[styles.sparkle, styles.sparkleLeft]}>✦</Text>
               <Text style={[styles.sparkle, styles.sparkleRight]}>✦</Text>
               <Image source={mascot} style={styles.mascot} resizeMode="contain" />
@@ -281,14 +280,6 @@ const styles = StyleSheet.create({
   mascot: {
     width: 140,
     height: 140
-  },
-  softOval: {
-    position: "absolute",
-    bottom: 10,
-    width: 112,
-    height: 30,
-    borderRadius: 56,
-    backgroundColor: "rgba(13, 50, 40, 0.08)"
   },
   sparkle: {
     position: "absolute",

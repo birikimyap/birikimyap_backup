@@ -30,8 +30,8 @@ import { formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 
-const mascotTR = require("../../pgn/mascot-cutout.jpg");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 
 const voiceWaveBars = [
   { id: "voice-sheet-wave-1", value: 0 },
@@ -717,22 +717,8 @@ export default function HomeDashboardScreen() {
               {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
             </Text>
           </View>
-          <View style={[styles.heroMascot, { 
-            backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.88)" : "#FFFFFF",
-            borderRadius: 55,
-            overflow: "hidden",
-            borderWidth: 1.2,
-            borderColor: isDarkMode ? "rgba(0, 229, 143, 0.15)" : "rgba(13, 50, 40, 0.06)",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: isDarkMode ? 0.2 : 0.05,
-            shadowRadius: 10,
-            elevation: 3
-          }]}>
-            <Image source={mascot} style={styles.heroMascotImage} resizeMode="cover" />
-            {isDarkMode && (
-              <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(5, 11, 8, 0.10)" }]} />
-            )}
+          <View style={styles.heroMascot}>
+            <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
           </View>
         </View>
 
@@ -2764,21 +2750,23 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 14,
     top: 29,
-    width: 110,
-    height: 110,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.white,
     alignItems: "center",
-    justifyContent: "center"
-  },
-  softOval: {
-    position: "absolute",
-    bottom: 4,
-    width: 90,
-    height: 26,
-    borderRadius: 45
+    justifyContent: "center",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3
   },
   heroMascotImage: {
-    width: 110,
-    height: 110
+    width: "92%",
+    height: "92%",
+    borderRadius: 55
   },
   periodWrap: {
     marginTop: 14,

@@ -50,8 +50,8 @@ const defaultIncomeRows = [
 
 const defaultIncomeRowIds = new Set<string>(defaultIncomeRows.map((row) => row.id));
 
-const mascotTR = require("../../pgn/mascot-cutout.jpg");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 const rowHeight = 86;
 
 function createRowId(prefix: string) {
@@ -454,9 +454,9 @@ const styles = StyleSheet.create({
   heroKeyboard: { marginTop: -4 },
   mascotStage: { width: 180, height: 110, alignItems: "center", justifyContent: "center" },
   mascotStageKeyboard: { height: 72 },
-  softOval: { position: "absolute", bottom: 4, width: 84, height: 22, borderRadius: 45, backgroundColor: "rgba(13, 50, 40, 0.08)" },
-  mascot: { width: 104, height: 104 },
-  mascotKeyboard: { width: 72, height: 72 },
+  softOval: { position: "absolute", bottom: 4, width: 140, height: 50, borderRadius: 120, backgroundColor: "rgba(13, 50, 40, 0.06)" },
+  mascot: { width: 104, height: 108 },
+  mascotKeyboard: { width: 72, height: 76 },
   sparkle: { position: "absolute", color: colors.primaryMuted, fontSize: 20, fontWeight: "700" },
   sparkleLeft: { left: 24, top: 24 },
   sparkleRight: { right: 24, bottom: 20, fontSize: 16 },

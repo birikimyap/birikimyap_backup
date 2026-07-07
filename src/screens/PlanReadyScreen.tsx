@@ -8,8 +8,8 @@ import { colors, radius } from "@/theme";
 import { formatCurrency } from "@/utils/currency";
 import { translations } from "@/utils/translations";
 
-const mascotTR = require("../../pgn/mascot-cutout.jpg");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
+const mascotTR = require("../../pgn/mascot-cutout.png");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 
 const waveBars = Array.from({ length: 12 }, (_, index) => ({
   id: `voice-wave-${index}`,
