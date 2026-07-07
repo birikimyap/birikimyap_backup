@@ -160,23 +160,23 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   mascotStage: {
-    width: 220,
-    height: 200,
+    width: 240,
+    height: 180,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8
+    marginBottom: 12
   },
   mascot: {
-    width: 184,
-    height: 190
+    width: 170,
+    height: 170
   },
   softOval: {
     position: "absolute",
-    bottom: 8,
-    width: 160,
-    height: 44,
-    borderRadius: 80,
-    backgroundColor: "rgba(13, 50, 40, 0.06)"
+    bottom: 6,
+    width: 140,
+    height: 36,
+    borderRadius: 70,
+    backgroundColor: "rgba(13, 50, 40, 0.08)"
   },
   title: {
     fontSize: 36,

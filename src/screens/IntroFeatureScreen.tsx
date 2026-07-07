@@ -145,10 +145,10 @@ const styles = StyleSheet.create({
   },
   softOval: {
     position: "absolute",
-    bottom: 4,
-    width: 190,
-    height: 80,
-    borderRadius: 100,
+    bottom: 6,
+    width: 140,
+    height: 36,
+    borderRadius: 70,
     backgroundColor: "rgba(13, 50, 40, 0.08)"
   },
   mascot: {

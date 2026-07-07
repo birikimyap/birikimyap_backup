@@ -284,11 +284,11 @@ const styles = StyleSheet.create({
   },
   softOval: {
     position: "absolute",
-    bottom: 12,
-    width: 130,
-    height: 36,
-    borderRadius: 65,
-    backgroundColor: "rgba(13, 50, 40, 0.06)"
+    bottom: 10,
+    width: 112,
+    height: 30,
+    borderRadius: 56,
+    backgroundColor: "rgba(13, 50, 40, 0.08)"
   },
   sparkle: {
     position: "absolute",
