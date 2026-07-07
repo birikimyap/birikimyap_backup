@@ -663,6 +663,9 @@ export default function HomeDashboardScreen() {
   }, [expenses]);
 
   function renderHomeTab() {
+    const absExceededAmount = Math.abs(selectedPeriodRemaining);
+    const formattedExceeded = formatCurrency(absExceededAmount);
+
     return (
       <View style={styles.tabContentContainer}>
         <View style={styles.header}>
@@ -670,7 +673,9 @@ export default function HomeDashboardScreen() {
             <Text style={[styles.greeting, { color: themeColors.text }]}>{t("welcomeUser")}</Text>
             {selectedPeriodRemaining < 0 ? (
               <Text style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900" }]}>
-                {language === "tr" ? "⚠️ Dikkat! Harcama limitini aştın, hedefin tehlikede!" : "⚠️ Warning! Exceeded spending limit, target in danger!"}
+                {language === "tr" 
+                  ? `⚠️ Dikkat! Harcama limitini ${formattedExceeded} aştın, hedefin tehlikede!` 
+                  : `⚠️ Warning! Exceeded spending limit by ${formattedExceeded}, target in danger!`}
               </Text>
             ) : (
               <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
@@ -725,11 +730,13 @@ export default function HomeDashboardScreen() {
           </View>
           <View style={{ position: "absolute", right: 14, top: 29, width: 120, height: 120, zIndex: 5 }}>
             {selectedPeriodRemaining < 0 && (
-              <View style={styles.mascotSpeechBubble}>
-                <Text style={styles.mascotSpeechBubbleText}>
-                  {language === "tr" ? "Limit Aşıldı! ⚠️" : "Limit Exceeded! ⚠️"}
-                </Text>
-                <View style={styles.speechBubbleArrow} />
+              <View style={styles.mascotSpeechBubbleWrapper}>
+                <View style={styles.mascotSpeechBubble}>
+                  <Text style={styles.mascotSpeechBubbleText}>
+                    {language === "tr" ? `${formattedExceeded} Aşıldı! ⚠️` : `${formattedExceeded} Over! ⚠️`}
+                  </Text>
+                  <View style={styles.speechBubbleArrow} />
+                </View>
               </View>
             )}
             <View style={[styles.heroMascot, { right: 0, top: 0 }]}>
@@ -2747,10 +2754,15 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.78)",
     textAlign: "left"
   },
-  mascotSpeechBubble: {
+  mascotSpeechBubbleWrapper: {
     position: "absolute",
-    left: -4,
-    top: -24,
+    left: -20,
+    right: -20,
+    top: -26,
+    alignItems: "center",
+    zIndex: 20
+  },
+  mascotSpeechBubble: {
     backgroundColor: "#D32F2F",
     paddingHorizontal: 8,
     paddingVertical: 5,
@@ -2759,8 +2771,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.16,
     shadowRadius: 6,
-    elevation: 4,
-    zIndex: 20
+    elevation: 4
   },
   mascotSpeechBubbleText: {
     color: "#FFFFFF",
@@ -2770,7 +2781,7 @@ const styles = StyleSheet.create({
   speechBubbleArrow: {
     position: "absolute",
     bottom: -6,
-    right: 20,
+    alignSelf: "center",
     width: 0,
     height: 0,
     backgroundColor: "transparent",
