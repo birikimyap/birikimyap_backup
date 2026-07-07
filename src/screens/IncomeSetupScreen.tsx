@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   FlatList,
   Image,
+  InputAccessoryView,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -49,6 +50,7 @@ const defaultIncomeRows = [
 ] as const;
 
 const defaultIncomeRowIds = new Set<string>(defaultIncomeRows.map((row) => row.id));
+const inputAccessoryID = "amountKeyboardDone";
 
 const mascotTR = require("../../pgn/mascot-cutout.png");
 const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
@@ -380,6 +382,28 @@ export default function IncomeSetupScreen() {
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+
+      {Platform.OS === "ios" && (
+        <InputAccessoryView nativeID={inputAccessoryID}>
+          <View style={{
+            width: "100%",
+            height: 45,
+            backgroundColor: "#F9F9F9",
+            borderTopWidth: 0.5,
+            borderTopColor: "rgba(0,0,0,0.15)",
+            flexDirection: "row",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            paddingHorizontal: 16
+          }}>
+            <Pressable onPress={() => Keyboard.dismiss()} style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}>
+              <Text style={{ color: colors.primary, fontWeight: "700", fontSize: 16 }}>
+                {language === "tr" ? "Bitti" : "Done"}
+              </Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      )}
     </SafeAreaView>
   );
 }
@@ -422,6 +446,7 @@ function IncomeRow({ title, subtitle, icon, tone, amount, onChangeText, onChange
           placeholder="0,00"
           placeholderTextColor="#9CA19E"
           keyboardType="decimal-pad"
+          inputAccessoryViewID={inputAccessoryID}
           style={styles.amountInput}
         />
         <Text style={styles.currency}>
