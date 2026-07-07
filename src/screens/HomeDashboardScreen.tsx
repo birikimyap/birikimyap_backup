@@ -1051,6 +1051,33 @@ export default function HomeDashboardScreen() {
     const highestCategory = analysisCategoryData[0]?.category || "Yok";
     const analysisPeriodRemaining = getRemainingLimitForPeriod(analysisPeriod);
 
+    const dailyRemaining = getRemainingLimitForPeriod("daily");
+    const monthlyRemainingPlan = getRemainingLimitForPeriod("monthly");
+
+    // Dynamic Comparative Insight Text
+    let analysisInsightText = "";
+    if (language === "tr") {
+      if (dailyRemaining < 0 && monthlyRemainingPlan > 0) {
+        analysisInsightText = "Bugün günlük harcama limitini aştın fakat aylık genel bütçen hâlâ güvende! Ay sonuna kadar günlük harcamalarını biraz toparlarsan hedefine kolayca ulaşırsın. 💪";
+      } else if (dailyRemaining < 0 && monthlyRemainingPlan < 0) {
+        analysisInsightText = "Hem günlük limitini aştın hem de aylık bütçen ekside! Tasarruf hedefine ulaşmak için harcamalarını acilen durdurmalı veya kısmalısın. 🚨";
+      } else if (dailyRemaining >= 0 && monthlyRemainingPlan < 0) {
+        analysisInsightText = "Bugün harika gidiyorsun ama aylık toplam bütçen limitlerin üzerinde kalmış. Ay sonuna kadar günlük limitlerini bu şekilde korumaya devam edersen durumu kurtarabilirsin! 🧐";
+      } else {
+        analysisInsightText = "Harika! Hem günlük limitinin altındasın hem de aylık tasarruf hedefin pürüzsüz ilerliyor. Birikim planına tam uyum sağlıyorsun! 🎯";
+      }
+    } else {
+      if (dailyRemaining < 0 && monthlyRemainingPlan > 0) {
+        analysisInsightText = "You exceeded the daily limit today, but your monthly budget is still safe! If you balance your daily spending by the end of the month, you'll easily reach your goal. 💪";
+      } else if (dailyRemaining < 0 && monthlyRemainingPlan < 0) {
+        analysisInsightText = "You exceeded both your daily limit and your monthly budget! To reach your target, you must immediately stop or cut down on spending. 🚨";
+      } else if (dailyRemaining >= 0 && monthlyRemainingPlan < 0) {
+        analysisInsightText = "You are doing great today, but your total monthly budget has exceeded the limit. If you maintain your daily limits until the end of the month, you can recover! 🧐";
+      } else {
+        analysisInsightText = "Great job! You are within your daily limit today and your monthly savings goal is on track. You are following your plan perfectly! 🎯";
+      }
+    }
+
     return (
       <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         <View style={styles.header}>
@@ -1102,52 +1129,75 @@ export default function HomeDashboardScreen() {
             borderRadius: 20,
             padding: 16,
             marginTop: 14,
-            flexDirection: "row",
-            gap: 12,
-            alignItems: "center",
-            marginBottom: 0
+            flexDirection: "column",
+            gap: 12
           }
         ]}>
-          <View style={{
-            width: 42,
-            height: 42,
-            borderRadius: 21,
-            backgroundColor: analysisPeriodRemaining < 0 ? "rgba(211, 47, 47, 0.12)" : "rgba(0, 223, 137, 0.12)",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>
-            <Feather 
-              name={analysisPeriodRemaining < 0 ? "alert-triangle" : "check-circle"} 
-              size={22} 
-              color={analysisPeriodRemaining < 0 ? "#D32F2F" : "#00DF89"} 
-            />
+          <View style={{ flexDirection: "row", gap: 12, alignItems: "center", width: "100%" }}>
+            <View style={{
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: analysisPeriodRemaining < 0 ? "rgba(211, 47, 47, 0.12)" : "rgba(0, 223, 137, 0.12)",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              <Feather 
+                name={analysisPeriodRemaining < 0 ? "alert-triangle" : "check-circle"} 
+                size={22} 
+                color={analysisPeriodRemaining < 0 ? "#D32F2F" : "#00DF89"} 
+              />
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ 
+                fontSize: 14, 
+                fontWeight: "900", 
+                color: analysisPeriodRemaining < 0 ? "#D32F2F" : "#00DF89" 
+              }}>
+                {analysisPeriodRemaining < 0 
+                  ? (language === "tr" ? "Harcama Durumu: Bütçe Aşıldı! ⚠️" : "Spending Status: Over Budget! ⚠️")
+                  : (language === "tr" ? "Harcama Durumu: Her Şey Yolunda! 🎉" : "Spending Status: On Track! 🎉")
+                }
+              </Text>
+              <Text style={{ 
+                fontSize: 12, 
+                lineHeight: 17, 
+                fontWeight: "600", 
+                color: themeColors.textMuted 
+              }}>
+                {analysisPeriodRemaining < 0 
+                  ? (language === "tr" 
+                      ? `Bu dönem limitinizi ${formatCurrency(Math.abs(analysisPeriodRemaining))} aştınız. Tasarruf hedefiniz tehlikede, harcamaları yavaşlatın.` 
+                      : `You exceeded your limit by ${formatCurrency(Math.abs(analysisPeriodRemaining))} this period. Your savings goal is in danger, slow down spending.`)
+                  : (language === "tr"
+                      ? `Tebrikler! Planlanan limitin içindesiniz. ${formatCurrency(analysisPeriodRemaining)} harcama limitiniz daha var. Böyle devam edin!`
+                      : `Congratulations! You are within the limit. You have ${formatCurrency(analysisPeriodRemaining)} remaining limit. Keep it up!`)
+                }
+              </Text>
+            </View>
           </View>
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={{ 
-              fontSize: 14, 
-              fontWeight: "900", 
-              color: analysisPeriodRemaining < 0 ? "#D32F2F" : "#00DF89" 
-            }}>
-              {analysisPeriodRemaining < 0 
-                ? (language === "tr" ? "Harcama Durumu: Bütçe Aşıldı! ⚠️" : "Spending Status: Over Budget! ⚠️")
-                : (language === "tr" ? "Harcama Durumu: Her Şey Yolunda! 🎉" : "Spending Status: On Track! 🎉")
-              }
-            </Text>
-            <Text style={{ 
-              fontSize: 12, 
-              lineHeight: 17, 
-              fontWeight: "600", 
-              color: themeColors.textMuted 
-            }}>
-              {analysisPeriodRemaining < 0 
-                ? (language === "tr" 
-                    ? `Bu dönem limitinizi ${formatCurrency(Math.abs(analysisPeriodRemaining))} aştınız. Tasarruf hedefiniz tehlikede, harcamaları yavaşlatın.` 
-                    : `You exceeded your limit by ${formatCurrency(Math.abs(analysisPeriodRemaining))} this period. Your savings goal is in danger, slow down spending.`)
-                : (language === "tr"
-                    ? `Tebrikler! Planlanan limitin içindesiniz. ${formatCurrency(analysisPeriodRemaining)} harcama limitiniz daha var. Böyle devam edin!`
-                    : `Congratulations! You are within the limit. You have ${formatCurrency(analysisPeriodRemaining)} remaining limit. Keep it up!`)
-              }
-            </Text>
+
+          {/* Dynamic Trend Insight box */}
+          <View style={{ 
+            marginTop: 4, 
+            padding: 12, 
+            borderRadius: 14, 
+            backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "rgba(0, 0, 0, 0.02)", 
+            borderWidth: 1, 
+            borderColor: isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
+            flexDirection: "row",
+            gap: 8,
+            alignItems: "flex-start"
+          }}>
+            <Feather name="info" size={16} color={themeColors.primary} style={{ marginTop: 1.5 }} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ fontSize: 10, fontWeight: "900", color: themeColors.primary, textTransform: "uppercase" }}>
+                {language === "tr" ? "💡 AKILLI FİNANSAL ÖNGÖRÜ" : "💡 SMART FINANCIAL INSIGHT"}
+              </Text>
+              <Text style={{ fontSize: 11, lineHeight: 15, fontWeight: "700", color: themeColors.text }}>
+                {analysisInsightText}
+              </Text>
+            </View>
           </View>
         </View>
 
