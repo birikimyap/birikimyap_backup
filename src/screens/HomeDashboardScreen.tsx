@@ -766,7 +766,7 @@ export default function HomeDashboardScreen() {
                 width: 122, 
                 height: 122, 
                 borderRadius: 61,
-                backgroundColor: isDarkMode ? "#131E1A" : colors.white,
+                backgroundColor: colors.white,
                 shadowOpacity: 0
               }]}>
                 <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
