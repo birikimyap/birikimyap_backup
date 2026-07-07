@@ -65,6 +65,7 @@ export default function HomeDashboardScreen() {
   const setLanguage = useFinanceStore((state) => state.setLanguage);
   const currency = useFinanceStore((state) => state.currency);
   const setCurrency = useFinanceStore((state) => state.setCurrency);
+  const getRemainingLimitForPeriod = useFinanceStore((state) => state.getRemainingLimitForPeriod);
 
   const t = (key: keyof typeof translations["tr"], variables?: Record<string, string>): string => {
     let str: string = translations[language][key] || key;
@@ -1048,7 +1049,6 @@ export default function HomeDashboardScreen() {
   function renderAnalysisTab() {
     const activeChartData = analysisPeriod === "weekly" ? analysisWeeklyData : analysisMonthlyData;
     const highestCategory = analysisCategoryData[0]?.category || "Yok";
-    const getRemainingLimitForPeriod = useFinanceStore((state) => state.getRemainingLimitForPeriod);
     const analysisPeriodRemaining = getRemainingLimitForPeriod(analysisPeriod);
 
     return (
