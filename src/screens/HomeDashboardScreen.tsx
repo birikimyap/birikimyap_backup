@@ -1238,10 +1238,6 @@ export default function HomeDashboardScreen() {
         <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", gap: 10, paddingVertical: 14 }]}>
           <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>{t("profileSavingsGoalHeader")}</Text>
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileGoalName")}</Text>
-            <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{savingsGoal.title || (language === "tr" ? "Belirtilmedi" : "Unspecified")}</Text>
-          </View>
-          <View style={styles.profileBudgetRow}>
             <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileGoalTarget")}</Text>
             <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{formatCurrency(savingsGoal.targetAmount)}</Text>
           </View>
@@ -2458,17 +2454,6 @@ function SavingsGoalEditModal({
           <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{t("editGoalSub")}</Text>
 
           <View style={[styles.formGroup, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginTop: 20 }]}>
-            <View style={styles.formRow}>
-              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("editGoalNameLabel")}</Text>
-              <TextInput
-                value={title}
-                onChangeText={setTitle}
-                placeholder={language === "tr" ? "Örn: Acil durum fonu" : "e.g. Emergency fund"}
-                placeholderTextColor="#9CA19E"
-                style={[styles.formInput, { color: themeColors.text }]}
-              />
-            </View>
-            <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
             <View style={styles.formRow}>
               <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("editGoalTargetLabel")}</Text>
               <TextInput
