@@ -687,87 +687,16 @@ export default function HomeDashboardScreen() {
           </Pressable>
         </View>
 
-        {/* Apple Card style Mesh Gradient Budget Card */}
-        <LinearGradient
-          colors={selectedPeriodRemaining < 0 
-            ? ["#5E1919", "#782222", "#9C2E2E"] 
-            : (isDarkMode ? ["#0B2E22", "#114A37", "#196B50"] : ["#0A2A20", "#0D3528", "#124E3A"])
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            marginHorizontal: 18,
-            marginTop: 14,
-            borderRadius: 24,
-            padding: 20,
-            overflow: "hidden",
-            shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : themeColors.primary,
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: isDarkMode ? 0.35 : 0.12,
-            shadowRadius: 20,
-            elevation: 8
-          }}
-        >
-          {/* Card Glassmorphic Overlay Border */}
-          <View style={[StyleSheet.absoluteFillObject, {
-            borderColor: "rgba(255, 255, 255, 0.12)",
-            borderWidth: 1.2,
-            borderRadius: 24
-          }]} />
-
-          {/* Top Row: Brand & Period Badge */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text style={{ fontSize: 10.5, fontWeight: "900", color: "rgba(255, 255, 255, 0.6)", textTransform: "uppercase", letterSpacing: 0.8 }}>
-              {selectedPeriod === "daily" ? t("periodDailyLimit").toUpperCase() : (selectedPeriod === "weekly" ? t("periodWeeklyLimit").toUpperCase() : t("periodMonthlyLimit").toUpperCase())}
-            </Text>
-            <View style={{
-              backgroundColor: "rgba(255, 255, 255, 0.12)",
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: 8
-            }}>
-              <Text style={{ fontSize: 9.5, fontWeight: "900", color: "#FFFFFF", letterSpacing: 0.5 }}>
-                ✨ {language === "tr" ? "AKILLI ASİSTAN" : "SMART ASSISTANT"}
-              </Text>
-            </View>
-          </View>
-
-          {/* Middle Row: Main Remaining Budget */}
-          <View style={{ marginTop: 20, gap: 4 }}>
-            <Text style={{ fontSize: 12.5, fontWeight: "700", color: "rgba(255, 255, 255, 0.7)" }}>
-              {selectedPeriod === "daily" ? t("periodDailyRemaining") : (selectedPeriod === "weekly" ? t("periodWeeklyRemaining") : t("periodMonthlyRemaining"))}
-            </Text>
-            <Text style={{ fontSize: 34, fontWeight: "900", color: "#FFFFFF", letterSpacing: -0.5 }}>
-              {formatCurrency(selectedPeriodRemaining)}
-            </Text>
-          </View>
-
-          {/* Bottom Row: Spent vs Limit Mini Progress bar */}
-          <View style={{ marginTop: 24, gap: 8 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <Text style={{ fontSize: 11.5, fontWeight: "700", color: "rgba(255, 255, 255, 0.7)" }}>
-                {language === "tr" ? "Durum" : "Status"}
-              </Text>
-              <Text style={{ fontSize: 11.5, fontWeight: "800", color: "#FFFFFF" }}>
-                {formatCurrency(recentTotal)} / {formatCurrency(selectedPeriodLimit)}
-              </Text>
-            </View>
-            <View style={{ height: 6, borderRadius: 3, backgroundColor: "rgba(255, 255, 255, 0.15)", overflow: "hidden" }}>
-              <View style={{
-                width: `${Math.min(Math.max((recentTotal / (selectedPeriodLimit || 1)) * 100, 0), 100)}%`,
-                height: "100%",
-                backgroundColor: selectedPeriodRemaining < 0 ? "#FF8A8A" : "#00DF89",
-                borderRadius: 3
-              }} />
-            </View>
-          </View>
-        </LinearGradient>
-
         {/* Savings Goal Management (Mascot Card) */}
         <View style={[styles.heroCard, { 
-          backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "#EBF2EE", 
-          borderColor: themeColors.border, 
+          backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "#FDF6EE", 
+          borderColor: isDarkMode ? "rgba(255, 255, 255, 0.06)" : "#F0E4D5", 
           borderWidth: 1.2,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: isDarkMode ? 0.2 : 0.03,
+          shadowRadius: 16,
+          elevation: 3,
           marginTop: 14
         }]}>
           <View style={styles.heroCopy}>
@@ -791,6 +720,39 @@ export default function HomeDashboardScreen() {
           <View style={styles.heroMascot}>
             <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
           </View>
+        </View>
+
+        {/* Polished 3-Column Summary Card */}
+        <View style={[styles.summaryCard, { 
+          backgroundColor: themeColors.surface, 
+          borderColor: themeColors.border,
+          borderWidth: 1.2,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: isDarkMode ? 0.25 : 0.04,
+          shadowRadius: 16,
+          elevation: 4
+        }]}>
+          <SummaryMetric
+            icon="credit-card"
+            title={copy.limit}
+            amount={selectedPeriodLimit}
+            tone="green"
+          />
+          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
+          <SummaryMetric
+            icon="pie-chart"
+            title={copy.spent}
+            amount={recentTotal}
+            tone="orange"
+          />
+          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
+          <SummaryMetric
+            icon="shield"
+            title={copy.remaining}
+            amount={selectedPeriodRemaining}
+            tone="green"
+          />
         </View>
 
         <View style={styles.addExpenseButtonRow}>
