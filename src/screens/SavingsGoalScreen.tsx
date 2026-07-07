@@ -92,6 +92,7 @@ export default function SavingsGoalScreen() {
 
           <View style={styles.hero}>
             <View style={styles.mascotStage}>
+              <View style={styles.softOval} />
               <Text style={[styles.sparkle, styles.sparkleLeft]}>✦</Text>
               <Text style={[styles.sparkle, styles.sparkleRight]}>✦</Text>
               <Image source={mascot} style={styles.mascot} resizeMode="contain" />
@@ -280,6 +281,14 @@ const styles = StyleSheet.create({
   mascot: {
     width: 140,
     height: 140
+  },
+  softOval: {
+    position: "absolute",
+    bottom: 12,
+    width: 130,
+    height: 36,
+    borderRadius: 65,
+    backgroundColor: "rgba(13, 50, 40, 0.06)"
   },
   sparkle: {
     position: "absolute",

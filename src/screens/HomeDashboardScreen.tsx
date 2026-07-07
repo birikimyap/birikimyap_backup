@@ -718,6 +718,7 @@ export default function HomeDashboardScreen() {
             </Text>
           </View>
           <View style={styles.heroMascot}>
+            <View style={[styles.softOval, { backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.12)" : "rgba(13, 50, 40, 0.08)" }]} />
             <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
           </View>
         </View>
@@ -2748,6 +2749,13 @@ const styles = StyleSheet.create({
     height: 110,
     alignItems: "center",
     justifyContent: "center"
+  },
+  softOval: {
+    position: "absolute",
+    bottom: 4,
+    width: 90,
+    height: 26,
+    borderRadius: 45
   },
   heroMascotImage: {
     width: 110,

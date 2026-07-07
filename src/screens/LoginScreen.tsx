@@ -67,7 +67,10 @@ export default function LoginScreen() {
           contentContainerStyle={styles.content}
         >
           <View style={styles.hero}>
-            <Image source={mascot} style={styles.mascot} resizeMode="contain" />
+            <View style={styles.mascotStage}>
+              <View style={styles.softOval} />
+              <Image source={mascot} style={styles.mascot} resizeMode="contain" />
+            </View>
             <Text style={styles.title}>{t("loginTitle")}</Text>
             <Text style={styles.subtitle}>
               {language === "tr" ? "Paranı daha kolay yönet,\nhedeflerine daha hızlı ulaş." : "Manage your money easily,\nreach your goals faster."}
@@ -156,10 +159,24 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center"
   },
+  mascotStage: {
+    width: 220,
+    height: 200,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8
+  },
   mascot: {
     width: 184,
-    height: 190,
-    marginBottom: 16
+    height: 190
+  },
+  softOval: {
+    position: "absolute",
+    bottom: 8,
+    width: 160,
+    height: 44,
+    borderRadius: 80,
+    backgroundColor: "rgba(13, 50, 40, 0.06)"
   },
   title: {
     fontSize: 36,
