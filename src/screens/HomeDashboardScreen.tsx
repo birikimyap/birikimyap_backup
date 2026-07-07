@@ -668,7 +668,13 @@ export default function HomeDashboardScreen() {
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
             <Text style={[styles.greeting, { color: themeColors.text }]}>{t("welcomeUser")}</Text>
-            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
+            {selectedPeriodRemaining < 0 ? (
+              <Text style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900" }]}>
+                {language === "tr" ? "⚠️ Dikkat! Harcama limitini aştın, hedefin tehlikede!" : "⚠️ Warning! Exceeded spending limit, target in danger!"}
+              </Text>
+            ) : (
+              <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
+            )}
           </View>
           <Pressable 
             style={({ pressed }) => [
@@ -717,8 +723,18 @@ export default function HomeDashboardScreen() {
               {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
             </Text>
           </View>
-          <View style={styles.heroMascot}>
-            <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+          <View style={{ position: "absolute", right: 14, top: 29, width: 120, height: 120, zIndex: 5 }}>
+            {selectedPeriodRemaining < 0 && (
+              <View style={styles.mascotSpeechBubble}>
+                <Text style={styles.mascotSpeechBubbleText}>
+                  {language === "tr" ? "Limit Aşıldı! ⚠️" : "Limit Exceeded! ⚠️"}
+                </Text>
+                <View style={styles.speechBubbleArrow} />
+              </View>
+            )}
+            <View style={[styles.heroMascot, { right: 0, top: 0 }]}>
+              <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+            </View>
           </View>
         </View>
 
@@ -2745,6 +2761,41 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "rgba(255,255,255,0.78)",
     textAlign: "left"
+  },
+  mascotSpeechBubble: {
+    position: "absolute",
+    left: -4,
+    top: -24,
+    backgroundColor: "#D32F2F",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    elevation: 4,
+    zIndex: 20
+  },
+  mascotSpeechBubbleText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "900"
+  },
+  speechBubbleArrow: {
+    position: "absolute",
+    bottom: -6,
+    right: 20,
+    width: 0,
+    height: 0,
+    backgroundColor: "transparent",
+    borderStyle: "solid",
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 6,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderTopColor: "#D32F2F"
   },
   heroMascot: {
     position: "absolute",

@@ -13,7 +13,10 @@ export const formatCurrency = (value: number) => {
     locale = "de-DE";
   }
   
-  return `${currencySign}${new Intl.NumberFormat(locale).format(Math.max(value, 0))}`;
+  const isNegative = value < 0;
+  const absValue = Math.abs(value);
+  const formatted = new Intl.NumberFormat(locale).format(absValue);
+  return isNegative ? `-${currencySign}${formatted}` : `${currencySign}${formatted}`;
 };
 
 export function parseAmount(value: string | number) {

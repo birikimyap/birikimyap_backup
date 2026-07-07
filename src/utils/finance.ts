@@ -84,7 +84,7 @@ export function calculateFinancePlan(
     limits,
     selectedPeriodLimit,
     selectedPeriodSpent,
-    selectedPeriodRemaining: Math.max(selectedPeriodLimit - selectedPeriodSpent, 0)
+    selectedPeriodRemaining: selectedPeriodLimit - selectedPeriodSpent
   };
 }
 
