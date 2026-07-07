@@ -1005,14 +1005,7 @@ export default function HomeDashboardScreen() {
                 renderItem={({ item, index }) => {
                   const iconConfig = getCategoryIconConfig(item.expense.category);
                   return (
-                    <Pressable 
-                      onPress={() => {
-                        triggerHaptic();
-                        setSelectedDetailExpense(item.expense);
-                        setIsDetailModalVisible(true);
-                      }}
-                      style={({ pressed }) => pressed && styles.pressed}
-                    >
+                    <View>
                       <View style={styles.expenseRow}>
                         <View style={[styles.expenseIcon, { backgroundColor: iconConfig.bg, alignItems: "center", justifyContent: "center" }]}>
                           <Feather name={iconConfig.name} size={15} color={iconConfig.color} />
@@ -1029,7 +1022,7 @@ export default function HomeDashboardScreen() {
                         </View>
                       </View>
                       {index < periodExpenseRows.length - 1 && <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />}
-                    </Pressable>
+                    </View>
                   );
                 }}
               />
@@ -1851,26 +1844,6 @@ export default function HomeDashboardScreen() {
               visible: true,
               message: t("resetToastMessage"),
               subtext: t("resetToastSub")
-            });
-          }}
-        />
-
-        <ExpenseDetailModal
-          visible={isDetailModalVisible}
-          onClose={() => setIsDetailModalVisible(false)}
-          expense={selectedDetailExpense}
-          onDelete={(id) => {
-            triggerHaptic();
-            const updatedExpenses = expenses.filter((e) => e.id !== id);
-            setExpenses(updatedExpenses);
-            setIsDetailModalVisible(false);
-            setToastConfig({
-              visible: true,
-              message: language === "tr" ? "Harcama Silindi 🗑️" : "Expense Deleted 🗑️",
-              subtext: selectedDetailExpense 
-                ? (language === "tr" ? `${selectedDetailExpense.label} başarıyla listeden kaldırıldı.` : `${selectedDetailExpense.label} was removed from the list.`)
-                : "",
-              type: "success"
             });
           }}
         />
@@ -2815,209 +2788,6 @@ function ResetConfirmModal({ visible, onClose, onConfirm }: { visible: boolean; 
     </Modal>
   );
 }
-
-function formatDetailDate(occurredAt?: string, language?: string) {
-  if (!occurredAt) return "";
-  const d = new Date(occurredAt);
-  if (Number.isNaN(d.getTime())) return "";
-  const locale = language === "tr" ? "tr-TR" : "en-US";
-  return d.toLocaleDateString(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
-
-function ExpenseDetailModal({
-  visible,
-  onClose,
-  expense,
-  onDelete
-}: {
-  visible: boolean;
-  onClose: () => void;
-  expense: Expense | null;
-  onDelete: (id: string) => void;
-}) {
-  if (!expense) return null;
-
-  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
-  const themeColors = isDarkMode ? darkColors : lightColors;
-  const language = useFinanceStore((state) => state.language);
-  
-  const iconConfig = getCategoryIconConfig(expense.category);
-  const formattedDate = formatDetailDate(expense.occurredAt, language);
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
-        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, paddingBottom: 36 }]}>
-          <View style={styles.sheetHandle} />
-          
-          {/* Category Icon & Title */}
-          <View style={{ alignItems: "center", marginTop: 10, marginBottom: 20 }}>
-            <View style={{
-              width: 54,
-              height: 54,
-              borderRadius: 27,
-              backgroundColor: iconConfig.bg,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 8
-            }}>
-              <Feather name={iconConfig.name} size={24} color={iconConfig.color} />
-            </View>
-            <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.primary }}>
-              {expense.label}
-            </Text>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted, marginTop: 2 }}>
-              {expense.category}{expense.subtitle && expense.subtitle !== expense.category ? ` • ${expense.subtitle}` : ""}
-            </Text>
-          </View>
-
-          {/* Amount Display */}
-          <View style={{ 
-            backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "rgba(13, 50, 40, 0.02)", 
-            borderRadius: 16, 
-            padding: 16, 
-            alignItems: "center",
-            marginBottom: 20,
-            borderWidth: 1,
-            borderColor: themeColors.border
-          }}>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted, textTransform: "uppercase" }}>
-              {language === "tr" ? "Harcama Tutarı" : "Expense Amount"}
-            </Text>
-            <Text style={{ fontSize: 28, fontWeight: "900", color: themeColors.text, marginTop: 4 }}>
-              {formatCurrency(expense.amount)}
-            </Text>
-          </View>
-
-          {/* Detail Rows Group */}
-          <View style={[styles.formGroup, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginBottom: 24, paddingVertical: 4 }]}>
-            {/* Expense Name Row */}
-            <View style={styles.formRow}>
-              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
-                {language === "tr" ? "Harcama Adı" : "Expense Name"}
-              </Text>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.text, textAlign: "right", flex: 1 }}>
-                {expense.label}
-              </Text>
-            </View>
-
-            <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
-
-            {/* Category Row */}
-            <View style={styles.formRow}>
-              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
-                {language === "tr" ? "Kategori" : "Category"}
-              </Text>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.text, textAlign: "right", flex: 1 }}>
-                {expense.category}
-              </Text>
-            </View>
-
-            {expense.subtitle && expense.subtitle !== expense.category ? (
-              <>
-                <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
-                {/* Subcategory Row */}
-                <View style={styles.formRow}>
-                  <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
-                    {language === "tr" ? "Alt Kategori" : "Subcategory"}
-                  </Text>
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.text, textAlign: "right", flex: 1 }}>
-                    {expense.subtitle}
-                  </Text>
-                </View>
-              </>
-            ) : null}
-
-            <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
-
-            {/* Date Row */}
-            <View style={styles.formRow}>
-              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
-                {language === "tr" ? "Tarih ve Saat" : "Date and Time"}
-              </Text>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.text, textAlign: "right", flex: 1 }}>
-                {formattedDate}
-              </Text>
-            </View>
-            
-            <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
-
-            {/* Notes Row */}
-            <View style={[styles.formRow, { alignItems: "flex-start", paddingVertical: 12 }]}>
-              <Text style={[styles.formLabel, { color: themeColors.textMuted, marginTop: 1 }]}>
-                {language === "tr" ? "Ek Açıklama" : "Note / Description"}
-              </Text>
-              <Text style={{ 
-                fontSize: 13, 
-                fontWeight: "600", 
-                color: expense.note?.trim() ? themeColors.text : themeColors.textMuted, 
-                textAlign: "right", 
-                flex: 1,
-                fontStyle: expense.note?.trim() ? "normal" : "italic"
-              }}>
-                {expense.note?.trim() || (language === "tr" ? "Açıklama girilmemiş" : "No description provided")}
-              </Text>
-            </View>
-          </View>
-
-          {/* Delete Button & Close Row */}
-          <View style={{ gap: 12 }}>
-            <Pressable 
-              style={({ pressed }) => [
-                {
-                  height: 48,
-                  borderRadius: 14,
-                  backgroundColor: "rgba(211, 47, 47, 0.1)",
-                  borderWidth: 1.2,
-                  borderColor: "rgba(211, 47, 47, 0.25)",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8
-                },
-                pressed && styles.pressed
-              ]}
-              onPress={() => {
-                onDelete(expense.id);
-              }}
-            >
-              <Feather name="trash-2" size={16} color="#D32F2F" />
-              <Text style={{ fontSize: 14, fontWeight: "900", color: "#D32F2F" }}>
-                {language === "tr" ? "Harcamayı Sil" : "Delete Expense"}
-              </Text>
-            </Pressable>
-
-            <Pressable 
-              style={({ pressed }) => [
-                {
-                  height: 46,
-                  borderRadius: 14,
-                  backgroundColor: "rgba(0,0,0,0.04)",
-                  alignItems: "center",
-                  justifyContent: "center"
-                },
-                pressed && styles.pressed
-              ]}
-              onPress={onClose}
-            >
-              <Text style={{ fontSize: 14, fontWeight: "800", color: themeColors.text }}>
-                {language === "tr" ? "Kapat" : "Close"}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
