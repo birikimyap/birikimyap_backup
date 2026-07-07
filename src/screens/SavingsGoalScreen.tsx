@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Image, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -190,12 +190,7 @@ function Slider({ value, max, step, onChange }: { value: number; max: number; st
   const language = useFinanceStore((state) => state.language);
   const [trackWidth, setTrackWidth] = useState(1);
   const progress = max > 0 ? Math.min(value / max, 1) : 0;
-
-  const updateValue = (x: number) => {
-    const ratio = Math.max(0, Math.min(x / trackWidth, 1));
-    const steppedValue = Math.round((ratio * max) / step) * step;
-    onChange(Math.min(steppedValue, max));
-  };
+  const startProgressRef = useRef(0);
 
   const panResponder = useMemo(
     () =>
@@ -203,10 +198,16 @@ function Slider({ value, max, step, onChange }: { value: number; max: number; st
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: (evt) => {
-          updateValue(evt.nativeEvent.locationX);
+          const ratio = Math.max(0, Math.min(evt.nativeEvent.locationX / trackWidth, 1));
+          startProgressRef.current = ratio;
+          const steppedValue = Math.round((ratio * max) / step) * step;
+          onChange(Math.min(steppedValue, max));
         },
         onPanResponderMove: (evt, gestureState) => {
-          updateValue(gestureState.x0 - (evt.currentTarget as any)._layout.x + gestureState.dx);
+          const deltaRatio = gestureState.dx / trackWidth;
+          const newRatio = Math.max(0, Math.min(startProgressRef.current + deltaRatio, 1));
+          const steppedValue = Math.round((newRatio * max) / step) * step;
+          onChange(Math.min(steppedValue, max));
         }
       }),
     [max, step, trackWidth]
@@ -267,19 +268,19 @@ const styles = StyleSheet.create({
   },
   hero: {
     alignItems: "center",
-    marginTop: 10,
-    marginBottom: 16
+    marginTop: 6,
+    marginBottom: 10
   },
   mascotStage: {
-    width: 220,
-    height: 160,
+    width: 150,
+    height: 110,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8
+    marginBottom: 6
   },
   mascot: {
-    width: 140,
-    height: 140
+    width: 96,
+    height: 96
   },
   sparkle: {
     position: "absolute",
@@ -287,28 +288,28 @@ const styles = StyleSheet.create({
     fontWeight: "900"
   },
   sparkleLeft: {
-    left: 18,
-    bottom: 30,
+    left: 8,
+    bottom: 20,
     color: "#E8BB73"
   },
   sparkleRight: {
-    right: 14,
-    top: 42,
+    right: 6,
+    top: 24,
     color: "#5A956D"
   },
   title: {
     maxWidth: 320,
-    fontSize: 25,
-    lineHeight: 31,
+    fontSize: 21,
+    lineHeight: 26,
     fontWeight: "900",
     color: colors.primary,
     textAlign: "center"
   },
   subtitle: {
-    marginTop: 6,
+    marginTop: 4,
     maxWidth: 305,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: "600",
     color: colors.textMuted,
     textAlign: "center"
@@ -420,7 +421,7 @@ const styles = StyleSheet.create({
   },
   slider: {
     width: "100%",
-    height: 34,
+    height: 48,
     marginTop: 4,
     justifyContent: "center"
   },
