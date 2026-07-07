@@ -754,28 +754,6 @@ export default function HomeDashboardScreen() {
             ) : (
               <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
             )}
-            {topCategoryInfo && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6 }}>
-                <View style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 4,
-                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.04)" : "rgba(13,50,40,0.04)",
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: themeColors.border
-                }}>
-                  <Text style={{ fontSize: 10, fontWeight: "800", color: themeColors.primary }}>
-                    {language === "tr" ? "🔥 En Çok Harcanan:" : "🔥 Highest Spending:"}
-                  </Text>
-                  <Text style={{ fontSize: 10, fontWeight: "900", color: themeColors.text }}>
-                    {topCategoryInfo.category} ({formatCurrency(topCategoryInfo.amount)})
-                  </Text>
-                </View>
-              </View>
-            )}
           </View>
           <Pressable 
             style={({ pressed }) => [
