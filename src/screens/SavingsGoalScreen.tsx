@@ -277,15 +277,15 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   mascotStage: {
-    width: 150,
-    height: 110,
+    width: 170,
+    height: 140,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 6
   },
   mascot: {
-    width: 96,
-    height: 96
+    width: 130,
+    height: 130
   },
   sparkle: {
     position: "absolute",
@@ -293,13 +293,13 @@ const styles = StyleSheet.create({
     fontWeight: "900"
   },
   sparkleLeft: {
-    left: 8,
-    bottom: 20,
+    left: 4,
+    bottom: 24,
     color: "#E8BB73"
   },
   sparkleRight: {
-    right: 6,
-    top: 24,
+    right: 4,
+    top: 20,
     color: "#5A956D"
   },
   title: {
