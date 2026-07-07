@@ -730,9 +730,9 @@ export default function HomeDashboardScreen() {
               {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
             </Text>
           </View>
-          <View style={{ position: "absolute", right: 14, top: 29, width: 120, height: 120, zIndex: 5 }}>
+          <View style={{ position: "absolute", right: 14, top: 25, width: 128, height: 128, zIndex: 5 }}>
             {selectedPeriodRemaining < 0 && (
-              <View style={styles.mascotSpeechBubbleWrapper}>
+              <View style={[styles.mascotSpeechBubbleWrapper, { top: -28 }]}>
                 <View style={styles.mascotSpeechBubble}>
                   <Text style={styles.mascotSpeechBubbleText}>
                     {language === "tr" ? `${formattedExceeded} Aşıldı! ⚠️` : `${formattedExceeded} Over! ⚠️`}
@@ -741,9 +741,37 @@ export default function HomeDashboardScreen() {
                 </View>
               </View>
             )}
-            <View style={[styles.heroMascot, { right: 0, top: 0 }]}>
-              <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
-            </View>
+            <LinearGradient
+              colors={selectedPeriodRemaining < 0 ? ["#D32F2F", "#DF7A12"] : ["#00DF89", "#DF7A12"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                width: 128,
+                height: 128,
+                borderRadius: 64,
+                padding: 3,
+                justifyContent: "center",
+                alignItems: "center",
+                shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00DF89",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: isDarkMode ? 0.35 : 0.15,
+                shadowRadius: 16,
+                elevation: 6
+              }}
+            >
+              <View style={[styles.heroMascot, { 
+                position: "relative", 
+                right: 0, 
+                top: 0, 
+                width: 122, 
+                height: 122, 
+                borderRadius: 61,
+                backgroundColor: isDarkMode ? "#131E1A" : colors.white,
+                shadowOpacity: 0
+              }]}>
+                <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+              </View>
+            </LinearGradient>
           </View>
         </View>
 
