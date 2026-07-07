@@ -4044,7 +4044,6 @@ const styles = StyleSheet.create({
   },
   profileCardCompact: {
     marginTop: 16,
-    marginHorizontal: 20,
     borderRadius: 24,
     borderWidth: 1,
     paddingHorizontal: 16,
@@ -4093,7 +4092,6 @@ const styles = StyleSheet.create({
   },
   profileCard: {
     marginTop: 16,
-    marginHorizontal: 20,
     borderRadius: 24,
     borderWidth: 1,
     padding: 16,
