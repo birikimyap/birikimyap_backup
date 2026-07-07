@@ -718,7 +718,7 @@ export default function HomeDashboardScreen() {
             </Text>
           </View>
           <View style={styles.heroMascot}>
-            <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+            <Image source={mascot} style={styles.heroMascotImage} resizeMode="cover" />
           </View>
         </View>
 
@@ -2744,22 +2744,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 14,
     top: 29,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
     elevation: 3
   },
   heroMascotImage: {
-    width: "92%",
-    height: "92%",
+    width: 110,
+    height: 110,
     borderRadius: 55
   },
   periodWrap: {
