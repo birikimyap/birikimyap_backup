@@ -305,13 +305,13 @@ export default function HomeDashboardScreen() {
         // Başarıyla çözümlendi
         const expense = {
           id: `voice-expense-${Date.now()}-${Math.random()}`,
-          label: voiceParsedExpense.note.trim() || `${voiceParsedExpense.category.trim() || "Harcama"} harcaması`,
-          subtitle: voiceParsedExpense.category.trim() || "Harcama",
+          label: voiceParsedExpense.label.trim() || `${voiceParsedExpense.category.trim() || "Harcama"} harcaması`,
+          subtitle: voiceParsedExpense.subcategory.trim() || voiceParsedExpense.category.trim() || "Harcama",
           amount: numericAmount,
           period: "daily" as const,
           isFixed: false,
           category: voiceParsedExpense.category.trim() || "Harcama",
-          note: voiceParsedExpense.note.trim(),
+          note: voiceTranscript.trim() || voiceParsedExpense.label.trim(),
           occurredAt: new Date().toISOString()
         };
         addExpense(expense);
@@ -1844,6 +1844,7 @@ function VoiceExpenseSheet({
   const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
 
   const [spokenText, setSpokenText] = useState("");
+  const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [note, setNote] = useState("");
@@ -1877,8 +1878,9 @@ function VoiceExpenseSheet({
 
     setAmount(parsedExpense.amount ? String(parsedExpense.amount) : "");
     setCategory(parsedExpense.category);
-    setNote(parsedExpense.note);
-  }, [parsedExpense.amount, parsedExpense.category, parsedExpense.note, transcript]);
+    setLabel(parsedExpense.label);
+    setNote(transcript);
+  }, [parsedExpense.amount, parsedExpense.category, parsedExpense.label, transcript]);
 
   useEffect(() => {
     if (!visible || !isListening) {
@@ -1921,7 +1923,7 @@ function VoiceExpenseSheet({
 
     const expense = {
       id: `voice-expense-${Date.now()}-${Math.random()}`,
-      label: note.trim() || `${category.trim() || "Harcama"} harcaması`,
+      label: label.trim() || `${category.trim() || "Harcama"} harcaması`,
       subtitle: category.trim() || "Harcama",
       amount: numericAmount,
       period: "daily" as const,
@@ -1935,6 +1937,7 @@ function VoiceExpenseSheet({
     onSave(expense);
     setSpokenText("");
     setAmount("");
+    setLabel("");
     setCategory("");
     setNote("");
     setTranscript("");
@@ -2003,6 +2006,17 @@ function VoiceExpenseSheet({
           </View>
 
           <View style={styles.formGroup}>
+            <View style={styles.formRow}>
+              <Text style={styles.formLabel}>{language === "tr" ? "Harcama Adı" : "Expense Name"}</Text>
+              <TextInput
+                value={label}
+                onChangeText={setLabel}
+                placeholder={language === "tr" ? "Örn: Çamaşır deterjanı" : "e.g. Laundry detergent"}
+                placeholderTextColor="#9CA19E"
+                style={styles.formInput}
+              />
+            </View>
+            <View style={styles.formDivider} />
             <View style={styles.formRow}>
               <Text style={styles.formLabel}>{t("sheetLabelAmount")}</Text>
               <TextInput
