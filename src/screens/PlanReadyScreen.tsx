@@ -150,14 +150,13 @@ const toneColors = {
 };
 
 const confettiPieces = [
-  { id: "c1", style: { left: 200, top: 110, backgroundColor: "#E87516", transform: [{ rotate: "90deg" }] } },
-  { id: "c2", style: { left: 174, top: 174, backgroundColor: "#69A071", transform: [{ rotate: "45deg" }] } },
-  { id: "c3", style: { left: 110, top: 200, backgroundColor: "#B4688A", transform: [{ rotate: "0deg" }] } },
-  { id: "c4", style: { left: 46, top: 174, backgroundColor: "#F0B35B", transform: [{ rotate: "-45deg" }] } },
-  { id: "c5", style: { left: 20, top: 110, backgroundColor: "#69A071", transform: [{ rotate: "-90deg" }] } },
-  { id: "c6", style: { left: 46, top: 46, backgroundColor: "#F0B35B", transform: [{ rotate: "-135deg" }] } },
-  { id: "c7", style: { left: 110, top: 20, backgroundColor: "#E87516", transform: [{ rotate: "180deg" }] } },
-  { id: "c8", style: { left: 174, top: 46, backgroundColor: "#B4688A", transform: [{ rotate: "135deg" }] } }
+  { id: "c1", style: { left: 190, top: 90, backgroundColor: "#E87516", transform: [{ rotate: "90deg" }] } },
+  { id: "c2", style: { left: 166, top: 146, backgroundColor: "#69A071", transform: [{ rotate: "45deg" }] } },
+  { id: "c3", style: { left: 54, top: 146, backgroundColor: "#B4688A", transform: [{ rotate: "-45deg" }] } },
+  { id: "c4", style: { left: 30, top: 90, backgroundColor: "#F0B35B", transform: [{ rotate: "-90deg" }] } },
+  { id: "c5", style: { left: 54, top: 34, backgroundColor: "#69A071", transform: [{ rotate: "-135deg" }] } },
+  { id: "c6", style: { left: 110, top: 10, backgroundColor: "#E87516", transform: [{ rotate: "180deg" }] } },
+  { id: "c7", style: { left: 166, top: 34, backgroundColor: "#B4688A", transform: [{ rotate: "135deg" }] } }
 ];
 
 const styles = StyleSheet.create({
@@ -200,7 +199,7 @@ const styles = StyleSheet.create({
   },
   mascotContainer: {
     width: 220,
-    height: 220,
+    height: 180,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
