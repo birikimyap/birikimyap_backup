@@ -889,69 +889,28 @@ export default function HomeDashboardScreen() {
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: isDarkMode ? 0.25 : 0.04,
           shadowRadius: 16,
-          elevation: 4,
-          flexDirection: "column",
-          paddingVertical: 12,
-          paddingHorizontal: 16,
-          gap: 12
+          elevation: 4
         }]}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-            <View style={{ flex: 1 }}>
-              <SummaryMetric
-                icon="credit-card"
-                title={copy.limit}
-                amount={selectedPeriodLimit}
-                tone="green"
-              />
-            </View>
-            <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-            <View style={{ flex: 1 }}>
-              <SummaryMetric
-                icon="pie-chart"
-                title={copy.spent}
-                amount={recentTotal}
-                tone="orange"
-              />
-            </View>
-            <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-            <View style={{ flex: 1 }}>
-              <SummaryMetric
-                icon="shield"
-                title={copy.remaining}
-                amount={selectedPeriodRemaining}
-                tone="green"
-              />
-            </View>
-          </View>
-
-          {/* Progress Health Bar */}
-          <View style={{ gap: 4, marginTop: 2 }}>
-            <View style={{ 
-              height: 6, 
-              borderRadius: 3, 
-              backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)", 
-              overflow: "hidden" 
-            }}>
-              <View style={{ 
-                width: `${displayRatio * 100}%`, 
-                height: "100%", 
-                backgroundColor: progressBarColor, 
-                borderRadius: 3 
-              }} />
-            </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <Text style={{ fontSize: 9, fontWeight: "700", color: themeColors.textMuted }}>
-                {language === "tr" ? `Bütçe Kullanımı: %${Math.round(spentRatio * 100)}` : `Budget Usage: ${Math.round(spentRatio * 100)}%`}
-              </Text>
-              <Text style={{ fontSize: 9, fontWeight: "800", color: progressBarColor }}>
-                {spentRatio >= 1.0 
-                  ? (language === "tr" ? "LİMİT AŞILDI! ⚠️" : "LIMIT EXCEEDED! ⚠️") 
-                  : (spentRatio >= 0.8 
-                      ? (language === "tr" ? "KRİTİK SEVİYE! ⚠️" : "CRITICAL LEVEL! ⚠️") 
-                      : (language === "tr" ? "Normal ✅" : "Healthy ✅"))}
-              </Text>
-            </View>
-          </View>
+          <SummaryMetric
+            icon="credit-card"
+            title={copy.limit}
+            amount={selectedPeriodLimit}
+            tone="green"
+          />
+          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
+          <SummaryMetric
+            icon="pie-chart"
+            title={copy.spent}
+            amount={recentTotal}
+            tone="orange"
+          />
+          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
+          <SummaryMetric
+            icon="shield"
+            title={copy.remaining}
+            amount={selectedPeriodRemaining}
+            tone="green"
+          />
         </View>
 
         <View style={styles.addExpenseButtonRow}>
