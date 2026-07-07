@@ -131,6 +131,8 @@ export default function HomeDashboardScreen() {
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
   const [selectedDetailExpense, setSelectedDetailExpense] = useState<Expense | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [mascotMessage, setMascotMessage] = useState<string | null>(null);
+  const mascotTimeoutRef = useRef<any>(null);
 
   // Tab state
   const [currentTab, setCurrentTab] = useState<"home" | "analysis" | "profile">("home");
@@ -664,9 +666,79 @@ export default function HomeDashboardScreen() {
     }));
   }, [expenses]);
 
+  const topCategoryInfo = useMemo(() => {
+    const totals: Record<string, number> = {};
+    periodExpenses.forEach((exp) => {
+      if (exp.isFixed) return;
+      const cat = exp.category || (language === "tr" ? "Diğer" : "Other");
+      totals[cat] = (totals[cat] || 0) + exp.amount;
+    });
+    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    if (sorted.length === 0) return null;
+    return {
+      category: sorted[0][0],
+      amount: sorted[0][1]
+    };
+  }, [periodExpenses, language]);
+
+  function handleMascotPress() {
+    triggerHaptic();
+    const isDeficit = selectedPeriodRemaining < 0;
+    const highestCat = topCategoryInfo?.category || (language === "tr" ? "Genel" : "General");
+
+    const deficitQuotes = language === "tr" ? [
+      "Bütçeyi biraz aştık ama sakin ol, yarın tasarruf günümüz olsun! 🐖",
+      "Harcamaları kısıp bütçeyi dengeleyebiliriz, sana güveniyorum! 💪",
+      "Hedefimiz tehlikede olsa da pes etmek yok, birlikte başaracağız! 🎯",
+      `Bu dönem ${highestCat} harcamaları bütçemizi zorladı sanki? 🧐`
+    ] : [
+      "We went over budget, but tomorrow is a new savings day! 🐖",
+      "We can balance the budget by cutting back a little. I believe in you! 💪",
+      "Don't give up on our goal, we can do this together! 🎯",
+      `It seems ${highestCat} spending pushed our budget this period! 🧐`
+    ];
+
+    const healthyQuotes = language === "tr" ? [
+      "Harika gidiyoruz Gürkan! Böyle devam edersek hedef cepte! 🎯",
+      "Bugün kahveyi evde demleyip tasarrufa katkı sağlamaya ne dersin? ☕",
+      "Bütçemiz güvende, maskotun senden çok memnun! 🐖✨",
+      "Küçük birikimler büyük hedeflere ulaştırır, harika gidiyorsun! 💸"
+    ] : [
+      "We are doing great! Keep it up and we will hit our target! 🎯",
+      "How about making coffee at home today to save a bit? ☕",
+      "Our budget is safe, your piggy bank is very happy! 🐖✨",
+      "Small savings lead to big targets. Keep up the good work! 💸"
+    ];
+
+    const quotes = isDeficit ? deficitQuotes : healthyQuotes;
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    setMascotMessage(randomQuote);
+
+    if (mascotTimeoutRef.current) {
+      clearTimeout(mascotTimeoutRef.current);
+    }
+
+    mascotTimeoutRef.current = setTimeout(() => {
+      setMascotMessage(null);
+    }, 6000);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (mascotTimeoutRef.current) {
+        clearTimeout(mascotTimeoutRef.current);
+      }
+    };
+  }, []);
+
   function renderHomeTab() {
     const absExceededAmount = Math.abs(selectedPeriodRemaining);
     const formattedExceeded = formatCurrency(absExceededAmount);
+    const spentRatio = selectedPeriodLimit > 0 ? recentTotal / selectedPeriodLimit : 0;
+    const displayRatio = Math.min(spentRatio, 1.0);
+    const progressBarColor = spentRatio >= 1.0 
+      ? "#D32F2F" 
+      : (spentRatio >= 0.8 ? "#DF7A12" : "#00DF89");
 
     return (
       <View style={styles.tabContentContainer}>
@@ -681,6 +753,28 @@ export default function HomeDashboardScreen() {
               </Text>
             ) : (
               <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
+            )}
+            {topCategoryInfo && (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6 }}>
+                <View style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.04)" : "rgba(13,50,40,0.04)",
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: themeColors.border
+                }}>
+                  <Text style={{ fontSize: 10, fontWeight: "800", color: themeColors.primary }}>
+                    {language === "tr" ? "🔥 En Çok Harcanan:" : "🔥 Highest Spending:"}
+                  </Text>
+                  <Text style={{ fontSize: 10, fontWeight: "900", color: themeColors.text }}>
+                    {topCategoryInfo.category} ({formatCurrency(topCategoryInfo.amount)})
+                  </Text>
+                </View>
+              </View>
             )}
           </View>
           <Pressable 
@@ -731,47 +825,58 @@ export default function HomeDashboardScreen() {
             </Text>
           </View>
           <View style={{ position: "absolute", right: 14, top: 25, width: 128, height: 128, zIndex: 5 }}>
-            {selectedPeriodRemaining < 0 && (
-              <View style={[styles.mascotSpeechBubbleWrapper, { top: -12 }]}>
-                <View style={styles.mascotSpeechBubble}>
-                  <Text style={styles.mascotSpeechBubbleText}>
-                    {language === "tr" ? `${formattedExceeded} Aşıldı! ⚠️` : `${formattedExceeded} Over! ⚠️`}
+            {(mascotMessage || selectedPeriodRemaining < 0) && (
+              <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -44 : -12 }]}>
+                <View style={[
+                  styles.mascotSpeechBubble, 
+                  { 
+                    backgroundColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228",
+                    maxWidth: mascotMessage ? 150 : 120 
+                  }
+                ]}>
+                  <Text style={[styles.mascotSpeechBubbleText, { textAlign: mascotMessage ? "center" : "left" }]}>
+                    {mascotMessage || (language === "tr" ? `${formattedExceeded} Aşıldı! ⚠️` : `${formattedExceeded} Over! ⚠️`)}
                   </Text>
-                  <View style={styles.speechBubbleArrow} />
+                  <View style={[
+                    styles.speechBubbleArrow, 
+                    { borderTopColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228" }
+                  ]} />
                 </View>
               </View>
             )}
-            <LinearGradient
-              colors={selectedPeriodRemaining < 0 ? ["#D32F2F", "#DF7A12"] : ["#00DF89", "#DF7A12"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                width: 128,
-                height: 128,
-                borderRadius: 64,
-                padding: 3,
-                justifyContent: "center",
-                alignItems: "center",
-                shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00DF89",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: isDarkMode ? 0.35 : 0.15,
-                shadowRadius: 16,
-                elevation: 6
-              }}
-            >
-              <View style={[styles.heroMascot, { 
-                position: "relative", 
-                right: 0, 
-                top: 0, 
-                width: 122, 
-                height: 122, 
-                borderRadius: 61,
-                backgroundColor: colors.white,
-                shadowOpacity: 0
-              }]}>
-                <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
-              </View>
-            </LinearGradient>
+            <Pressable onPress={handleMascotPress} style={({ pressed }) => pressed && styles.pressed}>
+              <LinearGradient
+                colors={selectedPeriodRemaining < 0 ? ["#D32F2F", "#DF7A12"] : ["#00DF89", "#DF7A12"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: 128,
+                  height: 128,
+                  borderRadius: 64,
+                  padding: 3,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00DF89",
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: isDarkMode ? 0.35 : 0.15,
+                  shadowRadius: 16,
+                  elevation: 6
+                }}
+              >
+                <View style={[styles.heroMascot, { 
+                  position: "relative", 
+                  right: 0, 
+                  top: 0, 
+                  width: 122, 
+                  height: 122, 
+                  borderRadius: 61,
+                  backgroundColor: colors.white,
+                  shadowOpacity: 0
+                }]}>
+                  <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+                </View>
+              </LinearGradient>
+            </Pressable>
           </View>
         </View>
 
@@ -784,28 +889,69 @@ export default function HomeDashboardScreen() {
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: isDarkMode ? 0.25 : 0.04,
           shadowRadius: 16,
-          elevation: 4
+          elevation: 4,
+          flexDirection: "column",
+          paddingVertical: 12,
+          paddingHorizontal: 16,
+          gap: 12
         }]}>
-          <SummaryMetric
-            icon="credit-card"
-            title={copy.limit}
-            amount={selectedPeriodLimit}
-            tone="green"
-          />
-          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-          <SummaryMetric
-            icon="pie-chart"
-            title={copy.spent}
-            amount={recentTotal}
-            tone="orange"
-          />
-          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-          <SummaryMetric
-            icon="shield"
-            title={copy.remaining}
-            amount={selectedPeriodRemaining}
-            tone="green"
-          />
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <View style={{ flex: 1 }}>
+              <SummaryMetric
+                icon="credit-card"
+                title={copy.limit}
+                amount={selectedPeriodLimit}
+                tone="green"
+              />
+            </View>
+            <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
+            <View style={{ flex: 1 }}>
+              <SummaryMetric
+                icon="pie-chart"
+                title={copy.spent}
+                amount={recentTotal}
+                tone="orange"
+              />
+            </View>
+            <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
+            <View style={{ flex: 1 }}>
+              <SummaryMetric
+                icon="shield"
+                title={copy.remaining}
+                amount={selectedPeriodRemaining}
+                tone="green"
+              />
+            </View>
+          </View>
+
+          {/* Progress Health Bar */}
+          <View style={{ gap: 4, marginTop: 2 }}>
+            <View style={{ 
+              height: 6, 
+              borderRadius: 3, 
+              backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)", 
+              overflow: "hidden" 
+            }}>
+              <View style={{ 
+                width: `${displayRatio * 100}%`, 
+                height: "100%", 
+                backgroundColor: progressBarColor, 
+                borderRadius: 3 
+              }} />
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text style={{ fontSize: 9, fontWeight: "700", color: themeColors.textMuted }}>
+                {language === "tr" ? `Bütçe Kullanımı: %${Math.round(spentRatio * 100)}` : `Budget Usage: ${Math.round(spentRatio * 100)}%`}
+              </Text>
+              <Text style={{ fontSize: 9, fontWeight: "800", color: progressBarColor }}>
+                {spentRatio >= 1.0 
+                  ? (language === "tr" ? "LİMİT AŞILDI! ⚠️" : "LIMIT EXCEEDED! ⚠️") 
+                  : (spentRatio >= 0.8 
+                      ? (language === "tr" ? "KRİTİK SEVİYE! ⚠️" : "CRITICAL LEVEL! ⚠️") 
+                      : (language === "tr" ? "Normal ✅" : "Healthy ✅"))}
+              </Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.addExpenseButtonRow}>
