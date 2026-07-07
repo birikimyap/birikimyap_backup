@@ -46,10 +46,26 @@ export function parseTurkishExpense(text: string): ParsedVoiceExpense {
   for (const item of EXPENSE_DICTIONARY) {
     const listToCheck = language === "tr" ? item.keywords : item.enKeywords;
     
-    // Check if any word in descriptive text matches keywords
-    const hasMatch = descriptiveWords.some(word => 
-      listToCheck.some(kw => word.includes(kw) || kw.includes(word))
-    );
+    // Check if any word in descriptive text matches keywords cleanly without collision
+    const hasMatch = listToCheck.some((kw) => {
+      if (kw.length <= 3) {
+        return descriptiveWords.some(
+          (word) =>
+            word === kw ||
+            word === kw + "ler" ||
+            word === kw + "lar" ||
+            word === kw + "im" ||
+            word === kw + "ım" ||
+            word === kw + "in" ||
+            word === kw + "ın" ||
+            word === kw + "i" ||
+            word === kw + "ı"
+        );
+      }
+      
+      const phrase = descriptiveWords.join(" ");
+      return phrase.includes(kw) || descriptiveWords.some(word => word.startsWith(kw));
+    });
 
     if (hasMatch) {
       category = language === "tr" ? item.categoryTr : item.categoryEn;

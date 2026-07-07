@@ -50,11 +50,12 @@ export const EXPENSE_DICTIONARY: DictionaryEntry[] = [
       "kahve", "nescafe", "filtre kahve", "enerji", "şalgam", "salgam", "ayran", "kefir", "limonata",
       "soğuk çay", "soguk cay", "ice tea", "meyve suyu", "sıkma", "sikma",
 
-      // Atıştırmalıklar (Snacks)
+      // Atıştırmalıklar (Snacks) & Kahvaltılık Sürülebilirler
       "çikolata", "cikolata", "gofret", "cips", "bisküvi", "biskuvi", "kek", "kraker", "jelibon",
       "sakız", "sakiz", "kuruyemiş", "kuruyemis", "fındık", "findik", "fıstık", "fistik", "badem",
       "ceviz", "leblebi", "kaju", "kuru üzüm", "kuru incir", "kuru kayısı", "popcorn", "patlamış",
-      "çekirdek", "cekirdek", "jelibon", "bonbon", "gofret"
+      "çekirdek", "cekirdek", "jelibon", "bonbon", "gofret", "nutella", "çokokrem", "cokokrem",
+      "sana", "teremyağ", "teremyag"
     ],
     enKeywords: [
       "tomato", "pepper", "eggplant", "cucumber", "potato", "onion", "garlic", "lemon", "apple",
@@ -91,8 +92,9 @@ export const EXPENSE_DICTIONARY: DictionaryEntry[] = [
       "çöp poşeti", "cop poseti", "lavabo aç", "lavabo ac", "tuz ruhu", "kireç çözücü", "kirec cozucu",
       "yüzey temizleyici", "yuzey temizleyici", "cam sil", "camsil", "sünger", "sunger", 
       "bulaşık süngeri", "temizlik bezi", "çamaşır deterjanı", "camasir deterjani", "domestos",
-      "prill", "fairy", "ariel", "alo", "omoda", "vileda", "mop", "fırça", "firca", "kova", "eldiven",
-      "bulaşık teli", "çamaşır sodası", "leke çıkarıcı", "arap sabunu", "porçöz", "porcoz"
+      "prill", "pril", "fairy", "ariel", "alo", "omo", "omoda", "vileda", "mop", "fırça", "firca", "kova", "eldiven",
+      "bulaşık teli", "çamaşır sodası", "leke çıkarıcı", "arap sabunu", "porçöz", "porcoz", "cif",
+      "vernel", "yumoş", "yumos", "calgon"
     ],
     enKeywords: [
       "detergent", "softener", "bleach", "dishwasher tablet", "dish soap", "soap", "bar soap",
@@ -119,7 +121,8 @@ export const EXPENSE_DICTIONARY: DictionaryEntry[] = [
       "fondöten", "fondoten", "maskara", "allık", "far", "göz kalemi", "makyaj temizleme",
       "saç kremi", "sac kremi", "saç boyası", "sac boyasi", "jön", "jöle", "jole", "saç spreyi",
       "ağda", "agda", "cımbız", "cimbiz", "epilatör", "losyon", "el kremi", "vücut losyonu",
-      "dudak nemlendirici", "lip balm", "gillette", "colgate", "ipana", "nivea"
+      "dudak nemlendirici", "lip balm", "gillette", "colgate", "ipana", "nivea", "selpak",
+      "solo", "kotex", "prima", "jilet", "sensodyne"
     ],
     enKeywords: [
       "toothpaste", "toothbrush", "deodorant", "perfume", "fragrance", "razor", "shaving cream",
