@@ -210,6 +210,13 @@ export default function FixedExpenseScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      listRef.current?.flashScrollIndicators();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [defaultRows.length, customRows.length]);
+
   const scrollToRow = (index: number) => {
     requestAnimationFrame(() => {
       listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
@@ -353,7 +360,8 @@ export default function FixedExpenseScreen() {
                 style={[styles.expenseList, isKeyboardVisible && styles.expenseListKeyboard]}
                 contentContainerStyle={styles.expenseListContent}
                 ItemSeparatorComponent={() => <View style={styles.rowSeparator} />}
-                showsVerticalScrollIndicator={rows.length > 4}
+                showsVerticalScrollIndicator={true}
+                persistentScrollbar={true}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
                 getItemLayout={(_, index) => ({ length: rowHeight, offset: rowHeight * index, index })}
