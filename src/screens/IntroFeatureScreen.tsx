@@ -15,8 +15,8 @@ type FeatureItem = {
   highlighted?: boolean;
 };
 
-const mascotTR = require("../../pgn/mascot-cutout.png");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
+const mascotTR = require("../../pgn/mascot-cutout.jpg");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
 
 // Static configuration removed to support dynamic translations
 

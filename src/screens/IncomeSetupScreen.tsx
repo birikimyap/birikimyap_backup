@@ -50,8 +50,8 @@ const defaultIncomeRows = [
 
 const defaultIncomeRowIds = new Set<string>(defaultIncomeRows.map((row) => row.id));
 
-const mascotTR = require("../../pgn/mascot-cutout.png");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
+const mascotTR = require("../../pgn/mascot-cutout.jpg");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
 const rowHeight = 86;
 
 function createRowId(prefix: string) {

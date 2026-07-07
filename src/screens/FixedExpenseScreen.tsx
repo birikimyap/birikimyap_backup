@@ -50,8 +50,8 @@ const defaultExpenseRows = [
 
 const defaultExpenseRowIds = new Set<string>(defaultExpenseRows.map((row) => row.id));
 
-const mascotTR = require("../../pgn/mascot-cutout.png");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
+const mascotTR = require("../../pgn/mascot-cutout.jpg");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
 const expenseAccent = "#C8742D";
 const rowHeight = 86;
 

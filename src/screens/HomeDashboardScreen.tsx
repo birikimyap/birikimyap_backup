@@ -30,8 +30,8 @@ import { formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 
-const mascotTR = require("../../pgn/mascot-cutout.png");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
+const mascotTR = require("../../pgn/mascot-cutout.jpg");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
 
 const voiceWaveBars = [
   { id: "voice-sheet-wave-1", value: 0 },
@@ -730,6 +730,9 @@ export default function HomeDashboardScreen() {
             elevation: 3
           }]}>
             <Image source={mascot} style={styles.heroMascotImage} resizeMode="cover" />
+            {isDarkMode && (
+              <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(5, 11, 8, 0.10)" }]} />
+            )}
           </View>
         </View>
 

@@ -23,8 +23,8 @@ type LoginButtonProps = {
   onPress: () => void;
 };
 
-const mascotTR = require("../../pgn/mascot-cutout.png");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
+const mascotTR = require("../../pgn/mascot-cutout.jpg");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
 const googleMark = require("../../pgn/google-mark.png");
 
 export default function LoginScreen() {

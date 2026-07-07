@@ -10,8 +10,8 @@ import { formatCurrency } from "@/utils/currency";
 import { getMonthlyRemaining, getTotalFixedExpenses, getTotalIncome } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 
-const mascotTR = require("../../pgn/mascot-cutout.png");
-const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
+const mascotTR = require("../../pgn/mascot-cutout.jpg");
+const mascotEN = require("../../pgn/mascot-cutout-dollar.jpg");
 
 const goalCards = [
   { id: "emergency", title: "Acil durum", subtitle: "Güvende hisset", icon: "shield" },
