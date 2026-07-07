@@ -2773,6 +2773,45 @@ function ExpenseDetailModal({
 
           {/* Detail Rows Group */}
           <View style={[styles.formGroup, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginBottom: 24, paddingVertical: 4 }]}>
+            {/* Expense Name Row */}
+            <View style={styles.formRow}>
+              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
+                {language === "tr" ? "Harcama Adı" : "Expense Name"}
+              </Text>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.text, textAlign: "right", flex: 1 }}>
+                {expense.label}
+              </Text>
+            </View>
+
+            <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
+
+            {/* Category Row */}
+            <View style={styles.formRow}>
+              <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
+                {language === "tr" ? "Kategori" : "Category"}
+              </Text>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.text, textAlign: "right", flex: 1 }}>
+                {expense.category}
+              </Text>
+            </View>
+
+            {expense.subtitle && expense.subtitle !== expense.category ? (
+              <>
+                <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
+                {/* Subcategory Row */}
+                <View style={styles.formRow}>
+                  <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
+                    {language === "tr" ? "Alt Kategori" : "Subcategory"}
+                  </Text>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.text, textAlign: "right", flex: 1 }}>
+                    {expense.subtitle}
+                  </Text>
+                </View>
+              </>
+            ) : null}
+
+            <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
+
             {/* Date Row */}
             <View style={styles.formRow}>
               <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
