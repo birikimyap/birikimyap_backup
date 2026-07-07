@@ -4044,10 +4044,11 @@ const styles = StyleSheet.create({
   },
   profileCardCompact: {
     marginTop: 16,
+    marginHorizontal: 20,
     borderRadius: 24,
     borderWidth: 1,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 18,
     flexDirection: "row",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -4067,9 +4068,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 12
   },
   profileMiniBtn: {
-    marginTop: 8,
+    marginTop: 12,
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center"
@@ -4085,16 +4086,17 @@ const styles = StyleSheet.create({
     lineHeight: 16
   },
   profileBudgetValCompact: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "900",
-    marginTop: 2,
-    lineHeight: 21
+    marginTop: 4,
+    lineHeight: 22
   },
   profileCard: {
     marginTop: 16,
+    marginHorizontal: 20,
     borderRadius: 24,
     borderWidth: 1,
-    padding: 14,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
     shadowColor: "#000",
