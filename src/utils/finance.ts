@@ -57,7 +57,7 @@ export function getRemainingLimitForPeriod(
   const limits = buildSpendingLimits(incomes, expenses, savingsGoal);
   const spendingTotal = getExpensesTotalForPeriod(expenses, period, now);
 
-  return Math.max(limits[period] - spendingTotal, 0);
+  return limits[period] - spendingTotal;
 }
 
 export function calculateFinancePlan(
