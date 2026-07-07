@@ -717,9 +717,19 @@ export default function HomeDashboardScreen() {
               {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
             </Text>
           </View>
-          <View style={styles.heroMascot}>
-            <View style={[styles.softOval, { backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.12)" : "rgba(13, 50, 40, 0.08)" }]} />
-            <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+          <View style={[styles.heroMascot, { 
+            backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.88)" : "#FFFFFF",
+            borderRadius: 55,
+            overflow: "hidden",
+            borderWidth: 1.2,
+            borderColor: isDarkMode ? "rgba(0, 229, 143, 0.15)" : "rgba(13, 50, 40, 0.06)",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.05,
+            shadowRadius: 10,
+            elevation: 3
+          }]}>
+            <Image source={mascot} style={styles.heroMascotImage} resizeMode="cover" />
           </View>
         </View>
 
