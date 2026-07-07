@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Image, PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { FlatList, Image, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFinanceStore } from "@/store/financeStore";
@@ -85,98 +85,102 @@ export default function SavingsGoalScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.screen}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-          <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-            <Feather name="chevron-left" size={28} color={colors.primary} />
-          </Pressable>
+        <View style={styles.content}>
+          <View style={{ flex: 1, justifyContent: "space-evenly" }}>
+            <View style={{ position: "relative" }}>
+              <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+                <Feather name="chevron-left" size={28} color={colors.primary} />
+              </Pressable>
 
-          <View style={styles.hero}>
-            <View style={styles.mascotStage}>
-              <Text style={[styles.sparkle, styles.sparkleLeft]}>✦</Text>
-              <Text style={[styles.sparkle, styles.sparkleRight]}>✦</Text>
-              <Image source={mascot} style={styles.mascot} resizeMode="contain" />
-            </View>
-            <Text style={styles.title}>
-              {language === "tr" ? "Bu ay ne kadar biriktirmek istiyorsun?" : "How much do you want to save this month?"}
-            </Text>
-            <Text style={styles.subtitle}>
-              {language === "tr" ? "Gelir ve giderlerine göre planını birlikte oluşturalım." : "Let's create your plan based on your income and expenses."}
-            </Text>
-          </View>
-
-          <View style={styles.budgetCard}>
-            <View style={styles.walletBadge}>
-              <Feather name="briefcase" size={26} color={colors.primary} />
-            </View>
-            <View style={styles.budgetCopy}>
-              <View style={styles.cardTitleRow}>
-                <Text style={styles.cardLabel}>
-                  {language === "tr" ? "Sana kalan aylık bütçe" : "Your remaining monthly budget"}
+              <View style={styles.hero}>
+                <View style={styles.mascotStage}>
+                  <Text style={[styles.sparkle, styles.sparkleLeft]}>✦</Text>
+                  <Text style={[styles.sparkle, styles.sparkleRight]}>✦</Text>
+                  <Image source={mascot} style={styles.mascot} resizeMode="contain" />
+                </View>
+                <Text style={styles.title}>
+                  {language === "tr" ? "Bu ay ne kadar biriktirmek istiyorsun?" : "How much do you want to save this month?"}
+                </Text>
+                <Text style={styles.subtitle}>
+                  {language === "tr" ? "Gelir ve giderlerine göre planını birlikte oluşturalım." : "Let's create your plan based on your income and expenses."}
                 </Text>
               </View>
-              <Text style={styles.budgetAmount}>{formatCurrency(monthlyRemaining)}</Text>
-              <Text style={styles.cardBody}>
-                {language === "tr" ? "Bu ay kullanabileceğin net harcama limiti." : "Net spending limit available for this month."}
+            </View>
+
+            <View style={styles.budgetCard}>
+              <View style={styles.walletBadge}>
+                <Feather name="briefcase" size={26} color={colors.primary} />
+              </View>
+              <View style={styles.budgetCopy}>
+                <View style={styles.cardTitleRow}>
+                  <Text style={styles.cardLabel}>
+                    {language === "tr" ? "Sana kalan aylık bütçe" : "Your remaining monthly budget"}
+                  </Text>
+                </View>
+                <Text style={styles.budgetAmount}>{formatCurrency(monthlyRemaining)}</Text>
+                <Text style={styles.cardBody}>
+                  {language === "tr" ? "Bu ay kullanabileceğin net harcama limiti." : "Net spending limit available for this month."}
+                </Text>
+              </View>
+            </View>
+
+            <View>
+              <View style={styles.sliderIntro}>
+                <Text style={styles.sectionTitle}>
+                  {language === "tr" ? "Birikim Oranı" : "Savings Rate"}
+                </Text>
+                <Text style={styles.helperText}>
+                  {language === "tr" ? "Slider’ı hareket ettirerek birikim hedefini belirle." : "Determine your savings goal by moving the slider."}
+                </Text>
+              </View>
+
+              <View style={styles.sliderCard}>
+                <View style={styles.savingsHeader}>
+                  <Text style={styles.selectedAmount}>{formatCurrency(selectedSavings)}</Text>
+                  <View style={styles.percentBadge}>
+                    <Feather name="shield" size={14} color={colors.primary} />
+                    <Text style={styles.percentText}>
+                      {language === "tr" ? `Kalanın %${percentage}’si` : `${percentage}% of remaining`}
+                    </Text>
+                  </View>
+                </View>
+                <Slider max={monthlyRemaining} step={sliderStep} value={selectedSavings} onChange={updateSelectedSavings} />
+                <View style={styles.sliderLabels}>
+                  <Text style={styles.sliderLabel}>{formatCurrency(0)}</Text>
+                  <Text style={styles.sliderLabel}>{formatCurrency(monthlyRemaining)}</Text>
+                </View>
+
+                <View style={styles.sliderInfoRow}>
+                  <Feather name="trending-up" size={16} color="#E87516" />
+                  {language === "tr" ? (
+                    <Text style={styles.sliderInfoText}>
+                      Bu hedefle ay sonunda <Text style={styles.sliderInfoHighlight}>{formatCurrency(selectedSavings)}</Text> biriktirebilirsin.
+                    </Text>
+                  ) : (
+                    <Text style={styles.sliderInfoText}>
+                      With this goal, you can save <Text style={styles.sliderInfoHighlight}>{formatCurrency(selectedSavings)}</Text> by the end of the month.
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.footer}>
+            <Pressable onPress={saveAndContinue} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
+              <View style={styles.ctaSpacer} />
+              <Text style={styles.ctaText}>
+                {language === "tr" ? "Planımı oluştur" : "Create my plan"}
+              </Text>
+              <Feather name="arrow-right" size={28} color={colors.white} style={styles.ctaIcon} />
+            </Pressable>
+
+            <View style={styles.securityRow}>
+              <Feather name="lock" size={15} color="#9AA19D" />
+              <Text style={styles.securityText}>
+                {language === "tr" ? "Verilerin güvenle saklanır." : "Your data is stored securely."}
               </Text>
             </View>
-          </View>
-
-          <View style={styles.sliderIntro}>
-            <Text style={styles.sectionTitle}>
-              {language === "tr" ? "Birikim Oranı" : "Savings Rate"}
-            </Text>
-            <Text style={styles.helperText}>
-              {language === "tr" ? "Slider’ı hareket ettirerek birikim hedefini belirle." : "Determine your savings goal by moving the slider."}
-            </Text>
-          </View>
-
-          <View style={styles.sliderCard}>
-            <View style={styles.savingsHeader}>
-              <Text style={styles.selectedAmount}>{formatCurrency(selectedSavings)}</Text>
-              <View style={styles.percentBadge}>
-                <Feather name="shield" size={14} color={colors.primary} />
-                <Text style={styles.percentText}>
-                  {language === "tr" ? `Kalanın %${percentage}’si` : `${percentage}% of remaining`}
-                </Text>
-              </View>
-            </View>
-            <Slider max={monthlyRemaining} step={sliderStep} value={selectedSavings} onChange={updateSelectedSavings} />
-            <View style={styles.sliderLabels}>
-              <Text style={styles.sliderLabel}>{formatCurrency(0)}</Text>
-              <Text style={styles.sliderLabel}>{formatCurrency(monthlyRemaining)}</Text>
-            </View>
-
-            <View style={styles.sliderInfoRow}>
-              <Feather name="trending-up" size={16} color="#E87516" />
-              {language === "tr" ? (
-                <Text style={styles.sliderInfoText}>
-                  Bu hedefle ay sonunda <Text style={styles.sliderInfoHighlight}>{formatCurrency(selectedSavings)}</Text> biriktirebilirsin.
-                </Text>
-              ) : (
-                <Text style={styles.sliderInfoText}>
-                  With this goal, you can save <Text style={styles.sliderInfoHighlight}>{formatCurrency(selectedSavings)}</Text> by the end of the month.
-                </Text>
-              )}
-            </View>
-          </View>
-
-
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <Pressable onPress={saveAndContinue} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
-            <View style={styles.ctaSpacer} />
-            <Text style={styles.ctaText}>
-              {language === "tr" ? "Planımı oluştur" : "Create my plan"}
-            </Text>
-            <Feather name="arrow-right" size={28} color={colors.white} style={styles.ctaIcon} />
-          </Pressable>
-
-          <View style={styles.securityRow}>
-            <Feather name="lock" size={15} color="#9AA19D" />
-            <Text style={styles.securityText}>
-              {language === "tr" ? "Verilerin güvenle saklanır." : "Your data is stored securely."}
-            </Text>
           </View>
         </View>
       </View>
@@ -239,14 +243,15 @@ const styles = StyleSheet.create({
     flex: 1
   },
   content: {
+    flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 54,
-    paddingBottom: 124
+    paddingTop: 14,
+    paddingBottom: Platform.OS === "ios" ? 10 : 20
   },
   backButton: {
     position: "absolute",
-    top: 12,
-    left: 16,
+    top: -6,
+    left: -6,
     zIndex: 15,
     width: 40,
     height: 40,
@@ -577,16 +582,9 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   footer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 24,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderColor: "rgba(0,0,0,0.03)"
+    width: "100%",
+    paddingTop: 12,
+    backgroundColor: colors.background
   },
   cta: {
     minHeight: 56,
