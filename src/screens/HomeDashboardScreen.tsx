@@ -732,7 +732,7 @@ export default function HomeDashboardScreen() {
           </View>
           <View style={{ position: "absolute", right: 14, top: 25, width: 128, height: 128, zIndex: 5 }}>
             {selectedPeriodRemaining < 0 && (
-              <View style={[styles.mascotSpeechBubbleWrapper, { top: -28 }]}>
+              <View style={[styles.mascotSpeechBubbleWrapper, { top: -12 }]}>
                 <View style={styles.mascotSpeechBubble}>
                   <Text style={styles.mascotSpeechBubbleText}>
                     {language === "tr" ? `${formattedExceeded} Aşıldı! ⚠️` : `${formattedExceeded} Over! ⚠️`}
