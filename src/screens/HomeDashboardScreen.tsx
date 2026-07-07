@@ -966,8 +966,71 @@ export default function HomeDashboardScreen() {
           </Pressable>
         </View>
 
+        {/* Spending Status Panel */}
+        <View style={[
+          styles.analysisCard, 
+          { 
+            backgroundColor: selectedPeriodRemaining < 0 
+              ? (isDarkMode ? "rgba(211, 47, 47, 0.08)" : "#FDEDED") 
+              : (isDarkMode ? "rgba(7, 74, 49, 0.08)" : "#EAF5F0"),
+            borderColor: selectedPeriodRemaining < 0 
+              ? (isDarkMode ? "rgba(211, 47, 47, 0.3)" : "#F8D7DA") 
+              : (isDarkMode ? "rgba(7, 74, 49, 0.3)" : "#D1E8DD"),
+            borderWidth: 1.2,
+            borderRadius: 20,
+            padding: 16,
+            marginTop: 14,
+            flexDirection: "row",
+            gap: 12,
+            alignItems: "center",
+            marginBottom: 0
+          }
+        ]}>
+          <View style={{
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            backgroundColor: selectedPeriodRemaining < 0 ? "rgba(211, 47, 47, 0.12)" : "rgba(0, 223, 137, 0.12)",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>
+            <Feather 
+              name={selectedPeriodRemaining < 0 ? "alert-triangle" : "check-circle"} 
+              size={22} 
+              color={selectedPeriodRemaining < 0 ? "#D32F2F" : "#00DF89"} 
+            />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={{ 
+              fontSize: 14, 
+              fontWeight: "900", 
+              color: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00DF89" 
+            }}>
+              {selectedPeriodRemaining < 0 
+                ? (language === "tr" ? "Harcama Durumu: Bütçe Aşıldı! ⚠️" : "Spending Status: Over Budget! ⚠️")
+                : (language === "tr" ? "Harcama Durumu: Her Şey Yolunda! 🎉" : "Spending Status: On Track! 🎉")
+              }
+            </Text>
+            <Text style={{ 
+              fontSize: 12, 
+              lineHeight: 17, 
+              fontWeight: "600", 
+              color: themeColors.textMuted 
+            }}>
+              {selectedPeriodRemaining < 0 
+                ? (language === "tr" 
+                    ? `Bu dönem limitinizi ${formatCurrency(Math.abs(selectedPeriodRemaining))} aştınız. Tasarruf hedefiniz tehlikede, harcamaları yavaşlatın.` 
+                    : `You exceeded your limit by ${formatCurrency(Math.abs(selectedPeriodRemaining))} this period. Your savings goal is in danger, slow down spending.`)
+                : (language === "tr"
+                    ? `Tebrikler! Planlanan limitin içindesiniz. ${formatCurrency(selectedPeriodRemaining)} harcama limitiniz daha var. Böyle devam edin!`
+                    : `Congratulations! You are within the limit. You have ${formatCurrency(selectedPeriodRemaining)} remaining limit. Keep it up!`)
+              }
+            </Text>
+          </View>
+        </View>
+
         {/* Dynamic Trend Bar Chart */}
-        <View style={[styles.analysisCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+        <View style={[styles.analysisCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginTop: 14 }]}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <Text style={[styles.analysisCardTitle, { color: themeColors.text, marginBottom: 0 }]}>
               {analysisPeriod === "weekly" ? t("analysisChartWeeklyTitle") : t("analysisChartMonthlyTitle")}
