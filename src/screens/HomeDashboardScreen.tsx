@@ -799,9 +799,15 @@ export default function HomeDashboardScreen() {
             { 
               backgroundColor: themeColors.surface, 
               borderColor: themeColors.border,
+              borderWidth: 1.2,
               paddingHorizontal: 0,
               paddingVertical: 0,
-              marginTop: 12
+              marginTop: 14,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: isDarkMode ? 0.25 : 0.04,
+              shadowRadius: 16,
+              elevation: 4
             }
           ]}>
             {/* The Integrated Segment Header */}
@@ -2647,8 +2653,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F04B24"
   },
   pressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.99 }]
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }]
   },
   heroCard: {
     marginTop: 16,
@@ -3510,15 +3516,15 @@ const styles = StyleSheet.create({
     flex: 1
   },
   chartBarTrack: {
-    width: 14,
+    width: 16,
     height: 100,
-    borderRadius: 7,
+    borderRadius: 8,
     justifyContent: "flex-end",
     overflow: "hidden"
   },
   chartBarFill: {
     width: "100%",
-    borderRadius: 7
+    borderRadius: 8
   },
   chartBarLabel: {
     marginTop: 8,
