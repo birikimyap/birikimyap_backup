@@ -687,51 +687,110 @@ export default function HomeDashboardScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.heroCard}>
+        {/* Apple Card style Mesh Gradient Budget Card */}
+        <LinearGradient
+          colors={selectedPeriodRemaining < 0 
+            ? ["#5E1919", "#782222", "#9C2E2E"] 
+            : (isDarkMode ? ["#0B2E22", "#114A37", "#196B50"] : ["#0A2A20", "#0D3528", "#124E3A"])
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            marginHorizontal: 18,
+            marginTop: 14,
+            borderRadius: 24,
+            padding: 20,
+            overflow: "hidden",
+            shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : themeColors.primary,
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: isDarkMode ? 0.35 : 0.12,
+            shadowRadius: 20,
+            elevation: 8
+          }}
+        >
+          {/* Card Glassmorphic Overlay Border */}
+          <View style={[StyleSheet.absoluteFillObject, {
+            borderColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: 1.2,
+            borderRadius: 24
+          }]} />
+
+          {/* Top Row: Brand & Period Badge */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={{ fontSize: 10.5, fontWeight: "900", color: "rgba(255, 255, 255, 0.6)", textTransform: "uppercase", letterSpacing: 0.8 }}>
+              {selectedPeriod === "daily" ? t("periodDailyLimit").toUpperCase() : (selectedPeriod === "weekly" ? t("periodWeeklyLimit").toUpperCase() : t("periodMonthlyLimit").toUpperCase())}
+            </Text>
+            <View style={{
+              backgroundColor: "rgba(255, 255, 255, 0.12)",
+              paddingHorizontal: 8,
+              paddingVertical: 4,
+              borderRadius: 8
+            }}>
+              <Text style={{ fontSize: 9.5, fontWeight: "900", color: "#FFFFFF", letterSpacing: 0.5 }}>
+                ✨ {language === "tr" ? "AKILLI ASİSTAN" : "SMART ASSISTANT"}
+              </Text>
+            </View>
+          </View>
+
+          {/* Middle Row: Main Remaining Budget */}
+          <View style={{ marginTop: 20, gap: 4 }}>
+            <Text style={{ fontSize: 12.5, fontWeight: "700", color: "rgba(255, 255, 255, 0.7)" }}>
+              {selectedPeriod === "daily" ? t("periodDailyRemaining") : (selectedPeriod === "weekly" ? t("periodWeeklyRemaining") : t("periodMonthlyRemaining"))}
+            </Text>
+            <Text style={{ fontSize: 34, fontWeight: "900", color: "#FFFFFF", letterSpacing: -0.5 }}>
+              {formatCurrency(selectedPeriodRemaining)}
+            </Text>
+          </View>
+
+          {/* Bottom Row: Spent vs Limit Mini Progress bar */}
+          <View style={{ marginTop: 24, gap: 8 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text style={{ fontSize: 11.5, fontWeight: "700", color: "rgba(255, 255, 255, 0.7)" }}>
+                {language === "tr" ? "Durum" : "Status"}
+              </Text>
+              <Text style={{ fontSize: 11.5, fontWeight: "800", color: "#FFFFFF" }}>
+                {formatCurrency(recentTotal)} / {formatCurrency(selectedPeriodLimit)}
+              </Text>
+            </View>
+            <View style={{ height: 6, borderRadius: 3, backgroundColor: "rgba(255, 255, 255, 0.15)", overflow: "hidden" }}>
+              <View style={{
+                width: `${Math.min(Math.max((recentTotal / (selectedPeriodLimit || 1)) * 100, 0), 100)}%`,
+                height: "100%",
+                backgroundColor: selectedPeriodRemaining < 0 ? "#FF8A8A" : "#00DF89",
+                borderRadius: 3
+              }} />
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Savings Goal Management (Mascot Card) */}
+        <View style={[styles.heroCard, { 
+          backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "#EBF2EE", 
+          borderColor: themeColors.border, 
+          borderWidth: 1.2,
+          marginTop: 14
+        }]}>
           <View style={styles.heroCopy}>
-            <View style={styles.goalBadge}>
+            <View style={[styles.goalBadge, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)" }]}>
               <Text style={styles.goalBadgeIcon}>🎯</Text>
-              <Text style={styles.goalBadgeText}>{t("savingsGoalTitle").toUpperCase()}</Text>
+              <Text style={[styles.goalBadgeText, { color: themeColors.primary }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
             </View>
-            <Text style={styles.heroSubtitle}>{language === "tr" ? "Hedefin" : "Your Goal"}</Text>
-            <Text style={styles.heroAmount}>{formatCurrency(goalTargetAmount)}</Text>
+            <Text style={[styles.heroSubtitle, { color: themeColors.textMuted }]}>{language === "tr" ? "Hedefin" : "Your Goal"}</Text>
+            <Text style={[styles.heroAmount, { color: themeColors.text }]}>{formatCurrency(goalTargetAmount)}</Text>
             <View style={styles.savedAmountBlock}>
-              <Text style={styles.savedAmountTitle}>{language === "tr" ? "Bugüne kadar biriktirdiğin" : "Accumulated so far"}</Text>
-              <Text style={styles.savedAmountValue}>{formatCurrency(goalSavedAmount)}</Text>
+              <Text style={[styles.savedAmountTitle, { color: themeColors.textMuted }]}>{language === "tr" ? "Bugüne kadar biriktirdiğin" : "Accumulated so far"}</Text>
+              <Text style={[styles.savedAmountValue, { color: themeColors.text }]}>{formatCurrency(goalSavedAmount)}</Text>
             </View>
-            <View style={styles.heroProgressTrack}>
-              <View style={[styles.heroProgressFill, { width: `${goalProgress * 100}%` }]} />
+            <View style={[styles.heroProgressTrack, { backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(13, 50, 40, 0.06)" }]}>
+              <View style={[styles.heroProgressFill, { backgroundColor: themeColors.primary, width: `${goalProgress * 100}%` }]} />
             </View>
-            <Text style={styles.heroPercentText}>
+            <Text style={[styles.heroPercentText, { color: themeColors.textMuted }]}>
               {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
             </Text>
           </View>
           <View style={styles.heroMascot}>
             <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
           </View>
-        </View>
-
-        <View style={[styles.summaryCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
-          <SummaryMetric
-            icon="credit-card"
-            title={copy.limit}
-            amount={selectedPeriodLimit}
-            tone="green"
-          />
-          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-          <SummaryMetric
-            icon="pie-chart"
-            title={copy.spent}
-            amount={recentTotal}
-            tone="orange"
-          />
-          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-          <SummaryMetric
-            icon="shield"
-            title={copy.remaining}
-            amount={selectedPeriodRemaining}
-            tone="green"
-          />
         </View>
 
         <View style={styles.addExpenseButtonRow}>
@@ -839,27 +898,29 @@ export default function HomeDashboardScreen() {
                     <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>{t("emptyExpensesSub")}</Text>
                   </View>
                 }
-                renderItem={({ item, index }) => (
-                  <View>
-                    <View style={styles.expenseRow}>
-                      <View style={[styles.expenseIcon, { backgroundColor: themeColors.primary }]}>
-                        <Text style={styles.expenseBadge}>{getExpenseBadge(item.expense)}</Text>
+                renderItem={({ item, index }) => {
+                  const iconConfig = getCategoryIconConfig(item.expense.category);
+                  return (
+                    <View>
+                      <View style={styles.expenseRow}>
+                        <View style={[styles.expenseIcon, { backgroundColor: iconConfig.bg, alignItems: "center", justifyContent: "center" }]}>
+                          <Feather name={iconConfig.name} size={15} color={iconConfig.color} />
+                        </View>
+                        <View style={styles.expenseCopy}>
+                          <Text style={[styles.expenseTitle, { color: themeColors.text, fontWeight: "800", fontSize: 14.5 }]}>{item.expense.label}</Text>
+                          <Text style={[styles.expenseCategory, { color: themeColors.textMuted, fontWeight: "600", fontSize: 11 }]}>
+                            {item.expense.category}{item.expense.subtitle && item.expense.subtitle !== item.expense.category ? ` • ${item.expense.subtitle}` : ""}
+                          </Text>
+                        </View>
+                        <View style={styles.expenseMeta}>
+                          <Text style={[styles.expenseAmount, { color: themeColors.text, fontWeight: "900", fontSize: 15 }]}>{formatCurrency(item.expense.amount)}</Text>
+                          <Text style={[styles.expenseDate, { color: themeColors.textMuted, fontWeight: "700", fontSize: 10 }]}>{formatExpenseDate(item.expense.occurredAt)}</Text>
+                        </View>
                       </View>
-                      <View style={styles.expenseCopy}>
-                        <Text style={[styles.expenseTitle, { color: themeColors.text }]}>{item.expense.label}</Text>
-                        <Text style={[styles.expenseCategory, { color: themeColors.textMuted }]}>
-                          {item.expense.category}{item.expense.subtitle && item.expense.subtitle !== item.expense.category ? ` • ${item.expense.subtitle}` : ""}
-                        </Text>
-                      </View>
-                      <View style={styles.expenseMeta}>
-                        <Text style={[styles.expenseAmount, { color: themeColors.text }]}>{formatCurrency(item.expense.amount)}</Text>
-                        <Text style={[styles.expenseDate, { color: themeColors.textMuted }]}>{formatExpenseDate(item.expense.occurredAt)}</Text>
-                      </View>
-                      <Feather name="chevron-right" size={24} color={themeColors.textMuted} />
+                      {index < periodExpenseRows.length - 1 && <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />}
                     </View>
-                    {index < periodExpenseRows.length - 1 && <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />}
-                  </View>
-                )}
+                  );
+                }}
               />
             </View>
             {isRecentListScrollable ? (
@@ -2027,8 +2088,31 @@ function TabItem({
   const themeColors = isDarkMode ? darkColors : lightColors;
   return (
     <Pressable style={styles.tabItem} onPress={onPress}>
-      <Feather name={icon} size={24} color={active ? themeColors.primary : "#929997"} />
-      <Text style={[styles.tabLabel, { color: active ? themeColors.primary : "#929997" }]}>{label}</Text>
+      <View style={{ alignItems: "center", justifyContent: "center", gap: 3, paddingVertical: 4 }}>
+        <Feather name={icon} size={20} color={active ? themeColors.primary : themeColors.textMuted} />
+        <Text style={[styles.tabLabel, { 
+          color: active ? themeColors.text : themeColors.textMuted, 
+          fontWeight: active ? "900" : "600",
+          fontSize: 10.5,
+          letterSpacing: 0.2
+        }]}>
+          {label}
+        </Text>
+        {active && (
+          <View style={{
+            width: 5,
+            height: 5,
+            borderRadius: 2.5,
+            backgroundColor: themeColors.primary,
+            marginTop: 1,
+            shadowColor: themeColors.primary,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.4,
+            shadowRadius: 3,
+            elevation: 2
+          }} />
+        )}
+      </View>
     </Pressable>
   );
 }
@@ -2051,6 +2135,26 @@ function getCategoryKey(category?: string): string {
   if (normalized.includes("giyim") || normalized.includes("clothing") || normalized.includes("moda") || normalized.includes("pantolon")) return "clothing";
   if (normalized.includes("eğlence") || normalized.includes("entertainment") || normalized.includes("sosyal") || normalized.includes("netflix") || normalized.includes("sinema")) return "entertainment";
   return "other";
+}
+
+function getCategoryIconConfig(category?: string): { name: keyof typeof Feather.glyphMap; bg: string; color: string } {
+  const key = getCategoryKey(category);
+  switch (key) {
+    case "market":
+      return { name: "shopping-cart", bg: "rgba(0, 229, 143, 0.08)", color: "#00B26F" };
+    case "dining":
+      return { name: "coffee", bg: "rgba(239, 122, 18, 0.08)", color: "#DF7A12" };
+    case "transport":
+      return { name: "truck", bg: "rgba(59, 130, 246, 0.08)", color: "#2563EB" };
+    case "clothing":
+      return { name: "tag", bg: "rgba(139, 92, 246, 0.08)", color: "#7C3AED" };
+    case "entertainment":
+      return { name: "film", bg: "rgba(236, 72, 153, 0.08)", color: "#DB2777" };
+    case "health":
+      return { name: "activity", bg: "rgba(239, 68, 68, 0.08)", color: "#DC2626" };
+    default:
+      return { name: "help-circle", bg: "rgba(107, 114, 128, 0.08)", color: "#5B6570" };
+  }
 }
 
 function buildExpenseRows(expenses: Expense[]) {
@@ -3291,7 +3395,7 @@ const styles = StyleSheet.create({
   },
   directVoiceOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(13, 50, 40, 0.96)",
+    backgroundColor: "rgba(4, 9, 7, 0.97)",
     zIndex: 99999,
     justifyContent: "center",
     alignItems: "center"
@@ -3301,40 +3405,41 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   directVoiceTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "900",
-    color: colors.white,
-    textAlign: "center"
+    color: "#FFFFFF",
+    textAlign: "center",
+    letterSpacing: -0.5
   },
   directVoiceSubtitle: {
-    marginTop: 8,
+    marginTop: 10,
     fontSize: 14,
-    fontWeight: "500",
-    color: "rgba(255, 255, 255, 0.6)",
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.5)",
     textAlign: "center"
   },
   directVoiceTranscriptBox: {
-    marginTop: 32,
-    minHeight: 120,
+    marginTop: 40,
+    minHeight: 130,
     width: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.04)",
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    padding: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: 28,
+    borderWidth: 1.2,
+    borderColor: "rgba(255, 255, 255, 0.06)",
+    padding: 24,
     justifyContent: "center",
     alignItems: "center"
   },
   directVoiceTranscriptText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: colors.white,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
     textAlign: "center",
-    lineHeight: 26
+    lineHeight: 28
   },
   directVoiceWaveWrap: {
     height: 48,
-    marginTop: 32,
+    marginTop: 40,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -3344,7 +3449,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 36,
     borderRadius: 3,
-    backgroundColor: "#DF7A12"
+    backgroundColor: "#00E58F"
   },
   directVoiceErrorText: {
     marginTop: 16,
@@ -3358,12 +3463,14 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#D32F2F",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.2)",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#D32F2F",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 5
   },
