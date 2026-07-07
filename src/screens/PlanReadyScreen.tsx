@@ -39,12 +39,14 @@ export default function PlanReadyScreen() {
         </Pressable>
 
         <View style={styles.hero}>
-          <View style={styles.confettiLayer} pointerEvents="none">
-            {confettiPieces.map((piece) => (
-              <View key={piece.id} style={[styles.confetti, piece.style]} />
-            ))}
+          <View style={styles.mascotContainer}>
+            <View style={styles.confettiLayer} pointerEvents="none">
+              {confettiPieces.map((piece) => (
+                <View key={piece.id} style={[styles.confetti, piece.style]} />
+              ))}
+            </View>
+            <Image source={mascot} style={styles.mascot} resizeMode="contain" />
           </View>
-          <Image source={mascot} style={styles.mascot} resizeMode="contain" />
           <Text style={styles.title}>{language === "tr" ? "Planın hazır! 🎉" : "Your plan is ready! 🎉"}</Text>
           <Text style={styles.subtitle}>
             {language === "tr"
@@ -148,11 +150,12 @@ const toneColors = {
 };
 
 const confettiPieces = [
-  { id: "c1", style: { left: 36, top: 58, backgroundColor: "#E87516", transform: [{ rotate: "24deg" }] } },
-  { id: "c2", style: { left: 82, top: 126, backgroundColor: "#69A071", transform: [{ rotate: "-28deg" }] } },
-  { id: "c4", style: { right: 62, top: 88, backgroundColor: "#B4688A", transform: [{ rotate: "-18deg" }] } },
-  { id: "c7", style: { right: 110, top: 34, backgroundColor: "#F0B35B", transform: [{ rotate: "-34deg" }] } },
-  { id: "c8", style: { left: 190, top: 166, backgroundColor: "#F0B35B", transform: [{ rotate: "15deg" }] } }
+  { id: "c1", style: { left: 20, top: 24, backgroundColor: "#E87516", transform: [{ rotate: "24deg" }] } },
+  { id: "c2", style: { left: 14, top: 78, backgroundColor: "#69A071", transform: [{ rotate: "-28deg" }] } },
+  { id: "c4", style: { right: 14, top: 64, backgroundColor: "#B4688A", transform: [{ rotate: "-18deg" }] } },
+  { id: "c7", style: { right: 20, top: 18, backgroundColor: "#F0B35B", transform: [{ rotate: "-34deg" }] } },
+  { id: "c8", style: { left: 38, top: 120, backgroundColor: "#F0B35B", transform: [{ rotate: "15deg" }] } },
+  { id: "c9", style: { right: 38, top: 114, backgroundColor: "#E87516", transform: [{ rotate: "-12deg" }] } }
 ];
 
 const styles = StyleSheet.create({
@@ -192,6 +195,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignItems: "center",
     marginBottom: 16
+  },
+  mascotContainer: {
+    width: 200,
+    height: 150,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    marginBottom: 8
   },
   confettiLayer: {
     ...StyleSheet.absoluteFillObject
