@@ -782,7 +782,7 @@ export default function HomeDashboardScreen() {
           shadowOpacity: isDarkMode ? 0.2 : 0.03,
           shadowRadius: 16,
           elevation: 3,
-          marginTop: 14
+          marginTop: 8
         }]}>
           <View style={styles.heroCopy}>
             <View style={[styles.goalBadge, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)" }]}>
@@ -802,7 +802,7 @@ export default function HomeDashboardScreen() {
               {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
             </Text>
           </View>
-          <View style={{ position: "absolute", right: 14, top: 25, width: 128, height: 128, zIndex: 5 }}>
+          <View style={{ position: "absolute", right: 14, top: 15, width: 128, height: 128, zIndex: 5 }}>
             {(mascotMessage || selectedPeriodRemaining < 0) && (
               <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -44 : -12 }]}>
                 <View style={[
@@ -3084,10 +3084,10 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     marginTop: 16,
-    height: 178,
+    height: 158,
     borderRadius: 28,
     backgroundColor: colors.primary,
-    overflow: "hidden",
+    overflow: "visible",
     paddingHorizontal: 18,
     paddingVertical: 14,
     shadowColor: colors.primary,
@@ -3124,15 +3124,15 @@ const styles = StyleSheet.create({
   },
   heroAmount: {
     marginTop: 2,
-    fontSize: 34,
-    lineHeight: 38,
+    fontSize: 26,
+    lineHeight: 30,
     fontWeight: "900",
     color: colors.white
   },
   heroSubtitle: {
-    marginTop: 8,
-    fontSize: 12,
-    lineHeight: 16,
+    marginTop: 6,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: "800",
     color: "rgba(255,255,255,0.72)"
   },
@@ -3140,15 +3140,15 @@ const styles = StyleSheet.create({
     marginTop: 3
   },
   savedAmountTitle: {
-    fontSize: 10,
-    lineHeight: 14,
+    fontSize: 9,
+    lineHeight: 12,
     fontWeight: "800",
     color: "rgba(255,255,255,0.68)"
   },
   savedAmountValue: {
     marginTop: 1,
-    fontSize: 17,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 18,
     fontWeight: "900",
     color: colors.white
   },
@@ -3166,9 +3166,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6D4A9"
   },
   heroPercentText: {
-    marginTop: 5,
-    fontSize: 11,
-    lineHeight: 14,
+    marginTop: 4,
+    fontSize: 10,
+    lineHeight: 12,
     fontWeight: "900",
     color: "rgba(255,255,255,0.78)",
     textAlign: "left"
@@ -3272,13 +3272,13 @@ const styles = StyleSheet.create({
     color: colors.white
   },
   summaryCard: {
-    marginTop: 12,
+    marginTop: 8,
     borderRadius: 16,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: "#EFE5D9",
     paddingHorizontal: 12,
-    paddingVertical: 14,
+    paddingVertical: 10,
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.03,
@@ -3341,15 +3341,15 @@ const styles = StyleSheet.create({
     color: "#111614"
   },
   addExpenseButtonRow: {
-    marginTop: 12,
+    marginTop: 8,
     flexDirection: "row",
     gap: 12,
-    height: 52
+    height: 44
   },
   mainAddButton: {
     flex: 1,
     height: "100%",
-    borderRadius: 26,
+    borderRadius: 22,
     overflow: "hidden",
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 10 },
@@ -3382,7 +3382,7 @@ const styles = StyleSheet.create({
   mainVoiceButton: {
     flex: 1,
     height: "100%",
-    borderRadius: 26,
+    borderRadius: 22,
     overflow: "hidden",
     shadowColor: "#DF7A12",
     shadowOffset: { width: 0, height: 10 },
@@ -3417,7 +3417,7 @@ const styles = StyleSheet.create({
     minHeight: 0
   },
   sectionHeader: {
-    marginTop: 18,
+    marginTop: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
