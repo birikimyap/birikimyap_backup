@@ -2189,7 +2189,7 @@ function VoiceExpenseSheet({
           <Text style={[styles.sheetTitle, { color: themeColors.text }]}>{t("sheetTitle")}</Text>
           <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{t("sheetSubtitle")}</Text>
 
-          <View style={[styles.speechBubbleContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(13,50,40,0.02)", borderColor: themeColors.border }]}>
+          <View style={[styles.speechBubbleContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(13,50,40,0.02)", borderColor: themeColors.border, borderLeftWidth: 4, borderLeftColor: "#DF7A12" }]}>
             <TextInput
               value={transcript}
               onChangeText={setTranscript}
@@ -2234,25 +2234,25 @@ function VoiceExpenseSheet({
             </View>
           </View>
 
-          <View style={[styles.formGroup, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.01)" : "#FFFFFF", borderColor: themeColors.border, borderWidth: 1.2 }]}>
+          <View style={[styles.formGroup, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.02)" : "#FFFFFF", borderColor: themeColors.border, borderWidth: 1.2 }]}>
             <View style={styles.formRow}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Feather name="tag" size={16} color={themeColors.textMuted} />
-                <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{language === "tr" ? "Harcama Adı" : "Expense Name"}</Text>
+                <Feather name="tag" size={16} color={themeColors.primary} />
+                <Text style={[styles.formLabel, { fontWeight: "800", color: isDarkMode ? "#E8FAF4" : "#1A3D34" }]}>{language === "tr" ? "Harcama Adı" : "Expense Name"}</Text>
               </View>
               <TextInput
                 value={label}
                 onChangeText={setLabel}
                 placeholder={language === "tr" ? "Örn: Market alışverişi" : "e.g. Market shopping"}
                 placeholderTextColor="#9CA19E"
-                style={[styles.formInput, { color: themeColors.text }]}
+                style={[styles.formInput, { color: themeColors.text, fontWeight: "700" }]}
               />
             </View>
             <View style={styles.formDivider} />
             <View style={styles.formRow}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Feather name="dollar-sign" size={16} color={themeColors.textMuted} />
-                <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("sheetLabelAmount")}</Text>
+                <Feather name="dollar-sign" size={16} color="#00DF89" />
+                <Text style={[styles.formLabel, { fontWeight: "900", color: "#00DF89" }]}>{t("sheetLabelAmount")}</Text>
               </View>
               <TextInput
                 value={amount}
@@ -2260,89 +2260,37 @@ function VoiceExpenseSheet({
                 keyboardType="decimal-pad"
                 placeholder="0,00"
                 placeholderTextColor="#9CA19E"
-                style={[styles.formInputAmount, { color: themeColors.primary }]}
+                style={[styles.formInputAmount, { color: "#00DF89", fontWeight: "900" }]}
               />
             </View>
             <View style={styles.formDivider} />
             <View style={styles.formRow}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Feather name="grid" size={16} color={themeColors.textMuted} />
-                <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("sheetLabelCategory")}</Text>
+                <Feather name="grid" size={16} color={themeColors.primary} />
+                <Text style={[styles.formLabel, { fontWeight: "800", color: isDarkMode ? "#E8FAF4" : "#1A3D34" }]}>{t("sheetLabelCategory")}</Text>
               </View>
               <TextInput
                 value={category}
                 onChangeText={setCategory}
                 placeholder={t("sheetCategoryPlaceholder")}
                 placeholderTextColor="#9CA19E"
-                style={[styles.formInput, { color: themeColors.text }]}
+                style={[styles.formInput, { color: themeColors.text, fontWeight: "700" }]}
               />
             </View>
             <View style={styles.formDivider} />
             <View style={styles.formRow}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Feather name="edit-3" size={16} color={themeColors.textMuted} />
-                <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("sheetLabelNote")}</Text>
+                <Feather name="edit-3" size={16} color={themeColors.primary} />
+                <Text style={[styles.formLabel, { fontWeight: "800", color: isDarkMode ? "#E8FAF4" : "#1A3D34" }]}>{t("sheetLabelNote")}</Text>
               </View>
               <TextInput
                 value={note}
                 onChangeText={setNote}
                 placeholder={t("sheetNotePlaceholder")}
                 placeholderTextColor="#9CA19E"
-                style={[styles.formInput, { color: themeColors.text }]}
+                style={[styles.formInput, { color: themeColors.text, fontWeight: "700" }]}
               />
             </View>
-          </View>
-
-          {/* Quick-Select Category Badges Row */}
-          <View style={{ marginTop: 12 }}>
-            <Text style={{ fontSize: 11, fontWeight: "800", color: themeColors.textMuted, marginBottom: 6, textTransform: "uppercase", paddingHorizontal: 4 }}>
-              {language === "tr" ? "Hızlı Kategori Seç" : "Quick Select Category"}
-            </Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false} 
-              contentContainerStyle={{ paddingHorizontal: 4, paddingBottom: 4, gap: 8 }}
-            >
-              {[
-                { id: "market", label: language === "tr" ? "Market" : "Grocery", icon: "shopping-cart" },
-                { id: "yemek", label: language === "tr" ? "Yemek" : "Food", icon: "coffee" },
-                { id: "ulasim", label: language === "tr" ? "Ulaşım" : "Transport", icon: "truck" },
-                { id: "eglence", label: language === "tr" ? "Eğlence" : "Entertainment", icon: "film" },
-                { id: "fatura", label: language === "tr" ? "Fatura" : "Bills", icon: "credit-card" },
-                { id: "diger", label: language === "tr" ? "Diğer" : "Other", icon: "archive" }
-              ].map((cat) => {
-                const isSelected = category.toLowerCase() === cat.label.toLowerCase();
-                return (
-                  <Pressable
-                    key={cat.id}
-                    onPress={() => {
-                      triggerHaptic();
-                      setCategory(cat.label);
-                    }}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 6,
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
-                      borderRadius: 12,
-                      backgroundColor: isSelected 
-                        ? "rgba(0, 223, 137, 0.12)" 
-                        : (isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(13,50,40,0.02)"),
-                      borderWidth: 1.2,
-                      borderColor: isSelected 
-                        ? "#00DF89" 
-                        : "transparent"
-                    }}
-                  >
-                    <Feather name={cat.icon as any} size={13} color={isSelected ? "#00DF89" : themeColors.textMuted} />
-                    <Text style={{ fontSize: 12, fontWeight: "800", color: isSelected ? "#00DF89" : themeColors.text }}>
-                      {cat.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
           </View>
 
           <View style={styles.sheetActions}>
