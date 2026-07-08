@@ -7,6 +7,9 @@
 
 - **Mevcut Tasarımı ve Sayfa Yapısını Koruma Kuralları (No Layout Refactoring):**
   * Uygulamanın ana iskeletini, sayfa yapısını, flex/grid düzenini veya genel görsel şablonlarını bozacak hiçbir refaktör/düzenleme işlemi YAPILMAYACAKTIR.
+  * Harcama Ekleme (VoiceExpenseSheet) gibi form ve modal ekranlarındaki tasarımsal iyileştirmelerde:
+    * Sayfa veya modal yapısına yeni iskeletsel elemanlar (hızlı seçim satırları, ekstra listeler, özel badge satırları vb.) EKLENMEYECEKTİR.
+    * Müdahaleler her zaman mevcut bileşen iskeletini koruyarak sadece görsel iyileştirmeyle (canlı renkler, yüksek kontrast, sol kenar çizgisi vurguları, ikonlar ve degrade butonlar) sınırlı tutulacaktır.
   * Tasarımsal değişiklikler yalnızca kullanıcı talep ettiğinde, mevcut düzenin sınırları korunarak yapılmalıdır.
 
 - **Paranoyak Hata ve Regresyon Tarama Kuralları:**
