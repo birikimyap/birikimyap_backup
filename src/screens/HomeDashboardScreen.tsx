@@ -2061,9 +2061,16 @@ function VoiceExpenseSheet({
   setDraftTranscript: (text: string) => void;
 }) {
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const isHapticsEnabled = useFinanceStore((state) => state.isHapticsEnabled);
   const themeColors = isDarkMode ? darkColors : lightColors;
   const language = useFinanceStore((state) => state.language);
   const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
+  const triggerHaptic = () => {
+    if (isHapticsEnabled) {
+      Vibration.vibrate(10);
+    }
+  };
 
   const [spokenText, setSpokenText] = useState("");
   const [label, setLabel] = useState("");
@@ -2177,18 +2184,18 @@ function VoiceExpenseSheet({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={closeSheet}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
         <Pressable style={styles.sheetBackdrop} onPress={closeSheet} />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>{t("sheetTitle")}</Text>
-          <Text style={styles.sheetSubtitle}>{t("sheetSubtitle")}</Text>
+          <Text style={[styles.sheetTitle, { color: themeColors.text }]}>{t("sheetTitle")}</Text>
+          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{t("sheetSubtitle")}</Text>
 
-          <View style={styles.speechBubbleContainer}>
+          <View style={[styles.speechBubbleContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(13,50,40,0.02)", borderColor: themeColors.border }]}>
             <TextInput
               value={transcript}
               onChangeText={setTranscript}
               placeholder={isListening ? t("sheetListening") : t("sheetInputPlaceholder")}
               placeholderTextColor="#9CA19E"
-              style={styles.speechBubbleInput}
+              style={[styles.speechBubbleInput, { color: themeColors.text }]}
               multiline
             />
           </View>
@@ -2220,66 +2227,151 @@ function VoiceExpenseSheet({
                   ))}
                 </View>
               ) : (
-                <Text style={styles.micHelperText}>
+                <Text style={[styles.micHelperText, { color: themeColors.textMuted }]}>
                   {error || (permissionStatus === "unsupported" ? t("sheetHelperTextUnsupported") : t("sheetHelperTextVoice"))}
                 </Text>
               )}
             </View>
           </View>
 
-          <View style={styles.formGroup}>
+          <View style={[styles.formGroup, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.01)" : "#FFFFFF", borderColor: themeColors.border, borderWidth: 1.2 }]}>
             <View style={styles.formRow}>
-              <Text style={styles.formLabel}>{language === "tr" ? "Harcama Adı" : "Expense Name"}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Feather name="tag" size={16} color={themeColors.textMuted} />
+                <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{language === "tr" ? "Harcama Adı" : "Expense Name"}</Text>
+              </View>
               <TextInput
                 value={label}
                 onChangeText={setLabel}
-                placeholder={language === "tr" ? "Örn: Çamaşır deterjanı" : "e.g. Laundry detergent"}
+                placeholder={language === "tr" ? "Örn: Market alışverişi" : "e.g. Market shopping"}
                 placeholderTextColor="#9CA19E"
-                style={styles.formInput}
+                style={[styles.formInput, { color: themeColors.text }]}
               />
             </View>
             <View style={styles.formDivider} />
             <View style={styles.formRow}>
-              <Text style={styles.formLabel}>{t("sheetLabelAmount")}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Feather name="dollar-sign" size={16} color={themeColors.textMuted} />
+                <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("sheetLabelAmount")}</Text>
+              </View>
               <TextInput
                 value={amount}
                 onChangeText={setAmount}
                 keyboardType="decimal-pad"
                 placeholder="0,00"
                 placeholderTextColor="#9CA19E"
-                style={styles.formInputAmount}
+                style={[styles.formInputAmount, { color: themeColors.primary }]}
               />
             </View>
             <View style={styles.formDivider} />
             <View style={styles.formRow}>
-              <Text style={styles.formLabel}>{t("sheetLabelCategory")}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Feather name="grid" size={16} color={themeColors.textMuted} />
+                <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("sheetLabelCategory")}</Text>
+              </View>
               <TextInput
                 value={category}
                 onChangeText={setCategory}
                 placeholder={t("sheetCategoryPlaceholder")}
                 placeholderTextColor="#9CA19E"
-                style={styles.formInput}
+                style={[styles.formInput, { color: themeColors.text }]}
               />
             </View>
             <View style={styles.formDivider} />
             <View style={styles.formRow}>
-              <Text style={styles.formLabel}>{t("sheetLabelNote")}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Feather name="edit-3" size={16} color={themeColors.textMuted} />
+                <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("sheetLabelNote")}</Text>
+              </View>
               <TextInput
                 value={note}
                 onChangeText={setNote}
                 placeholder={t("sheetNotePlaceholder")}
                 placeholderTextColor="#9CA19E"
-                style={styles.formInput}
+                style={[styles.formInput, { color: themeColors.text }]}
               />
             </View>
           </View>
 
+          {/* Quick-Select Category Badges Row */}
+          <View style={{ marginTop: 12 }}>
+            <Text style={{ fontSize: 11, fontWeight: "800", color: themeColors.textMuted, marginBottom: 6, textTransform: "uppercase", paddingHorizontal: 4 }}>
+              {language === "tr" ? "Hızlı Kategori Seç" : "Quick Select Category"}
+            </Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              contentContainerStyle={{ paddingHorizontal: 4, paddingBottom: 4, gap: 8 }}
+            >
+              {[
+                { id: "market", label: language === "tr" ? "Market" : "Grocery", icon: "shopping-cart" },
+                { id: "yemek", label: language === "tr" ? "Yemek" : "Food", icon: "coffee" },
+                { id: "ulasim", label: language === "tr" ? "Ulaşım" : "Transport", icon: "truck" },
+                { id: "eglence", label: language === "tr" ? "Eğlence" : "Entertainment", icon: "film" },
+                { id: "fatura", label: language === "tr" ? "Fatura" : "Bills", icon: "credit-card" },
+                { id: "diger", label: language === "tr" ? "Diğer" : "Other", icon: "archive" }
+              ].map((cat) => {
+                const isSelected = category.toLowerCase() === cat.label.toLowerCase();
+                return (
+                  <Pressable
+                    key={cat.id}
+                    onPress={() => {
+                      triggerHaptic();
+                      setCategory(cat.label);
+                    }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      paddingVertical: 8,
+                      paddingHorizontal: 12,
+                      borderRadius: 12,
+                      backgroundColor: isSelected 
+                        ? "rgba(0, 223, 137, 0.12)" 
+                        : (isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(13,50,40,0.02)"),
+                      borderWidth: 1.2,
+                      borderColor: isSelected 
+                        ? "#00DF89" 
+                        : "transparent"
+                    }}
+                  >
+                    <Feather name={cat.icon as any} size={13} color={isSelected ? "#00DF89" : themeColors.textMuted} />
+                    <Text style={{ fontSize: 12, fontWeight: "800", color: isSelected ? "#00DF89" : themeColors.text }}>
+                      {cat.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+
           <View style={styles.sheetActions}>
-            <Pressable style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]} onPress={closeSheet}>
-              <Text style={styles.cancelButtonText}>{t("sheetCancelBtn")}</Text>
+            <Pressable 
+              style={({ pressed }) => [
+                styles.cancelButton, 
+                { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#EFE8DD" },
+                pressed && styles.pressed
+              ]} 
+              onPress={closeSheet}
+            >
+              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>{t("sheetCancelBtn")}</Text>
             </Pressable>
-            <Pressable style={({ pressed }) => [styles.saveButton, pressed && styles.pressed]} onPress={saveExpense}>
-              <Text style={styles.saveButtonText}>{t("sheetSaveBtn")}</Text>
+            
+            <Pressable 
+              style={({ pressed }) => [
+                { flex: 1, borderRadius: 18, overflow: "hidden" }, 
+                pressed && styles.pressed
+              ]} 
+              onPress={saveExpense}
+            >
+              <LinearGradient
+                colors={["#00DF89", "#0D3228"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ flex: 1, minHeight: 52, alignItems: "center", justifyContent: "center" }}
+              >
+                <Text style={styles.saveButtonText}>{t("sheetSaveBtn")}</Text>
+              </LinearGradient>
             </Pressable>
           </View>
         </View>
