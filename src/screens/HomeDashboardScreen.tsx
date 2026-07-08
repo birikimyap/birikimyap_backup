@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { router } from "expo-router";
 import {
+  Alert,
   Animated,
   FlatList,
   Image,
@@ -27,7 +28,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatCurrency, parseAmount } from "@/utils/currency";
-import { getExpensesForPeriod } from "@/utils/finance";
+import { getExpensesForPeriod, getSimulatedDate } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 
 const mascotTR = require("../../pgn/mascot-cutout.png");
@@ -66,6 +67,7 @@ export default function HomeDashboardScreen() {
   const currency = useFinanceStore((state) => state.currency);
   const setCurrency = useFinanceStore((state) => state.setCurrency);
   const getRemainingLimitForPeriod = useFinanceStore((state) => state.getRemainingLimitForPeriod);
+  const simulatedDateOffsetDays = useFinanceStore((state) => state.simulatedDateOffsetDays);
 
   const t = (key: keyof typeof translations["tr"], variables?: Record<string, string>): string => {
     let str: string = translations[language][key] || key;
@@ -351,9 +353,31 @@ export default function HomeDashboardScreen() {
     previousIsVoiceListening.current = isVoiceListening;
   }, [isVoiceListening, isDirectVoiceActive, voiceParsedExpense, voiceTranscript]);
 
+  const simulatedDate = useMemo(() => {
+    return getSimulatedDate(simulatedDateOffsetDays || 0);
+  }, [simulatedDateOffsetDays]);
+
+  const planDay = useMemo(() => {
+    const start = new Date(savingsGoal.planStartDate || new Date());
+    const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const dSim = new Date(simulatedDate.getFullYear(), simulatedDate.getMonth(), simulatedDate.getDate());
+    const diffTime = dSim.getTime() - dStart.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(diffDays + 1, 1);
+  }, [simulatedDate, savingsGoal.planStartDate]);
+
+  const formattedSimulatedDate = useMemo(() => {
+    const locale = language === "tr" ? "tr-TR" : "en-US";
+    return simulatedDate.toLocaleDateString(locale, {
+      day: "numeric",
+      month: "long",
+      weekday: "long"
+    });
+  }, [simulatedDate, language]);
+
   const copy = periodCopy[selectedPeriod];
   const selectedPeriodLimit = plan.limits[selectedPeriod];
-  const periodExpenses = useMemo(() => getExpensesForPeriod(expenses, selectedPeriod), [expenses, selectedPeriod]);
+  const periodExpenses = useMemo(() => getExpensesForPeriod(expenses, selectedPeriod, simulatedDate), [expenses, selectedPeriod, simulatedDate]);
   const periodExpenseRows = useMemo(() => buildExpenseRows(periodExpenses), [periodExpenses]);
   const recentTotal = plan.selectedPeriodSpent;
   const selectedPeriodRemaining = plan.selectedPeriodRemaining;
@@ -536,7 +560,7 @@ export default function HomeDashboardScreen() {
     ];
   }, [expenses, savingsGoal, language, currency]);
 
-  const analysisExpenses = useMemo(() => getExpensesForPeriod(expenses, analysisPeriod), [expenses, analysisPeriod]);
+  const analysisExpenses = useMemo(() => getExpensesForPeriod(expenses, analysisPeriod, simulatedDate), [expenses, analysisPeriod, simulatedDate]);
 
   // Filtered expenses based on chart selection
   const filteredAnalysisExpenses = useMemo(() => {
@@ -626,7 +650,7 @@ export default function HomeDashboardScreen() {
     ];
     
     const periodSpends = Array(4).fill(0);
-    const todayStr = new Date().toDateString();
+    const todayStr = simulatedDate.toDateString();
     
     expenses.forEach((exp) => {
       if (exp.isFixed || !exp.occurredAt) return;
@@ -647,13 +671,13 @@ export default function HomeDashboardScreen() {
       amount: periodSpends[index],
       percentage: (periodSpends[index] / maxSpend) * 100
     }));
-  }, [expenses, language]);
+  }, [expenses, language, simulatedDate]);
 
   // Weekly daily spend trend for Analysis tab bar chart
   const analysisWeeklyData = useMemo(() => {
     const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
     const dailySpend = Array(7).fill(0);
-    const today = new Date();
+    const today = simulatedDate;
     
     expenses.forEach((exp) => {
       if (exp.isFixed || !exp.occurredAt) return;
@@ -673,13 +697,13 @@ export default function HomeDashboardScreen() {
       amount: dailySpend[index],
       percentage: (dailySpend[index] / maxSpend) * 100
     }));
-  }, [expenses]);
+  }, [expenses, simulatedDate]);
 
   // Monthly spending by weeks for Analysis tab bar chart
   const analysisMonthlyData = useMemo(() => {
     const weeks = ["1. Hft", "2. Hft", "3. Hft", "4. Hft"];
     const weeklySpend = Array(4).fill(0);
-    const now = new Date();
+    const now = simulatedDate;
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
@@ -707,7 +731,7 @@ export default function HomeDashboardScreen() {
       amount: weeklySpend[index],
       percentage: (weeklySpend[index] / maxSpend) * 100
     }));
-  }, [expenses]);
+  }, [expenses, simulatedDate]);
 
   const topCategoryInfo = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -728,6 +752,15 @@ export default function HomeDashboardScreen() {
     triggerHaptic();
     const isDeficit = selectedPeriodRemaining < 0;
     const highestCat = topCategoryInfo?.category || (language === "tr" ? "Genel" : "General");
+    const streak = useFinanceStore.getState().getZeroSpendingStreak();
+
+    const streakQuotes = language === "tr" ? [
+      `Tebrikler Gürkan! Tam ${streak} gündür sıfır harcama yaptın, harika gidiyorsun! 🏆🐖`,
+      `Müthiş! ${streak} günlük sıfır harcama serin var, tasarruf şampiyonusun! 🔥✨`
+    ] : [
+      `Congratulations Gurkan! You haven't spent anything for ${streak} days, you are doing great! 🏆🐖`,
+      `Awesome! You have a ${streak}-day zero spending streak, you are a savings champion! 🔥✨`
+    ];
 
     const deficitQuotes = language === "tr" ? [
       "Bütçeyi biraz aştık ama sakin ol, yarın tasarruf günümüz olsun! 🐖",
@@ -753,7 +786,7 @@ export default function HomeDashboardScreen() {
       "Small savings lead to big targets. Keep up the good work! 💸"
     ];
 
-    const quotes = isDeficit ? deficitQuotes : healthyQuotes;
+    const quotes = (streak >= 3 && !isDeficit) ? streakQuotes : (isDeficit ? deficitQuotes : healthyQuotes);
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setMascotMessage(randomQuote);
 
@@ -788,6 +821,12 @@ export default function HomeDashboardScreen() {
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
             <Text style={[styles.greeting, { color: themeColors.text }]}>{t("welcomeUser")}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4, marginBottom: 2 }}>
+              <Feather name="calendar" size={13} color={themeColors.primary} />
+              <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.primary }}>
+                {formattedSimulatedDate} — {language === "tr" ? `${planDay}. Gün` : `Day ${planDay}`}
+              </Text>
+            </View>
             {selectedPeriodRemaining < 0 ? (
               <Text style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900" }]}>
                 {language === "tr" 
@@ -2566,6 +2605,15 @@ function NotificationsModal({
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   const themeColors = isDarkMode ? darkColors : lightColors;
   const language = useFinanceStore((state) => state.language);
+  const skipDay = useFinanceStore((state) => state.skipDay);
+  const resetSimulatedDate = useFinanceStore((state) => state.resetSimulatedDate);
+  const isHapticsEnabled = useFinanceStore((state) => state.isHapticsEnabled);
+
+  const triggerHaptic = () => {
+    if (isHapticsEnabled) {
+      Vibration.vibrate(10);
+    }
+  };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -2595,6 +2643,77 @@ function NotificationsModal({
               onPress={onClose}
             >
               <Feather name="x" size={16} color={themeColors.text} />
+            </Pressable>
+          </View>
+
+          {/* Developer Test Day Skip Buttons */}
+          <View style={{ flexDirection: "row", gap: 10, width: "100%", marginBottom: 14 }}>
+            <Pressable 
+              onPress={() => {
+                triggerHaptic();
+                skipDay();
+                Alert.alert(
+                  language === "tr" ? "Gün Atlandı! 🚀" : "Day Skipped! 🚀",
+                  language === "tr" 
+                    ? "Sistemde 1 gün ileri atlandı. Günlük limitiniz sıfırlandı ve günlük birikim hedefiniz toplam birikiminize eklendi! 🐖✨"
+                    : "1 day skipped in the system. Your daily limit is reset and daily target is added to total savings! 🐖✨"
+                );
+              }}
+              style={({ pressed }) => [
+                {
+                  flex: 1.5,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  paddingVertical: 12,
+                  paddingHorizontal: 12,
+                  borderRadius: 14,
+                  backgroundColor: isDarkMode ? "rgba(223, 122, 18, 0.12)" : "#FFF3E0",
+                  borderWidth: 1.2,
+                  borderColor: isDarkMode ? "rgba(223, 122, 18, 0.3)" : "#FFE0B2"
+                },
+                pressed && styles.pressed
+              ]}
+            >
+              <Feather name="fast-forward" size={16} color="#DF7A12" />
+              <Text style={{ fontSize: 12, fontWeight: "800", color: "#DF7A12" }}>
+                {language === "tr" ? "🔧 1 Gün Atla" : "🔧 Skip 1 Day"}
+              </Text>
+            </Pressable>
+
+            <Pressable 
+              onPress={() => {
+                triggerHaptic();
+                resetSimulatedDate();
+                Alert.alert(
+                  language === "tr" ? "Tarih Sıfırlandı! 🔄" : "Date Reset! 🔄",
+                  language === "tr" 
+                    ? "Simüle edilen tarih başlangıç gününe sıfırlandı."
+                    : "Simulated date was reset to the start day."
+                );
+              }}
+              style={({ pressed }) => [
+                {
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  paddingVertical: 12,
+                  paddingHorizontal: 12,
+                  borderRadius: 14,
+                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F5F5F5",
+                  borderWidth: 1.2,
+                  borderColor: isDarkMode ? "rgba(255,255,255,0.15)" : "#E0E0E0"
+                },
+                pressed && styles.pressed
+              ]}
+            >
+              <Feather name="refresh-cw" size={15} color={themeColors.text} />
+              <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.text }}>
+                {language === "tr" ? "Sıfırla" : "Reset"}
+              </Text>
             </Pressable>
           </View>
 

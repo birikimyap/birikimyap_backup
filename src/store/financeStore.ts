@@ -13,7 +13,9 @@ import {
   getSpendableMonthlyBudget as calculateSpendableMonthlyBudget,
   getTotalFixedExpenses as calculateTotalFixedExpenses,
   getTotalIncome as calculateTotalIncome,
-  getWeeklyLimit as calculateWeeklyLimit
+  getWeeklyLimit as calculateWeeklyLimit,
+  getSimulatedDate,
+  getZeroSpendingStreak
 } from "@/utils/finance";
 import { parseAmount } from "@/utils/currency";
 
@@ -52,6 +54,10 @@ type FinanceState = {
   setCurrency: (currency: "TRY" | "USD" | "EUR") => void;
   categoryLimits: Record<string, number>;
   setCategoryLimit: (categoryKey: string, amount: number) => void;
+  simulatedDateOffsetDays: number;
+  skipDay: () => void;
+  resetSimulatedDate: () => void;
+  getZeroSpendingStreak: () => number;
 };
 
 const initialIncomes: Income[] = [
@@ -120,13 +126,13 @@ function normalizeSavingsGoal(savingsGoal: SavingsGoal, monthlyRemaining: number
   };
 }
 
-function createPlan(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal, selectedPeriod: Period) {
+function createPlan(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal, selectedPeriod: Period, now = new Date()) {
   const monthlyRemaining = calculateMonthlyRemaining(incomes, expenses);
   const normalizedSavingsGoal = normalizeSavingsGoal(savingsGoal, monthlyRemaining);
 
   return {
     savingsGoal: normalizedSavingsGoal,
-    plan: calculateFinancePlan(incomes, expenses, normalizedSavingsGoal, selectedPeriod)
+    plan: calculateFinancePlan(incomes, expenses, normalizedSavingsGoal, selectedPeriod, now)
   };
 }
 
@@ -134,6 +140,7 @@ export const useFinanceStore = create<FinanceState>()(
   persist(
     (set, get) => ({
       hasHydrated: false,
+      simulatedDateOffsetDays: 0,
       incomes: initialIncomes,
       expenses: initialFixedExpenses,
       savingsGoal: initialGoal,
@@ -199,7 +206,7 @@ export const useFinanceStore = create<FinanceState>()(
         });
 
         const { selectedPeriod } = get();
-        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod);
+        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
 
         set({
           currency: newCurrency,
@@ -213,7 +220,7 @@ export const useFinanceStore = create<FinanceState>()(
       setIncomes: (incomes) => {
         const normalizedIncomes = incomes.map(normalizeIncome);
         const { expenses, savingsGoal, selectedPeriod } = get();
-        const next = createPlan(normalizedIncomes, expenses, savingsGoal, selectedPeriod);
+        const next = createPlan(normalizedIncomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
 
         console.log("[finance-store] setIncomes", {
           incomes: normalizedIncomes,
@@ -232,7 +239,7 @@ export const useFinanceStore = create<FinanceState>()(
       setExpenses: (expenses) => {
         const normalizedExpenses = expenses.map(normalizeExpense);
         const { incomes, savingsGoal, selectedPeriod } = get();
-        const next = createPlan(incomes, normalizedExpenses, savingsGoal, selectedPeriod);
+        const next = createPlan(incomes, normalizedExpenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
 
         set({
           expenses: normalizedExpenses,
@@ -245,7 +252,7 @@ export const useFinanceStore = create<FinanceState>()(
         const variableExpenses = get().expenses.filter((expense) => !expense.isFixed);
         const expenses = [...normalizedFixedExpenses, ...variableExpenses];
         const { incomes, savingsGoal, selectedPeriod } = get();
-        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod);
+        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
 
         console.log("[finance-store] setFixedExpenses", {
           incomes,
@@ -262,9 +269,13 @@ export const useFinanceStore = create<FinanceState>()(
         });
       },
       addExpense: (expense) => {
-        const expenses = [normalizeExpense(expense), ...get().expenses];
+        const simulatedExpense = {
+          ...expense,
+          occurredAt: getSimulatedDate(get().simulatedDateOffsetDays).toISOString()
+        };
+        const expenses = [normalizeExpense(simulatedExpense), ...get().expenses];
         const { incomes, savingsGoal, selectedPeriod } = get();
-        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod);
+        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
 
         set({
           expenses,
@@ -274,7 +285,7 @@ export const useFinanceStore = create<FinanceState>()(
       },
       setSavingsGoal: (savingsGoal) => {
         const { incomes, expenses, selectedPeriod } = get();
-        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod);
+        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
 
         set({
           savingsGoal: next.savingsGoal,
@@ -287,7 +298,7 @@ export const useFinanceStore = create<FinanceState>()(
       },
       setSelectedPeriod: (selectedPeriod) => {
         const { incomes, expenses, savingsGoal } = get();
-        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod);
+        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
 
         set({
           selectedPeriod,
@@ -300,7 +311,7 @@ export const useFinanceStore = create<FinanceState>()(
         const incomes = get().incomes.map(normalizeIncome);
         const expenses = get().expenses.map(normalizeExpense);
         const { savingsGoal, selectedPeriod } = get();
-        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod);
+        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
 
         set({
           incomes,
@@ -316,9 +327,39 @@ export const useFinanceStore = create<FinanceState>()(
       getDailyLimit: () => calculateDailyLimit(get().incomes, get().expenses, get().savingsGoal),
       getWeeklyLimit: () => calculateWeeklyLimit(get().incomes, get().expenses, get().savingsGoal),
       getMonthlyLimit: () => calculateMonthlyLimit(get().incomes, get().expenses, get().savingsGoal),
-      getExpensesTotalForPeriod: (period) => calculateExpensesTotalForPeriod(get().expenses, period),
+      getExpensesTotalForPeriod: (period) => calculateExpensesTotalForPeriod(get().expenses, period, getSimulatedDate(get().simulatedDateOffsetDays)),
       getRemainingLimitForPeriod: (period) =>
-        calculateRemainingLimitForPeriod(get().incomes, get().expenses, get().savingsGoal, period)
+        calculateRemainingLimitForPeriod(get().incomes, get().expenses, get().savingsGoal, period, getSimulatedDate(get().simulatedDateOffsetDays)),
+      skipDay: () => {
+        const nextOffset = (get().simulatedDateOffsetDays || 0) + 1;
+        const { expenses, savingsGoal, selectedPeriod } = get();
+
+        const dailyTarget = savingsGoal.dailyTarget || (savingsGoal.monthlyContribution / 30) || 0;
+        const nextSaved = Math.min((savingsGoal.currentAmount || 0) + dailyTarget, savingsGoal.targetAmount || Infinity);
+
+        const shiftedGoal = { 
+          ...savingsGoal, 
+          currentAmount: Math.round(nextSaved * 100) / 100
+        };
+
+        const simulatedDate = getSimulatedDate(nextOffset);
+        const next = createPlan(get().incomes, expenses, shiftedGoal, selectedPeriod, simulatedDate);
+
+        set({
+          simulatedDateOffsetDays: nextOffset,
+          savingsGoal: next.savingsGoal,
+          plan: next.plan
+        });
+      },
+      resetSimulatedDate: () => {
+        const { expenses, savingsGoal, selectedPeriod } = get();
+        const next = createPlan(get().incomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(0));
+        set({
+          simulatedDateOffsetDays: 0,
+          plan: next.plan
+        });
+      },
+      getZeroSpendingStreak: () => getZeroSpendingStreak(get().expenses, getSimulatedDate(get().simulatedDateOffsetDays))
     }),
     {
       name: "birikim-yap-finance-storage",

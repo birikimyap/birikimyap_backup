@@ -64,7 +64,8 @@ export function calculateFinancePlan(
   incomes: Income[],
   expenses: Expense[],
   savingsGoal: SavingsGoal,
-  selectedPeriod: Period
+  selectedPeriod: Period,
+  now = new Date()
 ): FinancePlan {
   const monthlyIncome = getTotalIncome(incomes);
   const totalFixedExpenses = getTotalFixedExpenses(expenses);
@@ -73,7 +74,7 @@ export function calculateFinancePlan(
   const spendableMonthlyBudget = Math.max(monthlyRemaining - monthlySavings, 0);
   const limits = buildSpendingLimits(incomes, expenses, { ...savingsGoal, monthlyContribution: monthlySavings });
   const selectedPeriodLimit = limits[selectedPeriod];
-  const selectedPeriodSpent = getExpensesTotalForPeriod(expenses, selectedPeriod);
+  const selectedPeriodSpent = getExpensesTotalForPeriod(expenses, selectedPeriod, now);
 
   return {
     monthlyIncome,
@@ -90,6 +91,36 @@ export function calculateFinancePlan(
 
 export function getExpensesForPeriod(expenses: Expense[], period: Period, now = new Date()) {
   return expenses.filter((expense) => !expense.isFixed && isExpenseInPeriod(expense, period, now));
+}
+
+export function getSimulatedDate(offsetDays = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return d;
+}
+
+export function getZeroSpendingStreak(expenses: Expense[], now = new Date()) {
+  let streak = 0;
+  const checkDate = new Date(now);
+  
+  for (let i = 0; i < 30; i++) {
+    const targetDateStr = checkDate.toDateString();
+    const dayHasSpending = expenses.some((exp) => 
+      !exp.isFixed && 
+      exp.occurredAt && 
+      new Date(exp.occurredAt).toDateString() === targetDateStr &&
+      toSafeAmount(exp.amount) > 0
+    );
+    
+    if (dayHasSpending) {
+      break;
+    }
+    
+    streak++;
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+  
+  return streak;
 }
 
 function isExpenseInPeriod(expense: Expense, period: Period, now: Date) {
