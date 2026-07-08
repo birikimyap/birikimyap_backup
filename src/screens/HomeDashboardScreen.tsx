@@ -375,41 +375,6 @@ export default function HomeDashboardScreen() {
     });
   }, [simulatedDate, language]);
 
-  const debugInfo = useMemo(() => {
-    if ((simulatedDateOffsetDays || 0) === 0) return null;
-    const start = new Date(savingsGoal.planStartDate || new Date());
-    const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const dNow = new Date(simulatedDate.getFullYear(), simulatedDate.getMonth(), simulatedDate.getDate());
-    
-    const planExpenses = expenses.filter((exp) => {
-      if (exp.isFixed || !exp.occurredAt) return false;
-      const expDate = new Date(exp.occurredAt);
-      const dExp = new Date(expDate.getFullYear(), expDate.getMonth(), expDate.getDate());
-      return dExp.getTime() >= dStart.getTime() && dExp.getTime() <= dNow.getTime();
-    });
-
-    const totalSpentInPlan = planExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const spentToday = planExpenses
-      .filter((exp) => {
-        const expDate = new Date(exp.occurredAt!);
-        return expDate.getFullYear() === dNow.getFullYear() && 
-               expDate.getMonth() === dNow.getMonth() && 
-               expDate.getDate() === dNow.getDate();
-      })
-      .reduce((sum, exp) => sum + exp.amount, 0);
-
-    const previousDaysSpent = Math.max(totalSpentInPlan - spentToday, 0);
-    const remainingDays = Math.max(30 - (planDay - 1), 1);
-    
-    return {
-      planDay,
-      remainingDays,
-      totalSpentInPlan,
-      spentToday,
-      previousDaysSpent,
-      spendableMonthlyBudget: plan.spendableMonthlyBudget
-    };
-  }, [simulatedDate, savingsGoal.planStartDate, expenses, planDay, plan.spendableMonthlyBudget, simulatedDateOffsetDays]);
 
   const copy = periodCopy[selectedPeriod];
   const selectedPeriodLimit = plan.limits[selectedPeriod];
@@ -854,23 +819,6 @@ export default function HomeDashboardScreen() {
 
     return (
       <View style={styles.tabContentContainer}>
-        <View style={{
-          margin: 16,
-          padding: 12,
-          borderRadius: 8,
-          backgroundColor: "#FFEBEB",
-          borderColor: "#FFC1C1",
-          borderWidth: 1,
-          gap: 4
-        }}>
-          <Text style={{ fontSize: 12, fontWeight: "bold", color: "#D32F2F" }}>🤖 Diagnostic Panel (Please reload app if not visible)</Text>
-          <Text style={{ fontSize: 10, color: "#333" }}>Plan Start Date: {savingsGoal.planStartDate || "undefined"}</Text>
-          <Text style={{ fontSize: 10, color: "#333" }}>Offset Days: {simulatedDateOffsetDays || 0}</Text>
-          <Text style={{ fontSize: 10, color: "#333" }}>Plan Day: {planDay}</Text>
-          <Text style={{ fontSize: 10, color: "#333" }}>Daily Limit: {selectedPeriodLimit} (Plan limits daily: {plan.limits.daily})</Text>
-          <Text style={{ fontSize: 10, color: "#333" }}>Monthly Budget: {plan.spendableMonthlyBudget}</Text>
-          <Text style={{ fontSize: 10, color: "#333" }}>Expenses Count: {expenses.length} (Plan expenses count: {expenses.filter(e => !e.isFixed).length})</Text>
-        </View>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
             <Text style={[styles.greeting, { color: themeColors.text }]}>{t("welcomeUser")}</Text>
@@ -880,13 +828,7 @@ export default function HomeDashboardScreen() {
                 {formattedSimulatedDate} — {language === "tr" ? `${planDay}. Gün` : `Day ${planDay}`}
               </Text>
             </View>
-            {debugInfo && (
-              <View style={{ marginTop: 4, padding: 6, borderRadius: 6, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)", alignSelf: "flex-start" }}>
-                <Text style={{ fontSize: 9, fontWeight: "600", color: themeColors.textMuted }}>
-                  {language === "tr" ? "Kalan Gün:" : "Remaining Days:"} {debugInfo.remainingDays} | {language === "tr" ? "Geçmiş Harcanan:" : "Prev Spent:"} {formatCurrency(debugInfo.previousDaysSpent)} | {language === "tr" ? "Bugün Harcanan:" : "Today Spent:"} {formatCurrency(debugInfo.spentToday)}
-                </Text>
-              </View>
-            )}
+
             {selectedPeriodRemaining < 0 ? (
               <Text style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900" }]}>
                 {language === "tr" 
