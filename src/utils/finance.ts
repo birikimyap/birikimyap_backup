@@ -21,8 +21,25 @@ export function getSpendableMonthlyBudget(incomes: Income[], expenses: Expense[]
   return Math.max(monthlyRemaining - savings, 0);
 }
 
-export function getDailyLimit(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal) {
-  return Math.round(getSpendableMonthlyBudget(incomes, expenses, savingsGoal) / 30);
+export function getRemainingDaysInMonth(now: Date) {
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  const currentDay = now.getDate();
+  return Math.max(totalDays - currentDay + 1, 1);
+}
+
+export function getDailyLimit(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal, now = new Date()) {
+  const spendableMonthlyBudget = getSpendableMonthlyBudget(incomes, expenses, savingsGoal);
+  
+  // Previous days' variable spent so far in this month (excluding today)
+  const currentMonthSpent = getExpensesTotalForPeriod(expenses, "monthly", now);
+  const spentToday = getExpensesTotalForPeriod(expenses, "daily", now);
+  const previousDaysSpent = Math.max(currentMonthSpent - spentToday, 0);
+
+  const remainingDays = getRemainingDaysInMonth(now);
+  const dailyLimit = Math.max(spendableMonthlyBudget - previousDaysSpent, 0) / remainingDays;
+  return Math.round(dailyLimit);
 }
 
 export function getWeeklyLimit(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal) {
@@ -33,9 +50,9 @@ export function getMonthlyLimit(incomes: Income[], expenses: Expense[], savingsG
   return Math.round(getSpendableMonthlyBudget(incomes, expenses, savingsGoal));
 }
 
-export function buildSpendingLimits(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal): SpendingLimits {
+export function buildSpendingLimits(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal, now = new Date()): SpendingLimits {
   return {
-    daily: getDailyLimit(incomes, expenses, savingsGoal),
+    daily: getDailyLimit(incomes, expenses, savingsGoal, now),
     weekly: getWeeklyLimit(incomes, expenses, savingsGoal),
     monthly: getMonthlyLimit(incomes, expenses, savingsGoal)
   };
@@ -54,7 +71,7 @@ export function getRemainingLimitForPeriod(
   period: Period,
   now = new Date()
 ) {
-  const limits = buildSpendingLimits(incomes, expenses, savingsGoal);
+  const limits = buildSpendingLimits(incomes, expenses, savingsGoal, now);
   const spendingTotal = getExpensesTotalForPeriod(expenses, period, now);
 
   return limits[period] - spendingTotal;
