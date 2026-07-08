@@ -854,6 +854,23 @@ export default function HomeDashboardScreen() {
 
     return (
       <View style={styles.tabContentContainer}>
+        <View style={{
+          margin: 16,
+          padding: 12,
+          borderRadius: 8,
+          backgroundColor: "#FFEBEB",
+          borderColor: "#FFC1C1",
+          borderWidth: 1,
+          gap: 4
+        }}>
+          <Text style={{ fontSize: 12, fontWeight: "bold", color: "#D32F2F" }}>🤖 Diagnostic Panel (Please reload app if not visible)</Text>
+          <Text style={{ fontSize: 10, color: "#333" }}>Plan Start Date: {savingsGoal.planStartDate || "undefined"}</Text>
+          <Text style={{ fontSize: 10, color: "#333" }}>Offset Days: {simulatedDateOffsetDays || 0}</Text>
+          <Text style={{ fontSize: 10, color: "#333" }}>Plan Day: {planDay}</Text>
+          <Text style={{ fontSize: 10, color: "#333" }}>Daily Limit: {selectedPeriodLimit} (Plan limits daily: {plan.limits.daily})</Text>
+          <Text style={{ fontSize: 10, color: "#333" }}>Monthly Budget: {plan.spendableMonthlyBudget}</Text>
+          <Text style={{ fontSize: 10, color: "#333" }}>Expenses Count: {expenses.length} (Plan expenses count: {expenses.filter(e => !e.isFixed).length})</Text>
+        </View>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
             <Text style={[styles.greeting, { color: themeColors.text }]}>{t("welcomeUser")}</Text>
