@@ -119,7 +119,7 @@ export default function HomeDashboardScreen() {
   const recentScrollY = useRef(new Animated.Value(0)).current;
 
   // Analysis period & modal states
-  const [analysisPeriod, setAnalysisPeriod] = useState<"weekly" | "monthly">("weekly");
+  const [analysisPeriod, setAnalysisPeriod] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
   const [isCategoryLimitsModalVisible, setIsCategoryLimitsModalVisible] = useState(false);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
@@ -536,17 +536,26 @@ export default function HomeDashboardScreen() {
     ];
   }, [expenses, savingsGoal, language, currency]);
 
+  const analysisExpenses = useMemo(() => getExpensesForPeriod(expenses, analysisPeriod), [expenses, analysisPeriod]);
+
   // Filtered expenses based on chart selection
   const filteredAnalysisExpenses = useMemo(() => {
     if (!selectedChartLabel) {
-      return periodExpenses;
+      return analysisExpenses;
     }
     
-    return periodExpenses.filter((exp) => {
+    return analysisExpenses.filter((exp) => {
       if (exp.isFixed || !exp.occurredAt) return false;
       const date = new Date(exp.occurredAt);
       
-      if (analysisPeriod === "weekly") {
+      if (analysisPeriod === "daily") {
+        const hour = date.getHours();
+        let hourLabel = language === "tr" ? "Akşam" : "Evening";
+        if (hour >= 0 && hour < 6) hourLabel = language === "tr" ? "Gece" : "Night";
+        else if (hour >= 6 && hour < 12) hourLabel = language === "tr" ? "Sabah" : "Morning";
+        else if (hour >= 12 && hour < 18) hourLabel = language === "tr" ? "Öğle" : "Afternoon";
+        return hourLabel === selectedChartLabel;
+      } else if (analysisPeriod === "weekly") {
         const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
         const dayOfWeekIndex = (date.getDay() + 6) % 7;
         return days[dayOfWeekIndex] === selectedChartLabel;
@@ -563,7 +572,7 @@ export default function HomeDashboardScreen() {
         return weekLabel === selectedChartLabel;
       }
     });
-  }, [periodExpenses, selectedChartLabel, analysisPeriod]);
+  }, [analysisExpenses, selectedChartLabel, analysisPeriod, language]);
 
   const analysisTotal = useMemo(() => {
     return filteredAnalysisExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -606,6 +615,39 @@ export default function HomeDashboardScreen() {
       })
       .sort((a, b) => b.amount - a.amount);
   }, [periodExpenses, language]);
+
+  // Daily hourly spend trend for Analysis tab bar chart (Gece, Sabah, Öğle, Akşam)
+  const analysisDailyData = useMemo(() => {
+    const periods = [
+      { label: language === "tr" ? "Gece" : "Night", start: 0, end: 6 },
+      { label: language === "tr" ? "Sabah" : "Morning", start: 6, end: 12 },
+      { label: language === "tr" ? "Öğle" : "Afternoon", start: 12, end: 18 },
+      { label: language === "tr" ? "Akşam" : "Evening", start: 18, end: 24 }
+    ];
+    
+    const periodSpends = Array(4).fill(0);
+    const todayStr = new Date().toDateString();
+    
+    expenses.forEach((exp) => {
+      if (exp.isFixed || !exp.occurredAt) return;
+      const date = new Date(exp.occurredAt);
+      if (date.toDateString() === todayStr) {
+        const hour = date.getHours();
+        if (hour >= 0 && hour < 6) periodSpends[0] += exp.amount;
+        else if (hour >= 6 && hour < 12) periodSpends[1] += exp.amount;
+        else if (hour >= 12 && hour < 18) periodSpends[2] += exp.amount;
+        else periodSpends[3] += exp.amount;
+      }
+    });
+
+    const maxSpend = Math.max(...periodSpends, 1);
+
+    return periods.map((p, index) => ({
+      label: p.label,
+      amount: periodSpends[index],
+      percentage: (periodSpends[index] / maxSpend) * 100
+    }));
+  }, [expenses, language]);
 
   // Weekly daily spend trend for Analysis tab bar chart
   const analysisWeeklyData = useMemo(() => {
@@ -1047,7 +1089,10 @@ export default function HomeDashboardScreen() {
   }
 
   function renderAnalysisTab() {
-    const activeChartData = analysisPeriod === "weekly" ? analysisWeeklyData : analysisMonthlyData;
+    const activeChartData = 
+      analysisPeriod === "daily" ? analysisDailyData :
+      analysisPeriod === "weekly" ? analysisWeeklyData : 
+      analysisMonthlyData;
     const highestCategory = analysisCategoryData[0]?.category || "Yok";
     const analysisPeriodRemaining = getRemainingLimitForPeriod(analysisPeriod);
 
@@ -1089,6 +1134,18 @@ export default function HomeDashboardScreen() {
 
         {/* Period Selector Segment Row */}
         <View style={[styles.segmentContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.04)" : "rgba(13,50,40,0.03)" }]}>
+          <Pressable 
+            style={[
+              styles.segmentButton, 
+              analysisPeriod === "daily" && [styles.segmentButtonActive, { backgroundColor: themeColors.surface }]
+            ]}
+            onPress={() => {
+              triggerHaptic();
+              setAnalysisPeriod("daily");
+            }}
+          >
+            <Text style={[styles.segmentText, { color: analysisPeriod === "daily" ? themeColors.text : themeColors.textMuted }]}>{t("analysisPeriodDaily")}</Text>
+          </Pressable>
           <Pressable 
             style={[
               styles.segmentButton, 
@@ -1205,7 +1262,9 @@ export default function HomeDashboardScreen() {
         <View style={[styles.analysisCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginTop: 14 }]}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <Text style={[styles.analysisCardTitle, { color: themeColors.text, marginBottom: 0 }]}>
-              {analysisPeriod === "weekly" ? t("analysisChartWeeklyTitle") : t("analysisChartMonthlyTitle")}
+              {analysisPeriod === "daily" ? t("analysisChartDailyTitle") : 
+               analysisPeriod === "weekly" ? t("analysisChartWeeklyTitle") : 
+               t("analysisChartMonthlyTitle")}
             </Text>
             {selectedChartLabel && (
               <Pressable 

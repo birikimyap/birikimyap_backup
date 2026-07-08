@@ -90,8 +90,10 @@ export const translations = {
     // Analysis Tab
     analysisTitle: "Harcama Analizi",
     analysisSubtitle: "Bu dönem yaptığın harcamaların dağılımı.",
+    analysisPeriodDaily: "Bugün",
     analysisPeriodWeekly: "Haftalık",
     analysisPeriodMonthly: "Aylık",
+    analysisChartDailyTitle: "Gün İçi Harcama Trendi",
     analysisChartWeeklyTitle: "Son 7 Günlük Gidişat",
     analysisChartMonthlyTitle: "Aylık Gidişat (Haftalık)",
     analysisAiTipTitle: "Akıllı Finans Önerisi",
@@ -255,8 +257,10 @@ export const translations = {
     // Analysis Tab
     analysisTitle: "Spend Analysis",
     analysisSubtitle: "Distribution of your expenses for this period.",
+    analysisPeriodDaily: "Today",
     analysisPeriodWeekly: "Weekly",
     analysisPeriodMonthly: "Monthly",
+    analysisChartDailyTitle: "Intraday Spending Trend",
     analysisChartWeeklyTitle: "Last 7 Days Trend",
     analysisChartMonthlyTitle: "Monthly Trend (Weekly)",
     analysisAiTipTitle: "Smart Financial Advice",
