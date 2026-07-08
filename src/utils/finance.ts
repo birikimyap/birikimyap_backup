@@ -33,7 +33,7 @@ export function getDailyLimit(incomes: Income[], expenses: Expense[], savingsGoa
   const spendableMonthlyBudget = getSpendableMonthlyBudget(incomes, expenses, savingsGoal);
   
   // Calculate current day of the plan
-  const start = new Date(savingsGoal.planStartDate || now);
+  const start = new Date(savingsGoal.planStartDate || new Date());
   const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
   const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diffTime = dNow.getTime() - dStart.getTime();
