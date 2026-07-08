@@ -22,6 +22,16 @@
     * Limit hesaplamalarında; günlük limit `spendableMonthlyBudget / 30`, haftalık limit `spendableMonthlyBudget / 4.3`, aylık limit ise doğrudan `spendableMonthlyBudget` olarak hesaplanır.
   * Tüm gelir/gider miktarlarının sayısal değerleri, veritabanına kaydedilmeden ve matematiksel işleme sokulmadan önce `parseAmount` ve `normalizeAmount` işlevlerinden geçirilerek güvenli `number` tipine dönüştürülmelidir.
 
+- **Analiz Sekmesi Dönem ve Grafik Kuralları (Bugün/Haftalık/Aylık):**
+  * Analiz sekmesindeki dönem seçici `daily` (Bugün), `weekly` (Haftalık) ve `monthly` (Aylık) olmak üzere üç durumu desteklemelidir.
+  * Bugün (`daily`) görünümünde dikey bar grafiği gün içindeki harcamaları 4 zaman dilimine bölmelidir:
+    * Gece (00:00 - 06:00)
+    * Sabah (06:00 - 12:00)
+    * Öğle (12:00 - 18:00)
+    * Akşam (18:00 - 24:00)
+  * Bugün görünümündeki harcama ve kalan limit karşılaştırmaları her zaman kullanıcının `limits.daily` değeri üzerinden yapılmalıdır.
+  * Kategorisel analiz kırılımı (`analysisCategoryData`), seçilen analiz dönemine (Bugün/Haftalık/Aylık) göre filtrelenen harcamaları baz almalıdır.
+
 - **Yerel Depolama (Storage Rehydration) Güvenliği:**
   * Zustand store'da yapılan değişiklikler yerel depolamada (`AsyncStorage`) kayıtlı eski şemalarla çakışmamalıdır.
   * Store rehydrated olduğunda, planın tutarlılığını garanti etmek için `state.refreshPlan()` işlevi çağrılarak hesaplamaların güncelliği doğrulanmalıdır.
