@@ -2056,12 +2056,9 @@ export default function HomeDashboardScreen() {
               dailyTarget: 0,
               planStartDate: new Date().toISOString()
             });
+            useFinanceStore.getState().resetSimulatedDate();
             setIsResetConfirmVisible(false);
-            setToastConfig({
-              visible: true,
-              message: t("resetToastMessage"),
-              subtext: t("resetToastSub")
-            });
+            router.replace("/");
           }}
         />
 
