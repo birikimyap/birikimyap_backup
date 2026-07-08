@@ -399,8 +399,8 @@ export default function HomeDashboardScreen() {
     const list: Array<{ id: string; title: string; body: string; time: string; type: "warning" | "info" | "success"; icon: keyof typeof Feather.glyphMap }> = [];
     
     // 1. Check if limit exceeded in any period (daily / weekly / monthly)
-    const dailyRemaining = plan.limits.daily - getExpensesForPeriod(expenses, "daily").reduce((sum, e) => sum + e.amount, 0);
-    const weeklyRemaining = plan.limits.weekly - getExpensesForPeriod(expenses, "weekly").reduce((sum, e) => sum + e.amount, 0);
+    const dailyRemaining = plan.limits.daily - getExpensesForPeriod(expenses, "daily", simulatedDate).reduce((sum, e) => sum + e.amount, 0);
+    const weeklyRemaining = plan.limits.weekly - getExpensesForPeriod(expenses, "weekly", simulatedDate).reduce((sum, e) => sum + e.amount, 0);
     
     if (dailyRemaining < 0) {
       list.push({

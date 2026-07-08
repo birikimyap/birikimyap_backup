@@ -113,7 +113,15 @@ function normalizeExpense(expense: Expense): Expense {
 
 function normalizeSavingsGoal(savingsGoal: SavingsGoal, monthlyRemaining: number): SavingsGoal {
   const monthlyContribution = Math.min(normalizeAmount(savingsGoal.monthlyContribution), monthlyRemaining);
-  const planStartDate = savingsGoal.planStartDate || new Date().toISOString();
+  
+  // Safely retrieve existing planStartDate from current state if available to prevent overwrite
+  let existingStartDate: string | undefined;
+  try {
+    existingStartDate = useFinanceStore.getState()?.savingsGoal?.planStartDate;
+  } catch (e) {
+    // State might not be initialized yet
+  }
+  const planStartDate = savingsGoal.planStartDate || existingStartDate || new Date().toISOString();
 
   return {
     ...initialGoal,
@@ -366,6 +374,9 @@ export const useFinanceStore = create<FinanceState>()(
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {
+          if (state.savingsGoal && !state.savingsGoal.planStartDate) {
+            state.savingsGoal.planStartDate = new Date().toISOString();
+          }
           state.setHasHydrated(true);
         }
       }

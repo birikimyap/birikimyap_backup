@@ -64,7 +64,22 @@ export function getDailyLimit(incomes: Income[], expenses: Expense[], savingsGoa
   const previousDaysSpent = Math.max(totalSpentInPlan - spentToday, 0);
 
   const dailyLimit = Math.max(spendableMonthlyBudget - previousDaysSpent, 0) / remainingDays;
-  return Math.round(dailyLimit);
+  const roundedLimit = Math.round(dailyLimit);
+
+  console.log("[getDailyLimit] debug:", {
+    now: now.toISOString(),
+    planStartDate: start.toISOString(),
+    planDay,
+    remainingDays,
+    spendableMonthlyBudget,
+    totalSpentInPlan,
+    spentToday,
+    previousDaysSpent,
+    dailyLimit,
+    roundedLimit
+  });
+
+  return roundedLimit;
 }
 
 export function getWeeklyLimit(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal) {
