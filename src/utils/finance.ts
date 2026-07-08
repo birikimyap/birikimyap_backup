@@ -32,12 +32,37 @@ export function getRemainingDaysInMonth(now: Date) {
 export function getDailyLimit(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal, now = new Date()) {
   const spendableMonthlyBudget = getSpendableMonthlyBudget(incomes, expenses, savingsGoal);
   
-  // Previous days' variable spent so far in this month (excluding today)
-  const currentMonthSpent = getExpensesTotalForPeriod(expenses, "monthly", now);
-  const spentToday = getExpensesTotalForPeriod(expenses, "daily", now);
-  const previousDaysSpent = Math.max(currentMonthSpent - spentToday, 0);
+  // Calculate current day of the plan
+  const start = new Date(savingsGoal.planStartDate || now);
+  const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffTime = dNow.getTime() - dStart.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const planDay = Math.max(diffDays + 1, 1);
 
-  const remainingDays = getRemainingDaysInMonth(now);
+  // Remaining days in the 30-day plan
+  const remainingDays = Math.max(30 - (planDay - 1), 1);
+
+  // Variable expenses spent within the plan so far (from planStartDate to now)
+  const planExpenses = expenses.filter((exp) => {
+    if (exp.isFixed || !exp.occurredAt) return false;
+    const expDate = new Date(exp.occurredAt);
+    const dExp = new Date(expDate.getFullYear(), expDate.getMonth(), expDate.getDate());
+    return dExp.getTime() >= dStart.getTime() && dExp.getTime() <= dNow.getTime();
+  });
+
+  const totalSpentInPlan = planExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const spentToday = planExpenses
+    .filter((exp) => {
+      const expDate = new Date(exp.occurredAt!);
+      return expDate.getFullYear() === dNow.getFullYear() && 
+             expDate.getMonth() === dNow.getMonth() && 
+             expDate.getDate() === dNow.getDate();
+    })
+    .reduce((sum, exp) => sum + exp.amount, 0);
+
+  const previousDaysSpent = Math.max(totalSpentInPlan - spentToday, 0);
+
   const dailyLimit = Math.max(spendableMonthlyBudget - previousDaysSpent, 0) / remainingDays;
   return Math.round(dailyLimit);
 }
