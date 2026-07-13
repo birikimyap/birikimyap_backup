@@ -1037,7 +1037,19 @@ export default function HomeDashboardScreen() {
         <View style={styles.recentSection}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>{t("recentSectionTitle")}</Text>
-            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>{t("recentSectionTotal")}: {formatCurrency(recentTotal)}</Text>
+            <View style={{
+              backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(13, 50, 40, 0.05)",
+              borderColor: themeColors.border,
+              borderWidth: 1,
+              borderRadius: 12,
+              paddingHorizontal: 10,
+              paddingVertical: 4
+            }}>
+              <Text style={[styles.sectionTotal, { color: themeColors.primary, fontSize: 11, lineHeight: 15 }]}>
+                {language === "tr" ? "Toplam: " : "Total: "}
+                {formatCurrency(recentTotal)}
+              </Text>
+            </View>
           </View>
 
           <View style={[
@@ -3721,8 +3733,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     flex: 1,
-    fontSize: 20,
-    lineHeight: 27,
+    fontSize: 17,
+    lineHeight: 23,
     fontWeight: "900",
     color: colors.primary
   },
