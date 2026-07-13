@@ -340,10 +340,22 @@ export const useFinanceStore = create<FinanceState>()(
         calculateRemainingLimitForPeriod(get().incomes, get().expenses, get().savingsGoal, period, getSimulatedDate(get().simulatedDateOffsetDays)),
       skipDay: () => {
         const nextOffset = (get().simulatedDateOffsetDays || 0) + 1;
-        const { expenses, savingsGoal, selectedPeriod } = get();
+        const { expenses, savingsGoal, selectedPeriod, plan } = get();
+
+        const currentSimulatedDate = getSimulatedDate(get().simulatedDateOffsetDays || 0);
+        const dailyLimit = Math.round(plan.spendableMonthlyBudget / 30);
+
+        const currentSimulatedDateStr = currentSimulatedDate.toDateString();
+        const spentOnCompletedDay = expenses
+          .filter((exp) => {
+            if (exp.isFixed || !exp.occurredAt) return false;
+            return new Date(exp.occurredAt).toDateString() === currentSimulatedDateStr;
+          })
+          .reduce((sum, exp) => sum + exp.amount, 0);
 
         const dailyTarget = savingsGoal.dailyTarget || (savingsGoal.monthlyContribution / 30) || 0;
-        const nextSaved = Math.min((savingsGoal.currentAmount || 0) + dailyTarget, savingsGoal.targetAmount || Infinity);
+        const netDailySavings = dailyTarget + (dailyLimit - spentOnCompletedDay);
+        const nextSaved = Math.max((savingsGoal.currentAmount || 0) + netDailySavings, 0);
 
         const shiftedGoal = { 
           ...savingsGoal, 
