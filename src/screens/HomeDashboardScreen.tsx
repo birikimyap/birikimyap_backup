@@ -383,7 +383,21 @@ export default function HomeDashboardScreen() {
   const recentTotal = plan.selectedPeriodSpent;
   const selectedPeriodRemaining = plan.selectedPeriodRemaining;
   const goalTargetAmount = Math.max(savingsGoal.targetAmount || savingsGoal.monthlyContribution || 0, 0);
-  const goalSavedAmount = Math.max(savingsGoal.currentAmount || 0, 0);
+  
+  const spentToday = useMemo(() => {
+    return expenses
+      .filter((exp) => {
+        if (exp.isFixed || !exp.occurredAt) return false;
+        return new Date(exp.occurredAt).toDateString() === simulatedDate.toDateString();
+      })
+      .reduce((sum, exp) => sum + exp.amount, 0);
+  }, [expenses, simulatedDate]);
+
+  const overspentToday = Math.max(spentToday - plan.limits.daily, 0);
+  const goalSavedAmount = useMemo(() => {
+    return Math.max((savingsGoal.currentAmount || 0) - overspentToday, 0);
+  }, [savingsGoal.currentAmount, overspentToday]);
+
   const goalProgress = getProgress(goalSavedAmount, goalTargetAmount);
   const goalProgressPercent = goalTargetAmount > 0 ? Math.round(goalProgress * 100) : 0;
   const isRecentListScrollable = recentContentHeight > recentListHeight + 1;
