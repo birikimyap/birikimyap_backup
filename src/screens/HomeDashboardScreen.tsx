@@ -892,10 +892,16 @@ export default function HomeDashboardScreen() {
               <Text style={styles.goalBadgeIcon}>🎯</Text>
               <Text style={[styles.goalBadgeText, { color: themeColors.primary }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
             </View>
-            <Text style={[styles.heroAmount, { color: isDarkMode ? "#00E58F" : "#16A34A", marginTop: 6 }]}>{formatCurrency(goalTargetAmount)}</Text>
-            <View style={styles.savedAmountBlock}>
-              <Text style={[styles.savedAmountTitle, { color: themeColors.textMuted }]}>{language === "tr" ? "Bugüne kadar biriktirdiğin" : "Accumulated so far"}</Text>
-              <Text style={[styles.savedAmountValue, { color: isDarkMode ? "#00E58F" : "#16A34A" }]}>{formatCurrency(goalSavedAmount)}</Text>
+            <View style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", marginTop: 10, marginBottom: 8 }}>
+              <Text style={[styles.heroAmount, { color: isDarkMode ? "#00E58F" : "#16A34A" }]}>
+                {formatCurrency(goalSavedAmount)}
+              </Text>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: themeColors.textMuted, marginHorizontal: 4 }}>
+                /
+              </Text>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: themeColors.textMuted }}>
+                {formatCurrency(goalTargetAmount)}
+              </Text>
             </View>
             <View style={[styles.heroProgressTrack, { backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(13, 50, 40, 0.06)" }]}>
               <View style={[styles.heroProgressFill, { backgroundColor: themeColors.primary, width: `${goalProgress * 100}%` }]} />
