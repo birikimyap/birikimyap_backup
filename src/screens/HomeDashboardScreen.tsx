@@ -879,10 +879,10 @@ export default function HomeDashboardScreen() {
               <Text style={[styles.goalBadgeText, { color: themeColors.primary }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
             </View>
             <Text style={[styles.heroSubtitle, { color: themeColors.textMuted }]}>{language === "tr" ? "Hedefin" : "Your Goal"}</Text>
-            <Text style={[styles.heroAmount, { color: themeColors.text }]}>{formatCurrency(goalTargetAmount)}</Text>
+            <Text style={[styles.heroAmount, { color: isDarkMode ? "#00E58F" : "#16A34A" }]}>{formatCurrency(goalTargetAmount)}</Text>
             <View style={styles.savedAmountBlock}>
               <Text style={[styles.savedAmountTitle, { color: themeColors.textMuted }]}>{language === "tr" ? "Bugüne kadar biriktirdiğin" : "Accumulated so far"}</Text>
-              <Text style={[styles.savedAmountValue, { color: themeColors.text }]}>{formatCurrency(goalSavedAmount)}</Text>
+              <Text style={[styles.savedAmountValue, { color: isDarkMode ? "#00E58F" : "#16A34A" }]}>{formatCurrency(goalSavedAmount)}</Text>
             </View>
             <View style={[styles.heroProgressTrack, { backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(13, 50, 40, 0.06)" }]}>
               <View style={[styles.heroProgressFill, { backgroundColor: themeColors.primary, width: `${goalProgress * 100}%` }]} />
@@ -891,7 +891,7 @@ export default function HomeDashboardScreen() {
               {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
             </Text>
           </View>
-          <View style={{ position: "absolute", right: 14, top: 15, width: 128, height: 128, zIndex: 5 }}>
+          <View style={{ position: "absolute", right: 14, top: 29, width: 100, height: 100, zIndex: 5 }}>
             {(mascotMessage || selectedPeriodRemaining < 0) && (
               <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -44 : -12 }]}>
                 <View style={[
@@ -917,16 +917,16 @@ export default function HomeDashboardScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
-                  width: 128,
-                  height: 128,
-                  borderRadius: 64,
+                  width: 100,
+                  height: 100,
+                  borderRadius: 50,
                   padding: 3,
                   justifyContent: "center",
                   alignItems: "center",
                   shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00DF89",
-                  shadowOffset: { width: 0, height: 8 },
+                  shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: isDarkMode ? 0.35 : 0.15,
-                  shadowRadius: 16,
+                  shadowRadius: 12,
                   elevation: 6
                 }}
               >
@@ -934,9 +934,9 @@ export default function HomeDashboardScreen() {
                   position: "relative", 
                   right: 0, 
                   top: 0, 
-                  width: 122, 
-                  height: 122, 
-                  borderRadius: 61,
+                  width: 94, 
+                  height: 94, 
+                  borderRadius: 47,
                   backgroundColor: colors.white,
                   shadowOpacity: 0
                 }]}>
@@ -3371,7 +3371,7 @@ const styles = StyleSheet.create({
     elevation: 8
   },
   heroCopy: {
-    width: "54%",
+    width: "64%",
     zIndex: 2
   },
   goalBadge: {
@@ -3398,8 +3398,8 @@ const styles = StyleSheet.create({
   },
   heroAmount: {
     marginTop: 0,
-    fontSize: 29,
-    lineHeight: 33,
+    fontSize: 32,
+    lineHeight: 36,
     fontWeight: "900",
     color: colors.white
   },
@@ -3421,8 +3421,8 @@ const styles = StyleSheet.create({
   },
   savedAmountValue: {
     marginTop: 0,
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 20,
+    lineHeight: 24,
     fontWeight: "900",
     color: colors.white
   },
