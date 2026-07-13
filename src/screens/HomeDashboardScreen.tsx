@@ -892,24 +892,16 @@ export default function HomeDashboardScreen() {
               <Text style={styles.goalBadgeIcon}>🎯</Text>
               <Text style={[styles.goalBadgeText, { color: themeColors.primary }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
             </View>
-            <View style={{ flexDirection: "row", marginTop: 12, marginBottom: 8, gap: 20, alignItems: "center" }}>
-              <View>
-                <Text style={{ fontSize: 9, fontWeight: "800", color: themeColors.textMuted, marginBottom: 2 }}>
-                  {language === "tr" ? "HEDEF" : "GOAL"}
-                </Text>
-                <Text style={{ fontSize: 23, fontWeight: "900", color: themeColors.text }}>
-                  {formatCurrency(goalTargetAmount)}
-                </Text>
-              </View>
-              <View style={{ width: 1.2, height: 26, backgroundColor: themeColors.border, opacity: 0.6 }} />
-              <View>
-                <Text style={{ fontSize: 9, fontWeight: "800", color: themeColors.textMuted, marginBottom: 2 }}>
-                  {language === "tr" ? "BİRİKEN" : "SAVED"}
-                </Text>
-                <Text style={{ fontSize: 16, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#16A34A" }}>
-                  {formatCurrency(goalSavedAmount)}
-                </Text>
-              </View>
+            <View style={{ flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", marginTop: 12, marginBottom: 8 }}>
+              <Text style={{ fontSize: 24, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#16A34A" }}>
+                {formatCurrency(goalTargetAmount)}
+              </Text>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: themeColors.textMuted, marginHorizontal: 6 }}>
+                /
+              </Text>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: themeColors.text }}>
+                {formatCurrency(goalSavedAmount)}
+              </Text>
             </View>
             <View style={[styles.heroProgressTrack, { backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(13, 50, 40, 0.06)" }]}>
               <View style={[styles.heroProgressFill, { backgroundColor: themeColors.primary, width: `${goalProgress * 100}%` }]} />
