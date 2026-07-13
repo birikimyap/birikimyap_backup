@@ -878,8 +878,7 @@ export default function HomeDashboardScreen() {
               <Text style={styles.goalBadgeIcon}>🎯</Text>
               <Text style={[styles.goalBadgeText, { color: themeColors.primary }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
             </View>
-            <Text style={[styles.heroSubtitle, { color: themeColors.textMuted }]}>{language === "tr" ? "Hedefin" : "Your Goal"}</Text>
-            <Text style={[styles.heroAmount, { color: isDarkMode ? "#00E58F" : "#16A34A" }]}>{formatCurrency(goalTargetAmount)}</Text>
+            <Text style={[styles.heroAmount, { color: isDarkMode ? "#00E58F" : "#16A34A", marginTop: 6 }]}>{formatCurrency(goalTargetAmount)}</Text>
             <View style={styles.savedAmountBlock}>
               <Text style={[styles.savedAmountTitle, { color: themeColors.textMuted }]}>{language === "tr" ? "Bugüne kadar biriktirdiğin" : "Accumulated so far"}</Text>
               <Text style={[styles.savedAmountValue, { color: isDarkMode ? "#00E58F" : "#16A34A" }]}>{formatCurrency(goalSavedAmount)}</Text>
