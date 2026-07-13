@@ -833,11 +833,6 @@ export default function HomeDashboardScreen() {
 
     return (
       <View style={styles.tabContentContainer}>
-        <View style={{ padding: 10, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)", marginHorizontal: 16, marginTop: 12, borderRadius: 10, borderWidth: 1, borderColor: themeColors.border }}>
-          <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.text }}>
-            Bütçe: {formatCurrency(plan.limits.daily)} / gün | Plan Günü: {planDay}. Gün | Başlangıç: {savingsGoal.planStartDate ? new Date(savingsGoal.planStartDate).toLocaleDateString() : "Yok"}
-          </Text>
-        </View>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
             <Text style={[styles.greeting, { color: themeColors.text }]}>{t("welcomeUser")}</Text>
