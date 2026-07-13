@@ -3397,37 +3397,37 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.88)"
   },
   heroAmount: {
-    marginTop: 2,
-    fontSize: 26,
-    lineHeight: 30,
+    marginTop: 0,
+    fontSize: 29,
+    lineHeight: 33,
     fontWeight: "900",
     color: colors.white
   },
   heroSubtitle: {
-    marginTop: 6,
-    fontSize: 11,
-    lineHeight: 14,
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 15,
     fontWeight: "800",
     color: "rgba(255,255,255,0.72)"
   },
   savedAmountBlock: {
-    marginTop: 3
+    marginTop: 1
   },
   savedAmountTitle: {
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: "800",
     color: "rgba(255,255,255,0.68)"
   },
   savedAmountValue: {
-    marginTop: 1,
-    fontSize: 15,
-    lineHeight: 18,
+    marginTop: 0,
+    fontSize: 18,
+    lineHeight: 22,
     fontWeight: "900",
     color: colors.white
   },
   heroProgressTrack: {
-    marginTop: 5,
+    marginTop: 4,
     width: "100%",
     height: 7,
     borderRadius: 9,
@@ -3440,7 +3440,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6D4A9"
   },
   heroPercentText: {
-    marginTop: 4,
+    marginTop: 2,
     fontSize: 10,
     lineHeight: 12,
     fontWeight: "900",
