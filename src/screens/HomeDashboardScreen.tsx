@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import {
   Alert,
   Animated,
+  AppState,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -31,6 +32,7 @@ import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatAmountInput, formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod, getSimulatedDate } from "@/utils/finance";
 import { translations } from "@/utils/translations";
+import { syncSiriExpenses } from "@/utils/siriSync";
 
 const mascotTR = require("../../pgn/mascot-cutout.png");
 const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
@@ -198,8 +200,18 @@ export default function HomeDashboardScreen() {
   // Analysis Chart filter state
   const [selectedChartLabel, setSelectedChartLabel] = useState<string | null>(null);
 
-  // Listen for incoming deep links for Siri / Kestirmeler (Shortcuts) integration
+  // Listen for incoming deep links for Siri / Kestirmeler (Shortcuts) integration and sync Siri AppGroup expenses
   useEffect(() => {
+    // Initial Siri sync on mount
+    syncSiriExpenses();
+
+    // AppState listener to sync Siri expenses when app comes to foreground
+    const appStateSub = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        syncSiriExpenses();
+      }
+    });
+
     // Check if app was opened via deep link initially
     Linking.getInitialURL().then((url) => {
       if (url) {
@@ -208,12 +220,13 @@ export default function HomeDashboardScreen() {
     });
 
     // Listen to incoming deep links while app is open/backgrounded
-    const subscription = Linking.addEventListener("url", (event) => {
+    const linkSub = Linking.addEventListener("url", (event) => {
       handleDeepLink(event.url);
     });
 
     return () => {
-      subscription.remove();
+      appStateSub.remove();
+      linkSub.remove();
     };
   }, []);
 

@@ -14,6 +14,9 @@
 		C2A8C9BA2F356593B355B5CF /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FFF6EF8F56093731AAC6175A /* PrivacyInfo.xcprivacy */; };
 		CE500D9A38BAE11BBB212874 /* libPods-BirikimYap.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C74A32352D57CED1C46F15CB /* libPods-BirikimYap.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		SR1000012D0307B40044C1D9 /* AddExpenseIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR1000002D0307B40044C1D9 /* AddExpenseIntent.swift */; };
+		SR1000032D0307B40044C1D9 /* SiriBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR1000022D0307B40044C1D9 /* SiriBridge.swift */; };
+		SR1000052D0307B40044C1D9 /* SiriBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = SR1000042D0307B40044C1D9 /* SiriBridge.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +31,9 @@
 		C74A32352D57CED1C46F15CB /* libPods-BirikimYap.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BirikimYap.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = BirikimYap/AppDelegate.swift; sourceTree = "<group>"; };
+		SR1000002D0307B40044C1D9 /* AddExpenseIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AddExpenseIntent.swift; path = BirikimYap/Siri/AddExpenseIntent.swift; sourceTree = "<group>"; };
+		SR1000022D0307B40044C1D9 /* SiriBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SiriBridge.swift; path = BirikimYap/Siri/SiriBridge.swift; sourceTree = "<group>"; };
+		SR1000042D0307B40044C1D9 /* SiriBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SiriBridge.m; path = BirikimYap/Siri/SiriBridge.m; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* BirikimYap-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "BirikimYap-Bridging-Header.h"; path = "BirikimYap/BirikimYap-Bridging-Header.h"; sourceTree = "<group>"; };
 		FFF6EF8F56093731AAC6175A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = BirikimYap/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -48,6 +54,9 @@
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
+				SR1000002D0307B40044C1D9 /* AddExpenseIntent.swift */,
+				SR1000022D0307B40044C1D9 /* SiriBridge.swift */,
+				SR1000042D0307B40044C1D9 /* SiriBridge.m */,
 				F11748442D0722820044C1D9 /* BirikimYap-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -326,6 +335,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
+				SR1000012D0307B40044C1D9 /* AddExpenseIntent.swift in Sources */,
+				SR1000032D0307B40044C1D9 /* SiriBridge.swift in Sources */,
+				SR1000052D0307B40044C1D9 /* SiriBridge.m in Sources */,
 				C1A41C1DF2C75E1380F22295 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
