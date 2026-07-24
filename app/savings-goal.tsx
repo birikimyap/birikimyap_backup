@@ -1,3 +1,5 @@
-import SavingsGoalScreen from "@/screens/SavingsGoalScreen";
+import SavingsGoalScreen from "../src/screens/SavingsGoalScreen";
 
-export default SavingsGoalScreen;
+export default function SavingsGoalRoute() {
+  return <SavingsGoalScreen />;
+}

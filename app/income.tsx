@@ -1,3 +1,5 @@
-import IncomeSetupScreen from "@/screens/IncomeSetupScreen";
+import IncomeSetupScreen from "../src/screens/IncomeSetupScreen";
 
-export default IncomeSetupScreen;
+export default function IncomeRoute() {
+  return <IncomeSetupScreen />;
+}

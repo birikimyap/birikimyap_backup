@@ -107,7 +107,7 @@ export default function PlanReadyScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Pressable onPress={() => router.replace("/home")} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
+            <Pressable onPress={() => router.replace("/")} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
               <Feather name="star" size={25} color="#F2D38A" />
               <Text style={styles.ctaText}>{language === "tr" ? "Finans panelime git" : "Go to my dashboard"}</Text>
               <Feather name="arrow-right" size={29} color={colors.white} />

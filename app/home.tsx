@@ -1,3 +1,5 @@
-import HomeDashboardScreen from "@/screens/HomeDashboardScreen";
+import HomeDashboardScreen from "../src/screens/HomeDashboardScreen";
 
-export default HomeDashboardScreen;
+export default function HomeRoute() {
+  return <HomeDashboardScreen />;
+}

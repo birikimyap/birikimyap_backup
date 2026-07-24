@@ -9,10 +9,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.birikimyap.app"
+      "bundleIdentifier": "com.birikimyapsiri.app",
+      "buildNumber": "4"
     },
     "android": {
-      "package": "com.birikimyap.app",
+      "package": "com.thewalkingman.birikimyap",
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
@@ -22,9 +23,12 @@
         {
           "microphonePermission": "Birikim Yap mikrofonu sesli harcama eklemek için kullanır.",
           "speechRecognitionPermission": "Birikim Yap konuşmanı harcama metnine çevirmek için ses tanımayı kullanır.",
-          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

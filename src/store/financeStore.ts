@@ -30,6 +30,7 @@ type FinanceState = {
   setExpenses: (expenses: Expense[]) => void;
   setFixedExpenses: (expenses: Expense[]) => void;
   addExpense: (expense: Expense) => void;
+  deleteExpense: (id: string) => void;
   setSavingsGoal: (savingsGoal: SavingsGoal) => void;
   setMonthlySavings: (amount: number) => void;
   setSelectedPeriod: (period: Period) => void;
@@ -282,6 +283,17 @@ export const useFinanceStore = create<FinanceState>()(
           occurredAt: getSimulatedDate(get().simulatedDateOffsetDays).toISOString()
         };
         const expenses = [normalizeExpense(simulatedExpense), ...get().expenses];
+        const { incomes, savingsGoal, selectedPeriod } = get();
+        const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
+
+        set({
+          expenses,
+          savingsGoal: next.savingsGoal,
+          plan: next.plan
+        });
+      },
+      deleteExpense: (id: string) => {
+        const expenses = get().expenses.filter((e) => e.id !== id);
         const { incomes, savingsGoal, selectedPeriod } = get();
         const next = createPlan(incomes, expenses, savingsGoal, selectedPeriod, getSimulatedDate(get().simulatedDateOffsetDays));
 

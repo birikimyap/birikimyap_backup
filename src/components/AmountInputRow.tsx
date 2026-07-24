@@ -2,6 +2,8 @@ import { StyleSheet, Text, TextInput, View } from "react-native";
 
 import { colors, radius, spacing, typography } from "@/theme";
 
+import { formatAmountInput } from "@/utils/currency";
+
 type AmountInputRowProps = {
   label: string;
   value: string;
@@ -17,7 +19,7 @@ export function AmountInputRow({ label, value, onChangeText, placeholder = "0" }
         <Text style={styles.currency}>₺</Text>
         <TextInput
           value={value}
-          onChangeText={onChangeText}
+          onChangeText={(text) => onChangeText(formatAmountInput(text))}
           placeholder={placeholder}
           placeholderTextColor={colors.textMuted}
           keyboardType="decimal-pad"

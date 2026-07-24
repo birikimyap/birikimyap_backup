@@ -1,42 +1,120 @@
+import { useState } from "react";
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, radius, spacing } from "@/theme";
 import { useFinanceStore } from "@/store/financeStore";
 import { translations } from "@/utils/translations";
 
+type FeatureTheme = {
+  bgLight: string;
+  bgDark: string;
+  border: string;
+  iconBg: string;
+  iconColor: string;
+  badgeBg: string;
+  textColor: string;
+};
+
 type FeatureItem = {
   id: string;
   title: string;
   description: string;
   icon: keyof typeof Feather.glyphMap;
-  highlighted?: boolean;
+  badgeLabel?: string;
+  theme: FeatureTheme;
+  details: {
+    subtitle: string;
+    graphicType: "income" | "savings" | "voice";
+    steps: Array<{ icon: keyof typeof Feather.glyphMap; title: string; desc: string }>;
+  };
 };
 
 const mascotTR = require("../../pgn/mascot-cutout.png");
 const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 
-// Static configuration removed to support dynamic translations
-
 export default function IntroFeatureScreen() {
   const language = useFinanceStore((state) => state.language);
   const mascot = language === "tr" ? mascotTR : mascotEN;
-  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+  const [selectedFeature, setSelectedFeature] = useState<FeatureItem | null>(null);
 
   const features: FeatureItem[] = [
     {
       id: "income-expense",
       title: language === "tr" ? "Gelir ve Giderlerini Ekle" : "Add Income & Expenses",
       description: language === "tr" ? "Aylık gelir ve sabit ödemelerini girerek limitini belirle." : "Determine your limit by entering monthly incomes and fixed payments.",
-      icon: "credit-card"
+      icon: "credit-card",
+      badgeLabel: language === "tr" ? "BÜTÇE" : "BUDGET",
+      theme: {
+        bgLight: "#EDFDF5",
+        bgDark: "#0E2820",
+        border: "#00DF89",
+        iconBg: "#00DF89",
+        iconColor: "#FFFFFF",
+        badgeBg: "#00DF89",
+        textColor: "#065F46"
+      },
+      details: {
+        subtitle: language === "tr" ? "Aylık bütçeni doğru yönetmenin ilk adımı" : "First step to manage your monthly budget",
+        graphicType: "income",
+        steps: [
+          {
+            icon: "trending-up",
+            title: language === "tr" ? "1. Gelirlerini Giriş Yap" : "1. Enter Income Sources",
+            desc: language === "tr" ? "Maaş, ek gelir veya düzenli nakit girişlerini ekle." : "Add salary, side income or regular cash inflows."
+          },
+          {
+            icon: "shield",
+            title: language === "tr" ? "2. Sabit Ödemelerini Ayır" : "2. Set Fixed Expenses",
+            desc: language === "tr" ? "Kira, faturalar ve kredi ödemelerin otomatik düşülür." : "Rent, utility bills and loans are automatically deducted."
+          },
+          {
+            icon: "pie-chart",
+            title: language === "tr" ? "3. Harcanabilir Limitini Gör" : "3. See Spendable Limit",
+            desc: language === "tr" ? "Kalan net tutarla günlük ve haftalık harcama limitin belirlenir." : "Your daily and weekly limits are set from remaining net money."
+          }
+        ]
+      }
     },
     {
       id: "savings-goal",
       title: language === "tr" ? "Birikim Hedefini Belirle" : "Set Your Savings Goal",
       description: language === "tr" ? "Kendine bir birikim oranı seç ve ilerlemeni anlık gör." : "Choose a savings rate for yourself and see your progress in real-time.",
-      icon: "target"
+      icon: "target",
+      badgeLabel: language === "tr" ? "HEDEF" : "GOAL",
+      theme: {
+        bgLight: "#F5F0FF",
+        bgDark: "#1E1233",
+        border: "#9333EA",
+        iconBg: "#9333EA",
+        iconColor: "#FFFFFF",
+        badgeBg: "#9333EA",
+        textColor: "#6B21A8"
+      },
+      details: {
+        subtitle: language === "tr" ? "Hayallerine ulaşmak için akıllı finans rehberi" : "Smart financial guide to reach your dreams",
+        graphicType: "savings",
+        steps: [
+          {
+            icon: "percent",
+            title: language === "tr" ? "1. Gerçekçi Bir Oran Seç" : "1. Choose a Realistic Rate",
+            desc: language === "tr" ? "Gelirinin %10, %20 veya %30'unu birikime ayır." : "Set aside 10%, 20% or 30% of your income for savings."
+          },
+          {
+            icon: "lock",
+            title: language === "tr" ? "2. Birikim Tutarın Korunur" : "2. Savings Goal Secured",
+            desc: language === "tr" ? "Hedef tutarın harcama limitlerinden ayrılır ve dokunulmaz." : "Your goal amount is set aside from spending limits."
+          },
+          {
+            icon: "award",
+            title: language === "tr" ? "3. Canlı İlerleme Takibi" : "3. Live Progress Tracking",
+            desc: language === "tr" ? "Ana sayfadaki zümrüt çubukla hedefine ne kadar yaklaştığını izle." : "Watch your progress toward your goal on the home dashboard."
+          }
+        ]
+      }
     },
     {
       id: "voice-expense",
@@ -45,7 +123,37 @@ export default function IntroFeatureScreen() {
         ? "Örneğin: ‘120 lira kahve harcadım’ dediğinde yapay zeka harcamanı otomatik kaydeder." 
         : "For example: When you say 'spent 120 dollars on coffee', AI automatically records it.",
       icon: "mic",
-      highlighted: true
+      badgeLabel: language === "tr" ? "YAPAY ZEKA" : "AI POWERED",
+      theme: {
+        bgLight: "#FFF7ED",
+        bgDark: "#2A1A0A",
+        border: "#F59E0B",
+        iconBg: "#F59E0B",
+        iconColor: "#FFFFFF",
+        badgeBg: "#F59E0B",
+        textColor: "#92400E"
+      },
+      details: {
+        subtitle: language === "tr" ? "Klavyeye basmadan saniyeler içinde harcama kaydı" : "Record expenses in seconds without typing",
+        graphicType: "voice",
+        steps: [
+          {
+            icon: "mic",
+            title: language === "tr" ? "1. Mikrofona Dokun ve Konuş" : "1. Tap Mic & Speak",
+            desc: language === "tr" ? "‘Marketten 350 lira alışveriş yaptım’ demen yeterli." : "Simply say 'Spent 350 on grocery'."
+          },
+          {
+            icon: "cpu",
+            title: language === "tr" ? "2. Yapay Zeka Ayrıştırsın" : "2. AI Auto Parsing",
+            desc: language === "tr" ? "Tutar (₺350), kategori (Market) ve açıklama anında algılanır." : "Amount, category and label are recognized instantly."
+          },
+          {
+            icon: "check-circle",
+            title: language === "tr" ? "3. Bütçeden Otomatik Düşsün" : "3. Auto Budget Deduction",
+            desc: language === "tr" ? "Tek dokunuşla onaylayıp günlük kalan limitini güncelle." : "Confirm with one tap and update your daily remaining limit."
+          }
+        ]
+      }
     }
   ];
 
@@ -76,7 +184,11 @@ export default function IntroFeatureScreen() {
 
         <View style={styles.features}>
           {features.map((feature) => (
-            <FeatureCard key={feature.id} feature={feature} />
+            <FeatureCard 
+              key={feature.id} 
+              feature={feature} 
+              onPress={() => setSelectedFeature(feature)} 
+            />
           ))}
         </View>
 
@@ -89,32 +201,234 @@ export default function IntroFeatureScreen() {
           <Feather name="arrow-right" size={24} color={colors.white} style={styles.ctaIcon} />
         </Pressable>
       </ScrollView>
+
+      {/* Feature Detail Modal */}
+      {selectedFeature && (
+        <FeatureDetailModal 
+          feature={selectedFeature} 
+          onClose={() => setSelectedFeature(null)} 
+        />
+      )}
     </SafeAreaView>
   );
 }
 
-function FeatureCard({ feature }: { feature: FeatureItem }) {
+function FeatureCard({ feature, onPress }: { feature: FeatureItem; onPress: () => void }) {
   const language = useFinanceStore((state) => state.language);
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   
   return (
-    <View style={[styles.featureRow, feature.highlighted && styles.featureRowHighlighted]}>
-      <View style={[styles.iconBox, feature.highlighted && styles.iconBoxHighlighted]}>
-        <Feather name={feature.icon} size={22} color={feature.highlighted ? colors.primary : colors.primaryMuted} />
+    <Pressable 
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.featureRow, 
+        {
+          backgroundColor: isDarkMode ? feature.theme.bgDark : feature.theme.bgLight,
+          borderColor: feature.theme.border,
+          borderWidth: 1.5,
+          shadowColor: feature.theme.border,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.08,
+          shadowRadius: 10,
+          elevation: 3
+        },
+        pressed && { opacity: 0.82, transform: [{ scale: 0.98 }] }
+      ]}
+    >
+      <View style={[styles.iconBox, { backgroundColor: feature.theme.iconBg }]}>
+        <Feather name={feature.icon} size={22} color={feature.theme.iconColor} />
       </View>
+
       <View style={styles.featureCopy}>
         <View style={styles.titleRow}>
-          <Text style={styles.featureTitle}>{feature.title}</Text>
-          {feature.highlighted ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{language === "tr" ? "YENİ" : "NEW"}</Text>
+          <Text style={[styles.featureTitle, { color: isDarkMode ? "#FFFFFF" : "#0D3228" }]}>
+            {feature.title}
+          </Text>
+          {feature.badgeLabel ? (
+            <View style={[styles.badge, { backgroundColor: feature.theme.badgeBg }]}>
+              <Text style={[styles.badgeText, { color: "#FFFFFF" }]}>{feature.badgeLabel}</Text>
             </View>
           ) : null}
         </View>
-        <Text style={[styles.featureDesc, feature.highlighted && styles.exampleText]}>
+        <Text 
+          numberOfLines={2} 
+          style={[styles.featureDesc, { color: isDarkMode ? "rgba(255,255,255,0.7)" : "#5C6661" }]}
+        >
           {feature.description}
         </Text>
       </View>
-    </View>
+
+      <View style={{ justifyContent: "center", paddingLeft: 8 }}>
+        <View style={{
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.05)",
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+          <Feather name="chevron-right" size={18} color={feature.theme.border} />
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function FeatureDetailModal({ feature, onClose }: { feature: FeatureItem; onClose: () => void }) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const language = useFinanceStore((state) => state.language);
+
+  return (
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" }}>
+        <Pressable style={{ flex: 1 }} onPress={onClose} />
+        <View style={{
+          backgroundColor: isDarkMode ? "#16231E" : "#FFFFFF",
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          padding: 24,
+          maxHeight: "88%",
+          borderWidth: 1,
+          borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"
+        }}>
+          {/* Modal Header */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(0,223,137,0.14)", alignItems: "center", justifyContent: "center" }}>
+                <Feather name={feature.icon} size={22} color="#00DF89" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 18, fontWeight: "900", color: isDarkMode ? "#FFFFFF" : "#0D3228" }}>{feature.title}</Text>
+                <Text style={{ fontSize: 12, fontWeight: "600", color: isDarkMode ? "rgba(255,255,255,0.6)" : "#66706B" }}>{feature.details.subtitle}</Text>
+              </View>
+            </View>
+            <Pressable onPress={onClose} style={{ padding: 6, borderRadius: 16, backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#F0F0F0" }}>
+              <Feather name="x" size={20} color={isDarkMode ? "#FFFFFF" : "#0D3228"} />
+            </Pressable>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Visual Graphic Illustration Card */}
+            <View style={{ borderRadius: 20, overflow: "hidden", marginBottom: 20 }}>
+              <LinearGradient
+                colors={
+                  feature.details.graphicType === "income" 
+                    ? ["#0D3228", "#1A5243"] 
+                    : feature.details.graphicType === "savings"
+                    ? ["#2E1B4E", "#4C2882"]
+                    : ["#074737", "#00DF89"]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ padding: 20, alignItems: "center", justifyContent: "center", minHeight: 140 }}
+              >
+                {feature.details.graphicType === "income" && (
+                  <View style={{ width: "100%", alignItems: "center" }}>
+                    <View style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
+                      <View style={{ backgroundColor: "rgba(255,255,255,0.15)", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Feather name="trending-up" size={16} color="#00DF89" />
+                        <Text style={{ color: "#FFFFFF", fontWeight: "800", fontSize: 13 }}>Maaş + Ek Gelir</Text>
+                      </View>
+                      <View style={{ backgroundColor: "rgba(255,255,255,0.15)", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Feather name="shield" size={16} color="#DF7A12" />
+                        <Text style={{ color: "#FFFFFF", fontWeight: "800", fontSize: 13 }}>Kira & Faturalar</Text>
+                      </View>
+                    </View>
+                    <View style={{ backgroundColor: "rgba(0,223,137,0.25)", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16, borderWidth: 1, borderColor: "#00DF89" }}>
+                      <Text style={{ color: "#00DF89", fontWeight: "900", fontSize: 15 }}>= Net Kullanılabilir Bütçe ✨</Text>
+                    </View>
+                  </View>
+                )}
+
+                {feature.details.graphicType === "savings" && (
+                  <View style={{ width: "100%", alignItems: "center" }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <Feather name="award" size={24} color="#FDE68A" />
+                      <Text style={{ color: "#FFFFFF", fontWeight: "900", fontSize: 17 }}>%20 Akıllı Birikim</Text>
+                    </View>
+                    <View style={{ width: "100%", height: 10, borderRadius: 5, backgroundColor: "rgba(255,255,255,0.2)", overflow: "hidden" }}>
+                      <View style={{ width: "65%", height: "100%", backgroundColor: "#FDE68A", borderRadius: 5 }} />
+                    </View>
+                    <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: "700", marginTop: 8 }}>
+                      {language === "tr" ? "🎯 Bütçenden ₺5.000 Birikime Ayrıldı" : "🎯 $5,000 Saved from Budget"}
+                    </Text>
+                  </View>
+                )}
+
+                {feature.details.graphicType === "voice" && (
+                  <View style={{ width: "100%", alignItems: "center" }}>
+                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                      <Feather name="mic" size={24} color="#FFFFFF" />
+                    </View>
+                    <View style={{ backgroundColor: "#FFFFFF", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, marginBottom: 6 }}>
+                      <Text style={{ color: "#074737", fontWeight: "900", fontSize: 13 }}>🗣️ “120 lira kahve harcadım”</Text>
+                    </View>
+                    <Text style={{ color: "#040907", fontWeight: "900", fontSize: 12, backgroundColor: "#00DF89", paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 }}>
+                      ⚡ Kategori: Yiyecek & İçecek ➔ ₺120
+                    </Text>
+                  </View>
+                )}
+              </LinearGradient>
+            </View>
+
+            {/* Step-by-Step Guide Items */}
+            <Text style={{ fontSize: 15, fontWeight: "800", color: isDarkMode ? "#FFFFFF" : "#0D3228", marginBottom: 12 }}>
+              {language === "tr" ? "Nasıl Çalışır?" : "How It Works?"}
+            </Text>
+
+            {feature.details.steps.map((step, idx) => (
+              <View 
+                key={idx} 
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  marginBottom: 14,
+                  padding: 12,
+                  borderRadius: 16,
+                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "#FAFAF9",
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#E7E5E4"
+                }}
+              >
+                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(0,223,137,0.12)", alignItems: "center", justifyContent: "center", marginTop: 2 }}>
+                  <Feather name={step.icon} size={16} color="#00DF89" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: "800", color: isDarkMode ? "#FFFFFF" : "#0D3228", marginBottom: 2 }}>
+                    {step.title}
+                  </Text>
+                  <Text style={{ fontSize: 12.5, fontWeight: "600", color: isDarkMode ? "rgba(255,255,255,0.65)" : "#5C6661", lineHeight: 18 }}>
+                    {step.desc}
+                  </Text>
+                </View>
+              </View>
+            ))}
+
+            {/* Action Close Button */}
+            <Pressable
+              onPress={onClose}
+              style={({ pressed }) => [
+                {
+                  marginTop: 8,
+                  marginBottom: 12,
+                  paddingVertical: 14,
+                  borderRadius: 18,
+                  backgroundColor: "#00DF89",
+                  alignItems: "center",
+                  justifyContent: "center"
+                },
+                pressed && { opacity: 0.9 }
+              ]}
+            >
+              <Text style={{ fontSize: 15, fontWeight: "900", color: "#040907" }}>
+                {language === "tr" ? "Anladım, Harika! 👍" : "Got It, Great! 👍"}
+              </Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -194,34 +508,17 @@ const styles = StyleSheet.create({
   },
   featureRow: {
     width: "100%",
+    height: 114,
     flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 16,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(13, 50, 40, 0.04)",
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.02,
-    shadowRadius: 10,
-    elevation: 1,
-    marginBottom: 12
-  },
-  featureRowHighlighted: {
-    borderColor: colors.primarySoft,
-    backgroundColor: colors.primarySoft,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
-    shadowRadius: 14,
-    elevation: 3
+    alignItems: "center",
+    paddingHorizontal: 16,
+    borderRadius: 22,
+    marginBottom: 10
   },
   iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: colors.surfaceMuted,
+    width: 50,
+    height: 50,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 14

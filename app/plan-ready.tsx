@@ -1,3 +1,5 @@
-import PlanReadyScreen from "@/screens/PlanReadyScreen";
+import PlanReadyScreen from "../src/screens/PlanReadyScreen";
 
-export default PlanReadyScreen;
+export default function PlanReadyRoute() {
+  return <PlanReadyScreen />;
+}

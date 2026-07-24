@@ -11,6 +11,7 @@ import {
   Linking,
   Modal,
   Platform,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,9 +26,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useVoiceExpenseInput } from "@/hooks/useVoiceExpenseInput";
 import { Expense, Period } from "@/models/finance";
 import { useFinanceStore } from "@/store/financeStore";
-import { parseTurkishExpense } from "@/utils/voiceExpense";
+import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
-import { formatCurrency, parseAmount } from "@/utils/currency";
+import { formatAmountInput, formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod, getSimulatedDate } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 
@@ -55,7 +56,11 @@ export default function HomeDashboardScreen() {
   const categoryLimits = useFinanceStore((state) => state.categoryLimits) || {};
   const setCategoryLimit = useFinanceStore((state) => state.setCategoryLimit);
   const setSavingsGoal = useFinanceStore((state) => state.setSavingsGoal);
+  const incomes = useFinanceStore((state) => state.incomes);
   const setIncomes = useFinanceStore((state) => state.setIncomes);
+  const setFixedExpenses = useFinanceStore((state) => state.setFixedExpenses);
+  const deleteExpense = useFinanceStore((state) => state.deleteExpense);
+  const fixedExpenses = useMemo(() => expenses.filter((e) => e.isFixed), [expenses]);
   const setExpenses = useFinanceStore((state) => state.setExpenses);
   const totalIncome = useFinanceStore((state) => state.getTotalIncome());
   const totalFixedExpenses = useFinanceStore((state) => state.getTotalFixedExpenses());
@@ -136,6 +141,40 @@ export default function HomeDashboardScreen() {
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [mascotMessage, setMascotMessage] = useState<string | null>(null);
   const mascotTimeoutRef = useRef<any>(null);
+
+  // Income & Fixed Expense Profile Edit Modals
+  const [isIncomeEditModalVisible, setIsIncomeEditModalVisible] = useState(false);
+  const [isFixedExpenseEditModalVisible, setIsFixedExpenseEditModalVisible] = useState(false);
+  const [tempIncomes, setTempIncomes] = useState<Array<{ id: string; label: string; amount: string; subtitle?: string; period?: Period }>>([]);
+  const [tempFixedExpenses, setTempFixedExpenses] = useState<Array<{ id: string; label: string; amount: string; subtitle?: string; period?: Period }>>([]);
+
+  function openIncomeEditModal() {
+    triggerHaptic();
+    setTempIncomes(
+      (incomes || []).map((inc) => ({
+        id: inc.id,
+        label: inc.label,
+        amount: inc.amount ? formatAmountInput(String(inc.amount)) : "",
+        subtitle: inc.subtitle || "",
+        period: inc.period || "monthly"
+      }))
+    );
+    setIsIncomeEditModalVisible(true);
+  }
+
+  function openFixedExpenseEditModal() {
+    triggerHaptic();
+    setTempFixedExpenses(
+      (fixedExpenses || []).map((exp) => ({
+        id: exp.id,
+        label: exp.label,
+        amount: exp.amount ? formatAmountInput(String(exp.amount)) : "",
+        subtitle: exp.subtitle || "",
+        period: exp.period || "monthly"
+      }))
+    );
+    setIsFixedExpenseEditModalVisible(true);
+  }
 
   // Tab state
   const [currentTab, setCurrentTab] = useState<"home" | "analysis" | "profile">("home");
@@ -259,31 +298,90 @@ export default function HomeDashboardScreen() {
     permissionStatus: voicePermissionStatus,
     startListening: startVoiceListening,
     stopListening: stopVoiceListening,
+    clearTranscript: clearVoiceTranscript,
     setTranscript: setVoiceTranscript,
     parsedExpense: voiceParsedExpense
   } = useVoiceExpenseInput();
 
   const directVoiceWave = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const previousIsVoiceListening = useRef(false);
+
+  function openDirectVoice() {
+    triggerHaptic();
+    clearVoiceTranscript();
+    setDraftTranscript("");
+    setIsSheetVisible(true);
+    setTimeout(() => {
+      startVoiceListening();
+    }, 200);
+  }
+
+  function closeDirectVoice() {
+    stopVoiceListening();
+    setIsDirectVoiceActive(false);
+  }
+
+  function handleSaveDirectVoice() {
+    stopVoiceListening();
+    const numericAmount = voiceParsedExpense.amount;
+    if (numericAmount && numericAmount > 0) {
+      const expense = {
+        id: `voice-expense-${Date.now()}-${Math.random()}`,
+        label: voiceParsedExpense.label.trim() || `${voiceParsedExpense.category.trim() || "Harcama"} harcaması`,
+        subtitle: voiceParsedExpense.subcategory.trim() || voiceParsedExpense.category.trim() || "Harcama",
+        amount: numericAmount,
+        period: "daily" as const,
+        isFixed: false,
+        category: voiceParsedExpense.category.trim() || "Harcama",
+        note: voiceTranscript.trim() || voiceParsedExpense.label.trim(),
+        occurredAt: new Date().toISOString()
+      };
+      addExpense(expense);
+      
+      const wouldExceed = numericAmount > selectedPeriodRemaining;
+      if (wouldExceed) {
+        if (isHapticsEnabled) {
+          Vibration.vibrate([0, 50, 80, 50]);
+        }
+      } else {
+        triggerHaptic();
+      }
+
+      setToastConfig({
+        visible: true,
+        message: wouldExceed 
+          ? (language === "tr" ? "Limit Aşıldı! ⚠️" : "Limit Exceeded! ⚠️")
+          : `${formatCurrency(numericAmount)} ${t("toastAdded")}`,
+        subtext: wouldExceed
+          ? (language === "tr" ? `${expense.label} bütçe sınırınızı aştı.` : `${expense.label} went over your budget limit.`)
+          : `${expense.label} ${t("toastAddedSub")}`,
+        type: wouldExceed ? "warning" : "success"
+      });
+      setIsDirectVoiceActive(false);
+    } else {
+      if (voiceTranscript.trim()) {
+        setDraftTranscript(voiceTranscript);
+        setIsSheetVisible(true);
+      }
+      setIsDirectVoiceActive(false);
+    }
+  }
 
   useEffect(() => {
     if (isDirectVoiceActive) {
-      startVoiceListening();
       Animated.timing(overlayOpacity, {
         toValue: 1,
         duration: 250,
         useNativeDriver: true
       }).start();
     } else {
-      stopVoiceListening();
       Animated.timing(overlayOpacity, {
         toValue: 0,
         duration: 200,
         useNativeDriver: true
       }).start();
     }
-  }, [isDirectVoiceActive]);
+  }, [isDirectVoiceActive, overlayOpacity]);
 
   useEffect(() => {
     if (!isDirectVoiceActive || !isVoiceListening) {
@@ -301,57 +399,6 @@ export default function HomeDashboardScreen() {
 
     return () => animation.stop();
   }, [isVoiceListening, isDirectVoiceActive, directVoiceWave]);
-
-  useEffect(() => {
-    if (isDirectVoiceActive && previousIsVoiceListening.current && !isVoiceListening) {
-      // Dinleme bitti
-      const numericAmount = voiceParsedExpense.amount;
-      if (numericAmount && numericAmount > 0) {
-        // Başarıyla çözümlendi
-        const expense = {
-          id: `voice-expense-${Date.now()}-${Math.random()}`,
-          label: voiceParsedExpense.label.trim() || `${voiceParsedExpense.category.trim() || "Harcama"} harcaması`,
-          subtitle: voiceParsedExpense.subcategory.trim() || voiceParsedExpense.category.trim() || "Harcama",
-          amount: numericAmount,
-          period: "daily" as const,
-          isFixed: false,
-          category: voiceParsedExpense.category.trim() || "Harcama",
-          note: voiceTranscript.trim() || voiceParsedExpense.label.trim(),
-          occurredAt: new Date().toISOString()
-        };
-        addExpense(expense);
-        
-        const wouldExceed = numericAmount > selectedPeriodRemaining;
-        if (wouldExceed) {
-          if (isHapticsEnabled) {
-            Vibration.vibrate([0, 50, 80, 50]);
-          }
-        } else {
-          triggerHaptic();
-        }
-
-        setToastConfig({
-          visible: true,
-          message: wouldExceed 
-            ? (language === "tr" ? "Limit Aşıldı! ⚠️" : "Limit Exceeded! ⚠️")
-            : `${formatCurrency(numericAmount)} ${t("toastAdded")}`,
-          subtext: wouldExceed
-            ? (language === "tr" ? `${expense.label} bütçe sınırınızı aştı.` : `${expense.label} went over your budget limit.`)
-            : `${expense.label} ${t("toastAddedSub")}`,
-          type: wouldExceed ? "warning" : "success"
-        });
-        setIsDirectVoiceActive(false);
-      } else {
-        // Çözümlenemedi, manuel ekranı aç ve yazıyı aktar
-        if (voiceTranscript.trim()) {
-          setDraftTranscript(voiceTranscript);
-          setIsSheetVisible(true);
-        }
-        setIsDirectVoiceActive(false);
-      }
-    }
-    previousIsVoiceListening.current = isVoiceListening;
-  }, [isVoiceListening, isDirectVoiceActive, voiceParsedExpense, voiceTranscript]);
 
   const simulatedDate = useMemo(() => {
     return getSimulatedDate(simulatedDateOffsetDays || 0);
@@ -846,8 +893,8 @@ export default function HomeDashboardScreen() {
             {selectedPeriodRemaining < 0 ? (
               <Text style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900" }]}>
                 {language === "tr" 
-                  ? `⚠️ Dikkat! Harcama limitini ${formattedExceeded} aştın, hedefin tehlikede!` 
-                  : `⚠️ Warning! Exceeded spending limit by ${formattedExceeded}, target in danger!`}
+                  ? `⚠️ Dikkat! ${selectedPeriod === "daily" ? "Bugün" : selectedPeriod === "weekly" ? "Bu hafta" : "Bu ay"} harcama limitini ${formattedExceeded} aştın, hedefin tehlikede!` 
+                  : `⚠️ Warning! Exceeded spending limit by ${formattedExceeded} ${selectedPeriod === "daily" ? "today" : selectedPeriod === "weekly" ? "this week" : "this month"}, target in danger!`}
               </Text>
             ) : (
               <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
@@ -871,135 +918,200 @@ export default function HomeDashboardScreen() {
         </View>
 
         {/* Savings Goal Management (Mascot Card) */}
-        <View style={[styles.heroCard, { 
-          backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "#FDF6EE", 
-          borderColor: isDarkMode ? "rgba(255, 255, 255, 0.06)" : "#F0E4D5", 
-          borderWidth: 1.2,
+        <View style={{
+          marginTop: 8,
+          borderRadius: 24,
+          overflow: "hidden",
+          borderWidth: 1,
+          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(223, 122, 18, 0.15)",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: isDarkMode ? 0.2 : 0.03,
-          shadowRadius: 16,
-          elevation: 3,
-          marginTop: 8
-        }]}>
-          <View style={styles.heroCopy}>
-            <View style={[styles.goalBadge, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)" }]}>
-              <Text style={styles.goalBadgeIcon}>🎯</Text>
-              <Text style={[styles.goalBadgeText, { color: themeColors.primary }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
-            </View>
-            <View style={{ flexDirection: "row", marginTop: 12, marginBottom: 8, gap: 20, alignItems: "center" }}>
-              <View>
-                <Text style={{ fontSize: 9.5, fontWeight: "800", color: themeColors.textMuted, marginBottom: 2 }}>
-                  {language === "tr" ? "TOPLAM HEDEF" : "TOTAL GOAL"}
-                </Text>
-                <Text style={{ fontSize: 23, fontWeight: "900", color: themeColors.text }}>
-                  {formatCurrency(goalTargetAmount)}
-                </Text>
-              </View>
-              <View style={{ width: 1.2, height: 28, backgroundColor: themeColors.border, opacity: 0.6 }} />
-              <View>
-                <Text style={{ fontSize: 9.5, fontWeight: "800", color: themeColors.textMuted, marginBottom: 2 }}>
-                  {language === "tr" ? "BİRİKEN" : "SAVED SO FAR"}
-                </Text>
-                <Text style={{ fontSize: 19, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#16A34A" }}>
-                  {formatCurrency(goalSavedAmount)}
-                </Text>
-              </View>
-            </View>
-            <View style={[styles.heroProgressTrack, { backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(13, 50, 40, 0.06)" }]}>
-              <View style={[styles.heroProgressFill, { backgroundColor: themeColors.primary, width: `${goalProgress * 100}%` }]} />
-            </View>
-            <Text style={[styles.heroPercentText, { color: themeColors.textMuted }]}>
-              {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
-            </Text>
-          </View>
-          <View style={{ position: "absolute", right: 14, top: 29, width: 100, height: 100, zIndex: 5 }}>
-            {(mascotMessage || selectedPeriodRemaining < 0) && (
-              <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -44 : -12 }]}>
-                <View style={[
-                  styles.mascotSpeechBubble, 
-                  { 
-                    backgroundColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228",
-                    maxWidth: mascotMessage ? 150 : 120 
-                  }
-                ]}>
-                  <Text style={[styles.mascotSpeechBubbleText, { textAlign: mascotMessage ? "center" : "left" }]}>
-                    {mascotMessage || (language === "tr" ? `${formattedExceeded} Aşıldı! ⚠️` : `${formattedExceeded} Over! ⚠️`)}
-                  </Text>
-                  <View style={[
-                    styles.speechBubbleArrow, 
-                    { borderTopColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228" }
-                  ]} />
-                </View>
-              </View>
-            )}
-            <Pressable onPress={handleMascotPress} style={({ pressed }) => pressed && styles.pressed}>
-              <LinearGradient
-                colors={selectedPeriodRemaining < 0 ? ["#D32F2F", "#DF7A12"] : ["#00DF89", "#DF7A12"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
-                  padding: 3,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00DF89",
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: isDarkMode ? 0.35 : 0.15,
-                  shadowRadius: 12,
-                  elevation: 6
-                }}
-              >
-                <View style={[styles.heroMascot, { 
-                  position: "relative", 
-                  right: 0, 
-                  top: 0, 
-                  width: 94, 
-                  height: 94, 
-                  borderRadius: 47,
-                  backgroundColor: colors.white,
-                  shadowOpacity: 0
-                }]}>
-                  <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
-                </View>
-              </LinearGradient>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Polished 3-Column Summary Card */}
-        <View style={[styles.summaryCard, { 
-          backgroundColor: themeColors.surface, 
-          borderColor: themeColors.border,
-          borderWidth: 1.2,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: isDarkMode ? 0.25 : 0.04,
+          shadowOpacity: isDarkMode ? 0.2 : 0.05,
           shadowRadius: 16,
           elevation: 4
-        }]}>
-          <SummaryMetric
-            icon="credit-card"
-            title={copy.limit}
-            amount={selectedPeriodLimit}
-            tone="green"
-          />
-          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-          <SummaryMetric
-            icon="pie-chart"
-            title={copy.spent}
-            amount={recentTotal}
-            tone="orange"
-          />
-          <View style={[styles.divider, { backgroundColor: themeColors.border }]} />
-          <SummaryMetric
-            icon="shield"
-            title={copy.remaining}
-            amount={selectedPeriodRemaining}
-            tone="green"
-          />
+        }}>
+          <LinearGradient
+            colors={isDarkMode ? ["#14251E", "#0E1B15"] : ["#FAF3EB", "#F2E6D8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ padding: 18, position: "relative" }}
+          >
+            <View style={{ width: "72%" }}>
+              <View style={{ marginBottom: 12 }}>
+                <View style={[styles.goalBadge, { backgroundColor: isDarkMode ? "rgba(0,223,137,0.14)" : "rgba(13,50,40,0.06)" }]}>
+                  <Text style={styles.goalBadgeIcon}>🎯</Text>
+                  <Text style={[styles.goalBadgeText, { color: themeColors.primary }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: "row", marginTop: 4, marginBottom: 14, gap: 16, alignItems: "center" }}>
+                <View>
+                  <Text style={{ fontSize: 9.5, fontWeight: "800", color: isDarkMode ? "rgba(255,255,255,0.6)" : "#4B6358", marginBottom: 2 }}>
+                    {language === "tr" ? "TOPLAM HEDEF" : "TOTAL GOAL"}
+                  </Text>
+                  <Text style={{ fontSize: 21, fontWeight: "900", color: isDarkMode ? "#F1F5F9" : "#074A31" }}>
+                    {formatCurrency(goalTargetAmount)}
+                  </Text>
+                </View>
+
+                <View style={{ width: 1.2, height: 28, backgroundColor: themeColors.border, opacity: 0.6 }} />
+
+                <View style={{
+                  backgroundColor: isDarkMode ? "rgba(0,229,143,0.12)" : "rgba(0,229,143,0.08)",
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "rgba(0,229,143,0.2)"
+                }}>
+                  <Text style={{ fontSize: 9.5, fontWeight: "800", color: isDarkMode ? "#00E58F" : "#0D5D46", marginBottom: 1 }}>
+                    {language === "tr" ? "BİRİKEN" : "SAVED SO FAR"}
+                  </Text>
+                  <Text style={{ fontSize: 19, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}>
+                    {formatCurrency(goalSavedAmount)}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Gradient Progress Bar with Glow Indicator Dot */}
+              <View style={{ height: 10, borderRadius: 5, backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(13,50,40,0.08)", position: "relative", justifyContent: "center" }}>
+                <View style={{ height: "100%", width: `${goalProgress * 100}%`, borderRadius: 5, overflow: "hidden" }}>
+                  <LinearGradient
+                    colors={["#00DF89", "#10B981", "#059669"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+                {/* Glowing Tip Dot */}
+                {goalProgress > 0 && (
+                  <View style={{
+                    position: "absolute",
+                    left: `${Math.min(goalProgress * 100, 96)}%`,
+                    width: 14,
+                    height: 14,
+                    borderRadius: 7,
+                    backgroundColor: "#00FF9D",
+                    borderWidth: 2.5,
+                    borderColor: isDarkMode ? "#172620" : "#FFFFFF",
+                    shadowColor: "#00FF9D",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.8,
+                    shadowRadius: 6,
+                    elevation: 5,
+                    marginLeft: -7
+                  }} />
+                )}
+              </View>
+
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>
+                  {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
+                </Text>
+                {goalProgressPercent >= 50 && (
+                  <Text style={{ fontSize: 10.5, fontWeight: "800", color: "#00E58F" }}>
+                    🔥 {language === "tr" ? "Harika İlerleme!" : "Great Progress!"}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View style={{ position: "absolute", right: 14, top: 29, width: 100, height: 100, zIndex: 5 }}>
+              {(mascotMessage || selectedPeriodRemaining < 0) && (
+                <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -44 : -12 }]}>
+                  <View style={[
+                    styles.mascotSpeechBubble, 
+                    { 
+                      backgroundColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228",
+                      maxWidth: mascotMessage ? 150 : 120 
+                    }
+                  ]}>
+                    <Text style={[styles.mascotSpeechBubbleText, { textAlign: mascotMessage ? "center" : "left" }]}>
+                      {mascotMessage || (language === "tr" ? `${formattedExceeded} Aşıldı! ⚠️` : `${formattedExceeded} Over! ⚠️`)}
+                    </Text>
+                    <View style={[
+                      styles.speechBubbleArrow, 
+                      { borderTopColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228" }
+                    ]} />
+                  </View>
+                </View>
+              )}
+              <Pressable onPress={handleMascotPress} style={({ pressed }) => pressed && styles.pressed}>
+                <LinearGradient
+                  colors={selectedPeriodRemaining < 0 ? ["#D32F2F", "#DF7A12"] : ["#00DF89", "#DF7A12"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: 50,
+                    padding: 3,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00DF89",
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: isDarkMode ? 0.35 : 0.15,
+                    shadowRadius: 12,
+                    elevation: 6
+                  }}
+                >
+                  <View style={[styles.heroMascot, { 
+                    position: "relative", 
+                    right: 0, 
+                    top: 0, 
+                    width: 94, 
+                    height: 94, 
+                    borderRadius: 47,
+                    backgroundColor: colors.white,
+                    shadowOpacity: 0
+                  }]}>
+                    <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* Soft & Ultra-Balanced Emerald Summary Card */}
+        <View style={{
+          marginTop: 8,
+          borderRadius: 22,
+          overflow: "hidden",
+          borderWidth: 0,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: isDarkMode ? 0.2 : 0.05,
+          shadowRadius: 14,
+          elevation: 4
+        }}>
+          <LinearGradient
+            colors={isDarkMode ? ["#183228", "#1E3D31", "#142B22"] : ["#225344", "#2B6654", "#1D473A"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.summaryCard}
+          >
+            <SummaryMetric
+              icon="credit-card"
+              title={copy.limit}
+              amount={selectedPeriodLimit}
+              tone="green"
+            />
+            <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.12)" }]} />
+            <SummaryMetric
+              icon="pie-chart"
+              title={copy.spent}
+              amount={recentTotal}
+              tone="orange"
+            />
+            <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.12)" }]} />
+            <SummaryMetric
+              icon="shield"
+              title={copy.remaining}
+              amount={selectedPeriodRemaining}
+              tone="green"
+            />
+          </LinearGradient>
         </View>
 
         <View style={styles.addExpenseButtonRow}>
@@ -1012,24 +1124,9 @@ export default function HomeDashboardScreen() {
           >
             <LinearGradient colors={["#074A31", colors.primary, "#063B28"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.addGradient}>
               <View style={styles.addIconWrap}>
-                <Feather name="plus" size={18} color={colors.primary} />
+                <Feather name="plus" size={20} color={colors.primary} />
               </View>
               <Text style={styles.addText}>{t("addExpenseBtn")}</Text>
-            </LinearGradient>
-          </Pressable>
-
-          <Pressable 
-            style={({ pressed }) => [styles.mainVoiceButton, pressed && styles.pressed]} 
-            onPress={() => {
-              triggerHaptic();
-              setIsDirectVoiceActive(true);
-            }}
-          >
-            <LinearGradient colors={["#DF7A12", "#C8640E"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.voiceGradient}>
-              <View style={styles.voiceIconWrap}>
-                <Feather name="mic" size={18} color="#DF7A12" />
-              </View>
-              <Text style={styles.voiceText}>{t("voiceAddBtn")}</Text>
             </LinearGradient>
           </Pressable>
         </View>
@@ -1112,6 +1209,8 @@ export default function HomeDashboardScreen() {
                 data={periodExpenseRows}
                 keyExtractor={(item) => item.renderId}
                 nestedScrollEnabled={true}
+                scrollEnabled={isRecentListScrollable}
+                bounces={false}
                 showsVerticalScrollIndicator={false}
                 onLayout={(event) => setRecentListHeight(event.nativeEvent.layout.height)}
                 onContentSizeChange={(_, height) => setRecentContentHeight(height)}
@@ -1125,36 +1224,30 @@ export default function HomeDashboardScreen() {
                     <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>{t("emptyExpensesSub")}</Text>
                   </View>
                 }
-                renderItem={({ item, index }) => {
-                  const iconConfig = getCategoryIconConfig(item.expense.category);
-                  return (
-                    <Pressable 
-                      onPress={() => {
-                        triggerHaptic();
-                        setSelectedDetailExpense(item.expense);
-                        setIsDetailModalVisible(true);
-                      }}
-                      style={({ pressed }) => pressed && styles.pressed}
-                    >
-                      <View style={styles.expenseRow}>
-                        <View style={[styles.expenseIcon, { backgroundColor: iconConfig.bg, alignItems: "center", justifyContent: "center" }]}>
-                          <Feather name={iconConfig.name} size={15} color={iconConfig.color} />
-                        </View>
-                        <View style={styles.expenseCopy}>
-                          <Text style={[styles.expenseTitle, { color: themeColors.text, fontWeight: "800", fontSize: 14.5 }]}>{item.expense.label}</Text>
-                          <Text style={[styles.expenseCategory, { color: themeColors.textMuted, fontWeight: "600", fontSize: 11 }]}>
-                            {item.expense.category}{item.expense.subtitle && item.expense.subtitle !== item.expense.category ? ` • ${item.expense.subtitle}` : ""}
-                          </Text>
-                        </View>
-                        <View style={styles.expenseMeta}>
-                          <Text style={[styles.expenseAmount, { color: themeColors.text, fontWeight: "900", fontSize: 15 }]}>{formatCurrency(item.expense.amount)}</Text>
-                          <Text style={[styles.expenseDate, { color: themeColors.textMuted, fontWeight: "700", fontSize: 10 }]}>{formatExpenseDate(item.expense.occurredAt)}</Text>
-                        </View>
-                      </View>
-                      {index < periodExpenseRows.length - 1 && <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />}
-                    </Pressable>
-                  );
-                }}
+                renderItem={({ item, index }) => (
+                  <SwipeableExpenseRow
+                    key={item.renderId}
+                    item={item}
+                    index={index}
+                    isLast={index === periodExpenseRows.length - 1}
+                    themeColors={themeColors}
+                    onPress={() => {
+                      triggerHaptic();
+                      setSelectedDetailExpense(item.expense);
+                      setIsDetailModalVisible(true);
+                    }}
+                    onDelete={() => {
+                      triggerHaptic();
+                      deleteExpense(item.expense.id);
+                      setToastConfig({
+                        visible: true,
+                        message: language === "tr" ? "Harcama Silindi 🗑️" : "Expense Deleted 🗑️",
+                        subtext: language === "tr" ? "Bütçe limitleriniz ve birikiminiz yeniden hesaplandı." : "Budget limits recalculated.",
+                        type: "warning"
+                      });
+                    }}
+                  />
+                )}
               />
             </View>
             {isRecentListScrollable ? (
@@ -1304,8 +1397,8 @@ export default function HomeDashboardScreen() {
               }}>
                 {analysisPeriodRemaining < 0 
                   ? (language === "tr" 
-                      ? `Bu dönem limitinizi ${formatCurrency(Math.abs(analysisPeriodRemaining))} aştınız. Tasarruf hedefiniz tehlikede, harcamaları yavaşlatın.` 
-                      : `You exceeded your limit by ${formatCurrency(Math.abs(analysisPeriodRemaining))} this period. Your savings goal is in danger, slow down spending.`)
+                      ? `${analysisPeriod === "daily" ? "Bugün" : analysisPeriod === "weekly" ? "Bu hafta" : "Bu ay"} harcama limitinizi ${formatCurrency(Math.abs(analysisPeriodRemaining))} aştınız. Tasarruf hedefiniz tehlikede, harcamaları yavaşlatın.` 
+                      : `You exceeded your limit by ${formatCurrency(Math.abs(analysisPeriodRemaining))} ${analysisPeriod === "daily" ? "today" : analysisPeriod === "weekly" ? "this week" : "this month"}. Your savings goal is in danger, slow down spending.`)
                   : (language === "tr"
                       ? `Tebrikler! Planlanan limitin içindesiniz. ${formatCurrency(analysisPeriodRemaining)} harcama limitiniz daha var. Böyle devam edin!`
                       : `Congratulations! You are within the limit. You have ${formatCurrency(analysisPeriodRemaining)} remaining limit. Keep it up!`)
@@ -1586,10 +1679,7 @@ export default function HomeDashboardScreen() {
             <Text style={[styles.profileBudgetValCompact, { color: themeColors.primary }]}>{formatCurrency(totalIncome)}</Text>
             <Pressable 
               style={({ pressed }) => [styles.profileMiniBtn, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)" }, pressed && styles.pressed]}
-              onPress={() => {
-                triggerHaptic();
-                router.push("/income-setup");
-              }}
+              onPress={openIncomeEditModal}
             >
               <Text style={[styles.profileMiniBtnText, { color: themeColors.primary }]}>{t("profileEditIncomeBtn")}</Text>
             </Pressable>
@@ -1605,10 +1695,7 @@ export default function HomeDashboardScreen() {
             <Text style={[styles.profileBudgetValCompact, { color: "#DF7A12" }]}>{formatCurrency(totalFixedExpenses)}</Text>
             <Pressable 
               style={({ pressed }) => [styles.profileMiniBtn, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(223,122,18,0.06)" }, pressed && styles.pressed]}
-              onPress={() => {
-                triggerHaptic();
-                router.push("/fixed-expense");
-              }}
+              onPress={openFixedExpenseEditModal}
             >
               <Text style={[styles.profileMiniBtnText, { color: "#DF7A12" }]}>{t("profileEditExpenseBtn")}</Text>
             </Pressable>
@@ -1965,6 +2052,14 @@ export default function HomeDashboardScreen() {
           }}
           draftTranscript={draftTranscript}
           setDraftTranscript={setDraftTranscript}
+          isListening={isVoiceListening}
+          transcript={voiceTranscript}
+          error={voiceError}
+          startListening={startVoiceListening}
+          stopListening={stopVoiceListening}
+          setTranscript={setVoiceTranscript}
+          parsedExpense={voiceParsedExpense}
+          permissionStatus={voicePermissionStatus}
         />
 
         <NotificationsModal
@@ -2001,6 +2096,57 @@ export default function HomeDashboardScreen() {
               monthlyContribution: Math.min(savingsGoal.monthlyContribution, Math.max(parsedTarget - parsedSaved, 0))
             });
             setIsGoalModalVisible(false);
+          }}
+        />
+
+        <IncomeEditModal
+          visible={isIncomeEditModalVisible}
+          onClose={() => setIsIncomeEditModalVisible(false)}
+          tempIncomes={tempIncomes}
+          setTempIncomes={setTempIncomes}
+          onSave={() => {
+            triggerHaptic();
+            const formattedIncomes = tempIncomes.map((inc) => ({
+              id: inc.id,
+              label: inc.label.trim() || "Gelir",
+              amount: parseAmount(inc.amount),
+              period: inc.period || "monthly",
+              subtitle: inc.subtitle || ""
+            }));
+            setIncomes(formattedIncomes);
+            setIsIncomeEditModalVisible(false);
+            setToastConfig({
+              visible: true,
+              message: language === "tr" ? "Gelirler Güncellendi! 💰" : "Incomes Updated! 💰",
+              subtext: language === "tr" ? "Mevcut bütçe planınız başarıyla yeniden hesaplandı." : "Your budget plan was recalculated successfully.",
+              type: "success"
+            });
+          }}
+        />
+
+        <FixedExpenseEditModal
+          visible={isFixedExpenseEditModalVisible}
+          onClose={() => setIsFixedExpenseEditModalVisible(false)}
+          tempFixedExpenses={tempFixedExpenses}
+          setTempFixedExpenses={setTempFixedExpenses}
+          onSave={() => {
+            triggerHaptic();
+            const formattedFixed = tempFixedExpenses.map((exp) => ({
+              id: exp.id,
+              label: exp.label.trim() || "Sabit Gider",
+              amount: parseAmount(exp.amount),
+              period: exp.period || "monthly",
+              isFixed: true,
+              subtitle: exp.subtitle || ""
+            }));
+            setFixedExpenses(formattedFixed);
+            setIsFixedExpenseEditModalVisible(false);
+            setToastConfig({
+              visible: true,
+              message: language === "tr" ? "Sabit Giderler Güncellendi! 📌" : "Fixed Expenses Updated! 📌",
+              subtext: language === "tr" ? "Mevcut bütçe planınız başarıyla yeniden hesaplandı." : "Your budget plan was recalculated successfully.",
+              type: "success"
+            });
           }}
         />
 
@@ -2066,7 +2212,7 @@ export default function HomeDashboardScreen() {
         {/* Siri Direct Voice Overlay */}
         {isDirectVoiceActive && (
           <Animated.View style={[styles.directVoiceOverlay, { opacity: overlayOpacity }]}>
-            <Pressable style={StyleSheet.absoluteFill} onPress={() => setIsDirectVoiceActive(false)} />
+            <Pressable style={StyleSheet.absoluteFill} onPress={closeDirectVoice} />
             <View style={styles.directVoiceContent}>
               <Text style={styles.directVoiceTitle}>{t("siriListening")}</Text>
               <Text style={styles.directVoiceSubtitle}>{t("siriSubtitle")}</Text>
@@ -2100,12 +2246,40 @@ export default function HomeDashboardScreen() {
 
               {voiceError ? <Text style={styles.directVoiceErrorText}>{voiceError}</Text> : null}
 
-              <Pressable 
-                style={({ pressed }) => [styles.directVoiceStopButton, pressed && styles.pressed]}
-                onPress={() => stopVoiceListening()}
-              >
-                <Feather name="square" size={20} color={colors.white} />
-              </Pressable>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginTop: 24 }}>
+                <Pressable 
+                  style={({ pressed }) => [
+                    styles.directVoiceStopButton, 
+                    { backgroundColor: "rgba(255, 255, 255, 0.12)" },
+                    pressed && styles.pressed
+                  ]}
+                  onPress={closeDirectVoice}
+                >
+                  <Feather name="x" size={22} color={colors.white} />
+                </Pressable>
+
+                <Pressable 
+                  style={({ pressed }) => [
+                    styles.directVoiceStopButton, 
+                    !isVoiceListening && { backgroundColor: colors.primary },
+                    pressed && styles.pressed
+                  ]}
+                  onPress={() => isVoiceListening ? stopVoiceListening() : startVoiceListening()}
+                >
+                  <Feather name={isVoiceListening ? "square" : "mic"} size={22} color={colors.white} />
+                </Pressable>
+
+                <Pressable 
+                  style={({ pressed }) => [
+                    styles.directVoiceStopButton, 
+                    { backgroundColor: "#00DF89" },
+                    pressed && styles.pressed
+                  ]}
+                  onPress={handleSaveDirectVoice}
+                >
+                  <Feather name="check" size={22} color="#040907" />
+                </Pressable>
+              </View>
             </View>
           </Animated.View>
         )}
@@ -2124,18 +2298,479 @@ export default function HomeDashboardScreen() {
   );
 }
 
+function IncomeEditModal({
+  visible,
+  onClose,
+  tempIncomes,
+  setTempIncomes,
+  onSave
+}: {
+  visible: boolean;
+  onClose: () => void;
+  tempIncomes: Array<{ id: string; label: string; amount: string; subtitle?: string; period?: Period }>;
+  setTempIncomes: React.Dispatch<React.SetStateAction<Array<{ id: string; label: string; amount: string; subtitle?: string; period?: Period }>>>;
+  onSave: () => void;
+}) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
+  const totalTempAmount = useMemo(() => {
+    return tempIncomes.reduce((acc, curr) => acc + parseAmount(curr.amount), 0);
+  }, [tempIncomes]);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, maxHeight: "85%" }]}>
+          <View style={styles.sheetHandle} />
+          <Text style={[styles.sheetTitle, { color: themeColors.text }]}>{language === "tr" ? "Gelirleri Düzenle" : "Edit Incomes"}</Text>
+          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{language === "tr" ? "Mevcut gelirlerini güncelle veya yeni ekstra gelir ekle." : "Update incomes or add new extra income."}</Text>
+
+          {/* Premium Total Income Live Card */}
+          <View style={{
+            marginTop: 14,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderRadius: 18,
+            backgroundColor: isDarkMode ? "rgba(0,223,137,0.08)" : "rgba(0,223,137,0.06)",
+            borderWidth: 1,
+            borderColor: "rgba(0,223,137,0.2)",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#00DF89" }} />
+              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.textMuted }}>{language === "tr" ? "Aylık Toplam Gelir" : "Total Monthly Income"}</Text>
+            </View>
+            <Text style={{ fontSize: 18, fontWeight: "900", color: "#00DF89" }}>{formatCurrency(totalTempAmount)}</Text>
+          </View>
+
+          <ScrollView style={{ marginTop: 14, maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+            {tempIncomes.map((item, index) => (
+              <View
+                key={item.id || index}
+                style={{
+                  marginBottom: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  borderRadius: 18,
+                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "#FAFAF9",
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#E7E5E4",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10
+                }}
+              >
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,223,137,0.12)", alignItems: "center", justifyContent: "center" }}>
+                  <Feather name="trending-up" size={16} color="#00DF89" />
+                </View>
+
+                <TextInput
+                  value={item.label}
+                  onChangeText={(text) => {
+                    setTempIncomes((prev) => prev.map((inc, i) => i === index ? { ...inc, label: text } : inc));
+                  }}
+                  placeholder={language === "tr" ? "Gelir Adı" : "Income Label"}
+                  placeholderTextColor="#9CA19E"
+                  style={{ fontSize: 14.5, fontWeight: "700", color: themeColors.text, flex: 1 }}
+                />
+
+                <View style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  backgroundColor: isDarkMode ? "rgba(0,223,137,0.12)" : "rgba(0,223,137,0.08)",
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "rgba(0,223,137,0.2)"
+                }}>
+                  <Text style={{ fontSize: 13, fontWeight: "800", color: "#00DF89" }}>₺</Text>
+                  <TextInput
+                    value={item.amount}
+                    onChangeText={(text) => {
+                      setTempIncomes((prev) => prev.map((inc, i) => i === index ? { ...inc, amount: formatAmountInput(text) } : inc));
+                    }}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor="#9CA19E"
+                    style={{ fontSize: 15, fontWeight: "900", color: "#00DF89", textAlign: "right", minWidth: 64, padding: 0 }}
+                  />
+                </View>
+
+                <Pressable
+                  onPress={() => {
+                    setTempIncomes((prev) => prev.filter((_, i) => i !== index));
+                  }}
+                  style={{ padding: 6, borderRadius: 10, backgroundColor: "rgba(223,59,59,0.08)" }}
+                >
+                  <Feather name="trash-2" size={16} color="#DF3B3B" />
+                </Pressable>
+              </View>
+            ))}
+
+            <Pressable
+              style={({ pressed }) => [
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  paddingVertical: 12,
+                  borderRadius: 16,
+                  backgroundColor: isDarkMode ? "rgba(0,223,137,0.08)" : "rgba(0,223,137,0.05)",
+                  borderWidth: 1.2,
+                  borderColor: "rgba(0,223,137,0.25)",
+                  marginTop: 6
+                },
+                pressed && styles.pressed
+              ]}
+              onPress={() => {
+                setTempIncomes((prev) => [
+                  ...prev,
+                  { id: `income-${Date.now()}`, label: language === "tr" ? "Ekstra Gelir" : "Extra Income", amount: "", period: "monthly" }
+                ]);
+              }}
+            >
+              <Feather name="plus-circle" size={17} color="#00DF89" />
+              <Text style={{ fontSize: 13.5, fontWeight: "800", color: "#00DF89" }}>{language === "tr" ? "+ Yeni Gelir Ekle" : "+ Add Extra Income"}</Text>
+            </Pressable>
+          </ScrollView>
+
+          <View style={styles.sheetActions}>
+            <Pressable style={({ pressed }) => [styles.cancelButton, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#EFE8DD" }, pressed && styles.pressed]} onPress={onClose}>
+              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>{t("sheetCancelBtn")}</Text>
+            </Pressable>
+            
+            <Pressable style={({ pressed }) => [{ flex: 1, borderRadius: 22, overflow: "hidden" }, pressed && styles.pressed]} onPress={onSave}>
+              <LinearGradient colors={["#00DF89", "#0D3228"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, minHeight: 52, alignItems: "center", justifyContent: "center" }}>
+                <Text style={styles.saveButtonText}>{language === "tr" ? "Kaydet ve Hesapla" : "Save & Recalculate"}</Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function FixedExpenseEditModal({
+  visible,
+  onClose,
+  tempFixedExpenses,
+  setTempFixedExpenses,
+  onSave
+}: {
+  visible: boolean;
+  onClose: () => void;
+  tempFixedExpenses: Array<{ id: string; label: string; amount: string; subtitle?: string; period?: Period }>;
+  setTempFixedExpenses: React.Dispatch<React.SetStateAction<Array<{ id: string; label: string; amount: string; subtitle?: string; period?: Period }>>>;
+  onSave: () => void;
+}) {
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+  const language = useFinanceStore((state) => state.language);
+  const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
+
+  const totalTempAmount = useMemo(() => {
+    return tempFixedExpenses.reduce((acc, curr) => acc + parseAmount(curr.amount), 0);
+  }, [tempFixedExpenses]);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, maxHeight: "85%" }]}>
+          <View style={styles.sheetHandle} />
+          <Text style={[styles.sheetTitle, { color: themeColors.text }]}>{language === "tr" ? "Sabit Giderleri Düzenle" : "Edit Fixed Expenses"}</Text>
+          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{language === "tr" ? "Kira, fatura vb. sabit giderlerini güncelle veya yenisini ekle." : "Update rent, bills etc. or add new fixed expense."}</Text>
+
+          {/* Premium Total Fixed Expense Live Card */}
+          <View style={{
+            marginTop: 14,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderRadius: 18,
+            backgroundColor: isDarkMode ? "rgba(223,122,18,0.08)" : "rgba(223,122,18,0.06)",
+            borderWidth: 1,
+            borderColor: "rgba(223,122,18,0.2)",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#DF7A12" }} />
+              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.textMuted }}>{language === "tr" ? "Aylık Toplam Sabit Gider" : "Total Fixed Expenses"}</Text>
+            </View>
+            <Text style={{ fontSize: 18, fontWeight: "900", color: "#DF7A12" }}>{formatCurrency(totalTempAmount)}</Text>
+          </View>
+
+          <ScrollView style={{ marginTop: 14, maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+            {tempFixedExpenses.map((item, index) => (
+              <View
+                key={item.id || index}
+                style={{
+                  marginBottom: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  borderRadius: 18,
+                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "#FAFAF9",
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#E7E5E4",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10
+                }}
+              >
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(223,122,18,0.12)", alignItems: "center", justifyContent: "center" }}>
+                  <Feather name="shield" size={16} color="#DF7A12" />
+                </View>
+
+                <TextInput
+                  value={item.label}
+                  onChangeText={(text) => {
+                    setTempFixedExpenses((prev) => prev.map((exp, i) => i === index ? { ...exp, label: text } : exp));
+                  }}
+                  placeholder={language === "tr" ? "Gider Adı" : "Expense Label"}
+                  placeholderTextColor="#9CA19E"
+                  style={{ fontSize: 14.5, fontWeight: "700", color: themeColors.text, flex: 1 }}
+                />
+
+                <View style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                  backgroundColor: isDarkMode ? "rgba(223,122,18,0.12)" : "rgba(223,122,18,0.08)",
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "rgba(223,122,18,0.2)"
+                }}>
+                  <Text style={{ fontSize: 13, fontWeight: "800", color: "#DF7A12" }}>₺</Text>
+                  <TextInput
+                    value={item.amount}
+                    onChangeText={(text) => {
+                      setTempFixedExpenses((prev) => prev.map((exp, i) => i === index ? { ...exp, amount: formatAmountInput(text) } : exp));
+                    }}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor="#9CA19E"
+                    style={{ fontSize: 15, fontWeight: "900", color: "#DF7A12", textAlign: "right", minWidth: 64, padding: 0 }}
+                  />
+                </View>
+
+                <Pressable
+                  onPress={() => {
+                    setTempFixedExpenses((prev) => prev.filter((_, i) => i !== index));
+                  }}
+                  style={{ padding: 6, borderRadius: 10, backgroundColor: "rgba(223,59,59,0.08)" }}
+                >
+                  <Feather name="trash-2" size={16} color="#DF3B3B" />
+                </Pressable>
+              </View>
+            ))}
+
+            <Pressable
+              style={({ pressed }) => [
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  paddingVertical: 12,
+                  borderRadius: 16,
+                  backgroundColor: isDarkMode ? "rgba(223,122,18,0.08)" : "rgba(223,122,18,0.05)",
+                  borderWidth: 1.2,
+                  borderColor: "rgba(223,122,18,0.25)",
+                  marginTop: 6
+                },
+                pressed && styles.pressed
+              ]}
+              onPress={() => {
+                setTempFixedExpenses((prev) => [
+                  ...prev,
+                  { id: `fixed-exp-${Date.now()}`, label: language === "tr" ? "Ekstra Gider" : "Extra Fixed Expense", amount: "", period: "monthly" }
+                ]);
+              }}
+            >
+              <Feather name="plus-circle" size={17} color="#DF7A12" />
+              <Text style={{ fontSize: 13.5, fontWeight: "800", color: "#DF7A12" }}>{language === "tr" ? "+ Yeni Sabit Gider Ekle" : "+ Add Extra Fixed Expense"}</Text>
+            </Pressable>
+          </ScrollView>
+
+          <View style={styles.sheetActions}>
+            <Pressable style={({ pressed }) => [styles.cancelButton, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#EFE8DD" }, pressed && styles.pressed]} onPress={onClose}>
+              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>{t("sheetCancelBtn")}</Text>
+            </Pressable>
+            
+            <Pressable style={({ pressed }) => [{ flex: 1, borderRadius: 22, overflow: "hidden" }, pressed && styles.pressed]} onPress={onSave}>
+              <LinearGradient colors={["#DF7A12", "#C8640E"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, minHeight: 52, alignItems: "center", justifyContent: "center" }}>
+                <Text style={styles.saveButtonText}>{language === "tr" ? "Kaydet ve Hesapla" : "Save & Recalculate"}</Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function SwipeableExpenseRow({
+  item,
+  index,
+  isLast,
+  themeColors,
+  onPress,
+  onDelete
+}: {
+  item: any;
+  index: number;
+  isLast: boolean;
+  themeColors: any;
+  onPress: () => void;
+  onDelete: () => void;
+}) {
+  const panX = useRef(new Animated.Value(0)).current;
+  const iconConfig = getCategoryIconConfig(item.expense.category);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 6 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      },
+      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 6 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dx > 0) {
+          panX.setValue(Math.min(gestureState.dx, 100));
+        } else if (gestureState.dx < 0) {
+          panX.setValue(Math.max(gestureState.dx, -5));
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > 40) {
+          Animated.spring(panX, {
+            toValue: 80,
+            useNativeDriver: true,
+            bounciness: 4
+          }).start();
+        } else {
+          Animated.spring(panX, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 4
+          }).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        Animated.spring(panX, {
+          toValue: 0,
+          useNativeDriver: true
+        }).start();
+      }
+    })
+  ).current;
+
+  const resetPosition = () => {
+    Animated.spring(panX, {
+      toValue: 0,
+      useNativeDriver: true
+    }).start();
+  };
+
+  return (
+    <View style={{ position: "relative", overflow: "hidden" }}>
+      {/* Background Delete Action Button (Positioned on Left) */}
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: 80,
+          backgroundColor: "#DF3B3B",
+          justifyContent: "center",
+          alignItems: "center"
+        }}
+      >
+        <Pressable
+          onPress={() => {
+            resetPosition();
+            onDelete();
+          }}
+          style={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center" }}
+        >
+          <Feather name="trash-2" size={20} color="#FFFFFF" />
+          <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "800", marginTop: 2 }}>Sil</Text>
+        </Pressable>
+      </View>
+
+      {/* Foreground Interactive Content */}
+      <Animated.View
+        style={{ transform: [{ translateX: panX }], backgroundColor: themeColors.surface }}
+        {...panResponder.panHandlers}
+      >
+        <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+          <View style={styles.expenseRow}>
+            <View style={[styles.expenseIcon, { backgroundColor: iconConfig.bg, alignItems: "center", justifyContent: "center" }]}>
+              <Feather name={iconConfig.name} size={15} color={iconConfig.color} />
+            </View>
+            <View style={styles.expenseCopy}>
+              <Text style={[styles.expenseTitle, { color: themeColors.text, fontWeight: "800", fontSize: 14.5 }]}>{item.expense.label}</Text>
+              <Text style={[styles.expenseCategory, { color: themeColors.textMuted, fontWeight: "600", fontSize: 11 }]}>
+                {item.expense.category}{item.expense.subtitle && item.expense.subtitle !== item.expense.category ? ` • ${item.expense.subtitle}` : ""}
+              </Text>
+            </View>
+            <View style={styles.expenseMeta}>
+              <Text style={[styles.expenseAmount, { color: themeColors.text, fontWeight: "900", fontSize: 15 }]}>{formatCurrency(item.expense.amount)}</Text>
+              <Text style={[styles.expenseDate, { color: themeColors.textMuted, fontWeight: "700", fontSize: 10 }]}>{formatExpenseDate(item.expense.occurredAt)}</Text>
+            </View>
+          </View>
+          {!isLast && <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />}
+        </Pressable>
+      </Animated.View>
+    </View>
+  );
+}
+
 function VoiceExpenseSheet({
   visible,
   onClose,
   onSave,
   draftTranscript,
-  setDraftTranscript
+  setDraftTranscript,
+  isListening,
+  transcript,
+  error,
+  startListening,
+  stopListening,
+  setTranscript,
+  parsedExpense,
+  permissionStatus
 }: {
   visible: boolean;
   onClose: () => void;
   onSave: (expense: Expense) => void;
   draftTranscript: string;
   setDraftTranscript: (text: string) => void;
+  isListening: boolean;
+  transcript: string;
+  error: string;
+  startListening: () => Promise<void>;
+  stopListening: () => void;
+  setTranscript: (text: string) => void;
+  parsedExpense: ParsedVoiceExpense;
+  permissionStatus: string;
 }) {
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   const isHapticsEnabled = useFinanceStore((state) => state.isHapticsEnabled);
@@ -2155,21 +2790,24 @@ function VoiceExpenseSheet({
   const [category, setCategory] = useState("");
   const [note, setNote] = useState("");
   const wave = useRef(new Animated.Value(0)).current;
-  const {
-    isListening,
-    transcript,
-    error,
-    permissionStatus,
-    startListening,
-    stopListening,
-    setTranscript,
-    parsedExpense
-  } = useVoiceExpenseInput();
+
+  const hasAutoStartedVoice = useRef(false);
+  const isManualEditing = useRef(false);
 
   useEffect(() => {
-    if (visible && draftTranscript) {
-      setTranscript(draftTranscript);
-      setDraftTranscript("");
+    if (visible) {
+      isManualEditing.current = false;
+      if (draftTranscript) {
+        setTranscript(draftTranscript);
+        setDraftTranscript("");
+      } else {
+        setSpokenText("");
+        setAmount("");
+        setLabel("");
+        setCategory("");
+        setNote("");
+        setTranscript("");
+      }
     }
   }, [visible, draftTranscript]);
 
@@ -2178,11 +2816,11 @@ function VoiceExpenseSheet({
   }, [transcript]);
 
   useEffect(() => {
-    if (!transcript.trim()) {
+    if (!transcript.trim() || isManualEditing.current) {
       return;
     }
 
-    setAmount(parsedExpense.amount ? String(parsedExpense.amount) : "");
+    setAmount(parsedExpense.amount ? formatAmountInput(String(parsedExpense.amount)) : "");
     setCategory(parsedExpense.category);
     setLabel(parsedExpense.label);
     setNote(transcript);
@@ -2217,6 +2855,7 @@ function VoiceExpenseSheet({
       return;
     }
 
+    isManualEditing.current = false;
     startListening();
   }
 
@@ -2247,6 +2886,7 @@ function VoiceExpenseSheet({
     setCategory("");
     setNote("");
     setTranscript("");
+    isManualEditing.current = false;
   }
 
   function closeSheet() {
@@ -2254,6 +2894,13 @@ function VoiceExpenseSheet({
       stopListening();
     }
 
+    setSpokenText("");
+    setAmount("");
+    setLabel("");
+    setCategory("");
+    setNote("");
+    setTranscript("");
+    isManualEditing.current = false;
     onClose();
   }
 
@@ -2266,7 +2913,7 @@ function VoiceExpenseSheet({
           <Text style={[styles.sheetTitle, { color: themeColors.text }]}>{t("sheetTitle")}</Text>
           <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{t("sheetSubtitle")}</Text>
 
-          <View style={[styles.speechBubbleContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(13,50,40,0.02)", borderColor: themeColors.border, borderLeftWidth: 4, borderLeftColor: "#DF7A12" }]}>
+          <View style={[styles.speechBubbleContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(13,50,40,0.02)", borderColor: themeColors.border }]}>
             <TextInput
               value={transcript}
               onChangeText={setTranscript}
@@ -2279,7 +2926,7 @@ function VoiceExpenseSheet({
 
           <View style={styles.micControlRow}>
             <Pressable style={({ pressed }) => [styles.sheetMicButton, isListening && styles.sheetMicButtonListening, pressed && styles.pressed]} onPress={handleMicPress}>
-              <Feather name={isListening ? "square" : "mic"} size={22} color={colors.white} />
+              <Feather name={isListening ? "square" : "mic"} size={25} color={colors.white} />
             </Pressable>
             <View style={styles.waveContainer}>
               {isListening ? (
@@ -2319,7 +2966,10 @@ function VoiceExpenseSheet({
               </View>
               <TextInput
                 value={label}
-                onChangeText={setLabel}
+                onChangeText={(val) => {
+                  isManualEditing.current = true;
+                  setLabel(val);
+                }}
                 placeholder={language === "tr" ? "Örn: Market alışverişi" : "e.g. Market shopping"}
                 placeholderTextColor="#9CA19E"
                 style={[styles.formInput, { color: themeColors.text, fontWeight: "700" }]}
@@ -2333,7 +2983,10 @@ function VoiceExpenseSheet({
               </View>
               <TextInput
                 value={amount}
-                onChangeText={setAmount}
+                onChangeText={(val) => {
+                  isManualEditing.current = true;
+                  setAmount(formatAmountInput(val));
+                }}
                 keyboardType="decimal-pad"
                 placeholder="0,00"
                 placeholderTextColor="#9CA19E"
@@ -2348,7 +3001,10 @@ function VoiceExpenseSheet({
               </View>
               <TextInput
                 value={category}
-                onChangeText={setCategory}
+                onChangeText={(val) => {
+                  isManualEditing.current = true;
+                  setCategory(val);
+                }}
                 placeholder={t("sheetCategoryPlaceholder")}
                 placeholderTextColor="#9CA19E"
                 style={[styles.formInput, { color: themeColors.text, fontWeight: "700" }]}
@@ -2362,7 +3018,10 @@ function VoiceExpenseSheet({
               </View>
               <TextInput
                 value={note}
-                onChangeText={setNote}
+                onChangeText={(val) => {
+                  isManualEditing.current = true;
+                  setNote(val);
+                }}
                 placeholder={t("sheetNotePlaceholder")}
                 placeholderTextColor="#9CA19E"
                 style={[styles.formInput, { color: themeColors.text, fontWeight: "700" }]}
@@ -2384,7 +3043,7 @@ function VoiceExpenseSheet({
             
             <Pressable 
               style={({ pressed }) => [
-                { flex: 1, borderRadius: 18, overflow: "hidden" }, 
+                { flex: 1, borderRadius: 22, overflow: "hidden" }, 
                 pressed && styles.pressed
               ]} 
               onPress={saveExpense}
@@ -2474,31 +3133,25 @@ function SummaryMetric({
   amount: number;
   tone: "green" | "orange";
 }) {
-  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
-  const themeColors = isDarkMode ? darkColors : lightColors;
-  
   const isNegative = title.toLowerCase().includes("kalan") || title.toLowerCase().includes("remaining") ? amount < 0 : false;
   
-  let tint = tone === "green" ? themeColors.primary : "#DF7A12";
+  let tint = tone === "green" ? "#00E58F" : "#F59E0B";
+  let bgTint = tone === "green" ? "rgba(0, 229, 143, 0.10)" : "rgba(245, 158, 11, 0.10)";
   let activeIcon = icon;
   
   if (isNegative) {
-    tint = "#D32F2F"; // Red alarm!
+    tint = "#EF4444"; // Soft red alarm
+    bgTint = "rgba(239, 68, 68, 0.13)";
     activeIcon = "alert-triangle"; // Warning icon
   }
   
   return (
     <View style={styles.metric}>
-      <View style={[
-        styles.metricIcon, 
-        tone === "orange" && styles.metricIconOrange, 
-        isDarkMode && { backgroundColor: "rgba(255,255,255,0.06)" },
-        isNegative && { backgroundColor: "rgba(211, 47, 47, 0.08)" }
-      ]}>
-        <Feather name={activeIcon} size={20} color={tint} />
+      <View style={[styles.metricIcon, { backgroundColor: bgTint }]}>
+        <Feather name={activeIcon} size={18} color={tint} />
       </View>
-      <Text style={[styles.metricTitle, { color: themeColors.textMuted }]}>{title}</Text>
-      <Text style={[styles.metricAmount, { color: tint, fontWeight: isNegative ? "900" : "800" }]} numberOfLines={1} adjustsFontSizeToFit>
+      <Text style={[styles.metricTitle, { color: "rgba(255, 255, 255, 0.75)", fontSize: 11.5, fontWeight: "700" }]}>{title}</Text>
+      <Text style={[styles.metricAmount, { color: tint, fontWeight: "800", fontSize: 15.5 }]} numberOfLines={1} adjustsFontSizeToFit>
         {formatCurrency(amount)}
       </Text>
     </View>
@@ -2923,7 +3576,7 @@ function CategoryLimitsModal({
                     </View>
                     <TextInput
                       value={localLimits[cat.key] || ""}
-                      onChangeText={(txt) => setLocalLimits(prev => ({ ...prev, [cat.key]: txt }))}
+                      onChangeText={(txt) => setLocalLimits(prev => ({ ...prev, [cat.key]: formatAmountInput(txt) }))}
                       keyboardType="decimal-pad"
                       placeholder="Limitsiz"
                       placeholderTextColor="#9CA19E"
@@ -2990,7 +3643,7 @@ function SavingsGoalEditModal({
               <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("editGoalTargetLabel")}</Text>
               <TextInput
                 value={targetAmount}
-                onChangeText={setTargetAmount}
+                onChangeText={(val) => setTargetAmount(formatAmountInput(val))}
                 keyboardType="decimal-pad"
                 placeholder="0,00"
                 placeholderTextColor="#9CA19E"
@@ -3002,7 +3655,7 @@ function SavingsGoalEditModal({
               <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("editGoalSavedLabel")}</Text>
               <TextInput
                 value={currentAmount}
-                onChangeText={setCurrentAmount}
+                onChangeText={(val) => setCurrentAmount(formatAmountInput(val))}
                 keyboardType="decimal-pad"
                 placeholder="0,00"
                 placeholderTextColor="#9CA19E"
@@ -3033,7 +3686,7 @@ function AboutModal({ visible, onClose }: { visible: boolean; onClose: () => voi
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.sheetBackdrop}>
+      <View style={[styles.sheetBackdrop, { justifyContent: "center", alignItems: "center" }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={[styles.dialogBox, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
           <View style={[styles.dialogAvatar, { backgroundColor: themeColors.primary }]}>
@@ -3102,7 +3755,7 @@ function ResetConfirmModal({ visible, onClose, onConfirm }: { visible: boolean; 
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.sheetBackdrop}>
+      <View style={[styles.sheetBackdrop, { justifyContent: "center", alignItems: "center" }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={[styles.dialogBox, { backgroundColor: themeColors.surface, borderColor: themeColors.danger, borderWidth: 1.5 }]}>
           <View style={[styles.dialogAvatar, { backgroundColor: "#FFCDD2" }]}>
@@ -3580,18 +4233,9 @@ const styles = StyleSheet.create({
     color: colors.white
   },
   summaryCard: {
-    marginTop: 8,
-    borderRadius: 16,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: "#EFE5D9",
+    borderRadius: 22,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.03,
-    shadowRadius: 12,
-    elevation: 2,
+    paddingVertical: 16,
     flexDirection: "row",
     alignItems: "center"
   },
@@ -3649,19 +4293,18 @@ const styles = StyleSheet.create({
     color: "#111614"
   },
   addExpenseButtonRow: {
-    marginTop: 8,
+    marginTop: 10,
     flexDirection: "row",
-    gap: 12,
-    height: 44
+    height: 52
   },
   mainAddButton: {
     flex: 1,
     height: "100%",
-    borderRadius: 22,
+    borderRadius: 26,
     overflow: "hidden",
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.16,
+    shadowOpacity: 0.2,
     shadowRadius: 16,
     elevation: 4
   },
@@ -3669,21 +4312,21 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
+    justifyContent: "center",
+    paddingHorizontal: 20,
     height: "100%"
   },
   addIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center"
   },
   addText: {
-    flex: 1,
-    marginLeft: 14,
-    fontSize: 16,
+    marginLeft: 12,
+    fontSize: 17,
     fontWeight: "800",
     color: colors.white
   },
@@ -3924,7 +4567,9 @@ const styles = StyleSheet.create({
   },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(17, 22, 20, 0.38)"
+    backgroundColor: "rgba(17, 22, 20, 0.38)",
+    justifyContent: "center",
+    alignItems: "center"
   },
   sheet: {
     borderTopLeftRadius: 32,
@@ -3961,43 +4606,43 @@ const styles = StyleSheet.create({
     color: "#747C78"
   },
   speechBubbleContainer: {
-    marginTop: 16,
-    borderRadius: 16,
+    marginTop: 14,
+    borderRadius: 20,
     backgroundColor: "rgba(13,50,40,0.03)",
     borderWidth: 1,
     borderColor: "rgba(13,50,40,0.05)",
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    minHeight: 76
+    minHeight: 64
   },
   speechBubbleInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     lineHeight: 20,
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#111614",
     padding: 0,
     margin: 0,
     textAlignVertical: "top"
   },
   micControlRow: {
-    marginTop: 12,
+    marginTop: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 12
   },
   sheetMicButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 4
   },
   sheetMicButtonListening: {
     backgroundColor: "#DF7A12",
@@ -4005,36 +4650,36 @@ const styles = StyleSheet.create({
   },
   waveContainer: {
     flex: 1,
-    height: 48,
+    height: 56,
     justifyContent: "center"
   },
   waveWrap: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5
+    gap: 4
   },
   waveBar: {
-    width: 6,
-    height: 24,
+    width: 5,
+    height: 20,
     borderRadius: 3,
     backgroundColor: colors.primary
   },
   micHelperText: {
-    fontSize: 13,
-    fontWeight: "500",
+    fontSize: 12,
+    fontWeight: "600",
     color: "#747C78"
   },
   formGroup: {
-    marginTop: 16,
-    borderRadius: 16,
+    marginTop: 14,
+    borderRadius: 22,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: "rgba(13,50,40,0.06)",
-    paddingVertical: 4,
+    paddingVertical: 2,
     overflow: "hidden"
   },
   formRow: {
-    minHeight: 48,
+    minHeight: 52,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -4042,41 +4687,41 @@ const styles = StyleSheet.create({
   },
   formLabel: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#747C78"
   },
   formInput: {
     flex: 1,
     textAlign: "right",
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#111614",
-    paddingVertical: 8,
-    paddingLeft: 20
+    paddingVertical: 10,
+    paddingLeft: 16
   },
   formInputAmount: {
     flex: 1,
     textAlign: "right",
-    fontSize: 17,
-    fontWeight: "700",
-    color: colors.primary,
-    paddingVertical: 8,
-    paddingLeft: 20
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#00DF89",
+    paddingVertical: 10,
+    paddingLeft: 16
   },
   formDivider: {
     height: 1,
-    backgroundColor: "rgba(13,50,40,0.05)",
+    backgroundColor: "rgba(13,50,40,0.04)",
     marginHorizontal: 16
   },
   sheetActions: {
-    marginTop: 14,
+    marginTop: 18,
     flexDirection: "row",
-    gap: 10
+    gap: 12
   },
   cancelButton: {
     flex: 1,
     minHeight: 52,
-    borderRadius: 18,
+    borderRadius: 22,
     backgroundColor: "#EFE8DD",
     alignItems: "center",
     justifyContent: "center"
@@ -4084,13 +4729,13 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 15,
     lineHeight: 20,
-    fontWeight: "900",
+    fontWeight: "800",
     color: "#111614"
   },
   saveButton: {
     flex: 1,
     minHeight: 52,
-    borderRadius: 18,
+    borderRadius: 22,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center"
@@ -4098,7 +4743,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 15,
     lineHeight: 20,
-    fontWeight: "900",
+    fontWeight: "800",
     color: colors.white
   },
   tabBar: {

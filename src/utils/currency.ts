@@ -50,6 +50,52 @@ export function parseAmount(value: string | number) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+/**
+ * Kullanıcı miktar alanına (TextInput) veri girerken:
+ * - Rakamları canlı olarak binlik ayırıcı ile biçimlendirir (Örn: 250000 -> 250.000).
+ * - Küsurat (virgül) eklendiğinde küsuratı korur (Örn: 250.000,50).
+ */
+export function formatAmountInput(val: string): string {
+  if (!val) return "";
+
+  // Sadece rakamlar, nokta ve virgüle izin ver
+  const raw = val.replace(/[^0-9.,]/g, "");
+  if (!raw) return "";
+
+  // Eğer metinde virgül (,) varsa ondalık kısmı ayrıştır
+  if (raw.includes(",")) {
+    const parts = raw.split(",");
+    const integerRaw = parts[0].replace(/\D/g, "");
+    const decimalRaw = parts.slice(1).join("").replace(/\D/g, "").slice(0, 2);
+
+    let formattedInteger = "0";
+    if (integerRaw) {
+      formattedInteger = integerRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    return `${formattedInteger},${decimalRaw}`;
+  }
+
+  // Eğer metinde sadece nokta (.) varsa ve noktadan sonra tam 1 veya 2 basamak varsa (küsurat gibi)
+  // ama birden fazla nokta yoksa ondalık virgülüne çevir
+  const dotParts = raw.split(".");
+  if (dotParts.length === 2 && dotParts[1].length > 0 && dotParts[1].length < 3) {
+    const integerRaw = dotParts[0].replace(/\D/g, "");
+    const decimalRaw = dotParts[1].replace(/\D/g, "").slice(0, 2);
+    let formattedInteger = "0";
+    if (integerRaw) {
+      formattedInteger = integerRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+    return `${formattedInteger},${decimalRaw}`;
+  }
+
+  // Sadece tam sayı (tüm binlik noktaları temizle ve sıfırdan canlı binlik noktaları koy)
+  const integerRaw = raw.replace(/\D/g, "");
+  if (!integerRaw) return "";
+
+  return integerRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
 function getDecimalSeparator(value: string, lastComma: number, lastDot: number) {
   if (lastComma === -1 && lastDot === -1) {
     return "";
@@ -69,3 +115,4 @@ function getDecimalSeparator(value: string, lastComma: number, lastDot: number) 
 
   return separator;
 }
+

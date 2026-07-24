@@ -20,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFinanceStore } from "@/store/financeStore";
 import { colors, radius } from "@/theme";
-import { parseAmount } from "@/utils/currency";
+import { formatAmountInput, parseAmount } from "@/utils/currency";
 import { translations } from "@/utils/translations";
 
 type EditableIncomeRow = {
@@ -449,7 +449,7 @@ function IncomeRow({ title, subtitle, icon, tone, amount, onChangeText, onChange
       <View style={styles.amountBox}>
         <TextInput
           value={amount}
-          onChangeText={onChangeText}
+          onChangeText={(text) => onChangeText(formatAmountInput(text))}
           onFocus={onFocus}
           placeholder="0,00"
           placeholderTextColor="#9CA19E"
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
     color: "#747C78"
   },
   amountBox: {
-    width: 120,
+    width: 145,
     minHeight: 44,
     borderRadius: 12,
     backgroundColor: "rgba(13,50,40,0.03)",
@@ -558,10 +558,10 @@ const styles = StyleSheet.create({
     borderColor: "rgba(13,50,40,0.04)",
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12
+    paddingHorizontal: 8
   },
-  amountInput: { flex: 1, fontSize: 18, lineHeight: 22, fontWeight: "800", color: colors.primary, paddingVertical: 4 },
-  currency: { marginLeft: 4, fontSize: 16, lineHeight: 20, fontWeight: "800", color: colors.primaryMuted },
+  amountInput: { flex: 1, fontSize: 15, lineHeight: 20, fontWeight: "800", color: colors.primary, paddingVertical: 4 },
+  currency: { marginLeft: 2, fontSize: 15, lineHeight: 20, fontWeight: "800", color: colors.primaryMuted },
   addButton: {
     marginTop: 6,
     minHeight: 52,

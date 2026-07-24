@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 
 import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 
@@ -14,11 +15,13 @@ type SpeechRecognitionModule = {
 
 function getSpeechRecognitionModule(): SpeechRecognitionModule | null {
   try {
-    const module = require("expo-speech-recognition").ExpoSpeechRecognitionModule;
-    return module?.start && module?.requestPermissionsAsync ? module : null;
-  } catch {
-    return null;
+    if (ExpoSpeechRecognitionModule && typeof ExpoSpeechRecognitionModule.start === "function") {
+      return ExpoSpeechRecognitionModule as unknown as SpeechRecognitionModule;
+    }
+  } catch (e) {
+    console.log("[voice-expense] module fallback", e);
   }
+  return null;
 }
 
 export function useVoiceExpenseInput() {
@@ -26,47 +29,37 @@ export function useVoiceExpenseInput() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState("");
-  const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>(speechModule ? "unknown" : "unsupported");
+  const [permissionStatus, setPermissionStatus] = useState<PermissionStatus>(
+    speechModule ? "unknown" : "unsupported"
+  );
 
   const parsedExpense: ParsedVoiceExpense = useMemo(() => {
-    const parsed = parseTurkishExpense(transcript);
-
-    if (transcript.trim()) {
-      console.log("[voice-expense] parsing result", parsed);
-    }
-
-    return parsed;
+    return parseTurkishExpense(transcript);
   }, [transcript]);
 
   useEffect(() => {
-    if (!speechModule) {
-      return undefined;
-    }
+    if (!speechModule) return undefined;
 
     const startListener = speechModule.addListener("start", () => {
       setIsListening(true);
       setError("");
     });
+
     const endListener = speechModule.addListener("end", () => {
       setIsListening(false);
     });
-    const resultListener = speechModule.addListener("result", (event) => {
-      const nextTranscript = event.results?.[0]?.transcript?.trim() || "";
-      console.log("[voice-expense] transcript result", {
-        transcript: nextTranscript,
-        isFinal: event.isFinal,
-        results: event.results
-      });
 
-      if (nextTranscript) {
-        setTranscript(nextTranscript);
+    const resultListener = speechModule.addListener("result", (event) => {
+      const text = event.results?.[0]?.transcript?.trim() || "";
+      if (text) {
+        setTranscript(text);
       }
     });
+
     const errorListener = speechModule.addListener("error", (event) => {
-      const message = event.error === "not-allowed" ? "Mikrofon izni gerekli." : "Ses anlaşılamadı, tekrar dene.";
+      if (event.error === "no-speech") return;
       setIsListening(false);
-      setError(message);
-      console.log("[voice-expense] listening started", { ok: false, error: event });
+      console.log("[voice-expense] error event:", event);
     });
 
     return () => {
@@ -79,70 +72,56 @@ export function useVoiceExpenseInput() {
 
   async function startListening() {
     if (!speechModule) {
-      const message = "Expo Go’da gerçek ses tanıma desteklenmiyor. Development build gerekir.";
       setPermissionStatus("unsupported");
-      setError(message);
-      setIsListening(false);
-      console.log("[voice-expense] listening started", { ok: false, reason: "speech module unavailable" });
+      setError("Ses tanıma bu cihazda kullanılamıyor.");
+      return;
+    }
+
+    try {
+      const permission = await speechModule.requestPermissionsAsync();
+      if (!permission.granted) {
+        setPermissionStatus("denied");
+        setError("Mikrofon izni verilmedi.");
+        return;
+      }
+      setPermissionStatus("granted");
+    } catch {
+      setPermissionStatus("unsupported");
       return;
     }
 
     setError("");
-
-    let permission: { granted: boolean; status?: string };
+    setTranscript("");
 
     try {
-      permission = await speechModule.requestPermissionsAsync();
-      console.log("[voice-expense] permission result", permission);
-    } catch (permissionError) {
-      setPermissionStatus("unsupported");
-      setError("Expo Go’da gerçek ses tanıma desteklenmiyor. Development build gerekir.");
-      setIsListening(false);
-      console.log("[voice-expense] permission result", { granted: false, error: permissionError });
-      return;
-    }
-
-    if (!permission.granted) {
-      setPermissionStatus("denied");
-      setError("Mikrofon izni gerekli.");
-      return;
-    }
-
-    setPermissionStatus("granted");
-    setTranscript("");
-    setIsListening(true);
+      speechModule.stop();
+    } catch {}
 
     try {
       speechModule.start({
         lang: "tr-TR",
         interimResults: true,
-        continuous: false,
-        contextualStrings: ["kahve", "market", "alışveriş", "taksi", "benzin", "yemek", "lira", "harcadım", "aldım"]
+        continuous: true,
+        requiresOnDeviceRecognition: true
       });
-      console.log("[voice-expense] listening started", { ok: true, lang: "tr-TR" });
-    } catch (startError) {
-      setPermissionStatus("unsupported");
-      setError("Expo Go’da gerçek ses tanıma desteklenmiyor. Development build gerekir.");
+      setIsListening(true);
+    } catch (e) {
+      console.log("[voice-expense] start error", e);
       setIsListening(false);
-      console.log("[voice-expense] listening started", { ok: false, error: startError });
     }
   }
 
   function stopListening() {
-    if (!speechModule) {
-      setIsListening(false);
-      return;
-    }
-
-    speechModule.stop();
+    if (!speechModule) return;
+    try {
+      speechModule.stop();
+    } catch {}
     setIsListening(false);
   }
 
-  useEffect(() => {
-    return () => {
-      speechModule?.abort();
-    };
-  }, [speechModule]);
+  function clearTranscript() {
+    setTranscript("");
+  }
 
   return {
     isListening,
@@ -151,6 +130,7 @@ export function useVoiceExpenseInput() {
     permissionStatus,
     startListening,
     stopListening,
+    clearTranscript,
     setTranscript,
     parsedExpense
   };

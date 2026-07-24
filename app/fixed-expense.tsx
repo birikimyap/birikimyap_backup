@@ -1,3 +1,5 @@
-import FixedExpenseScreen from "@/screens/FixedExpenseScreen";
+import FixedExpenseScreen from "../src/screens/FixedExpenseScreen";
 
-export default FixedExpenseScreen;
+export default function FixedExpenseRoute() {
+  return <FixedExpenseScreen />;
+}
