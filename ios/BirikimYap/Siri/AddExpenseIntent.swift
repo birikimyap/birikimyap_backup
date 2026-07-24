@@ -9,16 +9,16 @@ struct AddExpenseIntent: AppIntent {
     static var openAppWhenRun: Bool = false
     
     @Parameter(title: "Harcama Detayı", description: "Örn: Market 350 veya Kahve 120")
-    var input: String
+    var input: String?
     
     static var parameterSummary: ParameterSummary {
-        Summary("Birikim Yap'a \(\.$input) ekle")
+        Summary("Birikim Yap'a harcama ekle")
     }
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        let cleanedInput = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanedInput.isEmpty else {
+        let textToParse = input?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !textToParse.isEmpty else {
             return .result(dialog: "Lütfen eklenecek harcamayı ve miktarını söyleyin.")
         }
         
@@ -28,7 +28,7 @@ struct AddExpenseIntent: AppIntent {
         
         let newExpense: [String: Any] = [
             "id": UUID().uuidString,
-            "rawInput": cleanedInput,
+            "rawInput": textToParse,
             "timestamp": Date().timeIntervalSince1970
         ]
         
@@ -36,7 +36,7 @@ struct AddExpenseIntent: AppIntent {
         userDefaults.set(pendingExpenses, forKey: "pending_siri_expenses")
         userDefaults.synchronize()
         
-        return .result(dialog: "'\(cleanedInput)' harcamanız Birikim Yap'a eklendi! 🐷")
+        return .result(dialog: "'\(textToParse)' harcamanız Birikim Yap'a eklendi! 🐷")
     }
 }
 
@@ -46,9 +46,9 @@ struct BirikimYapShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: AddExpenseIntent(),
             phrases: [
-                "\(.applicationName) \(\.$input)",
-                "\(.applicationName) harcama ekle \(\.$input)",
-                "\(.applicationName) ile \(\.$input) harcadım"
+                "\(.applicationName) ile harcama ekle",
+                "\(.applicationName) harcama ekle",
+                "\(.applicationName) sesli harcama"
             ],
             shortTitle: "Harcama Ekle",
             systemImageName: "plus.circle.fill"
