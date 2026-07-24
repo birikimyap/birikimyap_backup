@@ -48,7 +48,8 @@ struct BirikimYapShortcuts: AppShortcutsProvider {
             phrases: [
                 "\(.applicationName) ile harcama ekle",
                 "\(.applicationName) harcama ekle",
-                "\(.applicationName) sesli harcama"
+                "\(.applicationName) sesli harcama",
+                "\(.applicationName) harcama"
             ],
             shortTitle: "Harcama Ekle",
             systemImageName: "plus.circle.fill"

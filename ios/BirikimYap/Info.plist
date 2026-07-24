@@ -35,7 +35,7 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>7</string>
+    <string>8</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSRequiresIPhoneOS</key>
@@ -55,9 +55,12 @@
     <string>Birikim Yap fotoğraflarınıza profil resmi ve harcama belgesi eklemek için erişir.</string>
     <key>NSCameraUsageDescription</key>
     <string>Birikim Yap harcama belgesi ve fatura fotoğrafı çekebilmeniz için kamerayı kullanır.</string>
+    <key>NSSiriUsageDescription</key>
+    <string>Birikim Yap Siri ile sesli harcama eklemenizi sağlar.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
+      <string>AddExpenseIntent</string>
     </array>
     <key>RCTNewArchEnabled</key>
     <true/>
