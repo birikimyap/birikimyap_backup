@@ -29,6 +29,10 @@ public class AppDelegate: ExpoAppDelegate {
       launchOptions: launchOptions)
 #endif
 
+    if #available(iOS 16.0, *) {
+      BirikimYapShortcuts.updateAppShortcutParameters()
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
