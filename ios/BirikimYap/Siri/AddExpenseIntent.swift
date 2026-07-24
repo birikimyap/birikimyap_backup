@@ -11,7 +11,7 @@ struct AddExpenseIntent: AppIntent {
     @Parameter(title: "Harcama Detayı", description: "Örn: Market 350 veya Kahve 120")
     var input: String
     
-    static var parameterSummary: SomeParameterSummary {
+    static var parameterSummary: ParameterSummary {
         Summary("Birikim Yap'a \(\.$input) ekle")
     }
 
