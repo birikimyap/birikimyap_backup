@@ -8,7 +8,7 @@ struct AddExpenseIntent: AppIntent {
     
     static var openAppWhenRun: Bool = false
     
-    @Parameter(title: "Harcama Detayı", requestValueDialog: IntentDialog("Lütfen eklenecek harcamayı ve miktarını söyleyin (Örn: Market 350)"))
+    @Parameter(title: "Harcama Detayı", requestValueDialog: IntentDialog("Lütfen eklenecek harcamayı ve miktarını söyleyin. Örn: Market 350"))
     var input: String?
 
     @MainActor
@@ -38,6 +38,8 @@ struct AddExpenseIntent: AppIntent {
 
 @available(iOS 16.0, *)
 struct BirikimYapShortcuts: AppShortcutsProvider {
+    static var shortcutTileColor: ShortcutTileColor = .green
+    
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: AddExpenseIntent(),
@@ -45,7 +47,12 @@ struct BirikimYapShortcuts: AppShortcutsProvider {
                 "\(.applicationName) harcama ekle",
                 "\(.applicationName) ile harcama ekle",
                 "\(.applicationName) sesli harcama",
-                "\(.applicationName) harcama"
+                "\(.applicationName) harcama",
+                "Birikim Yap harcama ekle",
+                "Birikim Yap harcama",
+                "Birikim Yap sesli harcama",
+                "Birikimyap harcama ekle",
+                "Birikimyap harcama"
             ],
             shortTitle: "Harcama Ekle",
             systemImageName: "plus.circle.fill"
