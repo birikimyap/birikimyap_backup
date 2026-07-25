@@ -49,6 +49,8 @@ type FinanceState = {
   setIsDarkMode: (enabled: boolean) => void;
   isHapticsEnabled: boolean;
   setIsHapticsEnabled: (enabled: boolean) => void;
+  isSmartNotificationsEnabled: boolean;
+  setIsSmartNotificationsEnabled: (enabled: boolean) => void;
   language: "tr" | "en";
   setLanguage: (lang: "tr" | "en") => void;
   currency: "TRY" | "USD" | "EUR";
@@ -59,6 +61,26 @@ type FinanceState = {
   skipDay: () => void;
   resetSimulatedDate: () => void;
   getZeroSpendingStreak: () => number;
+  monthlyArchives: Array<{
+    id: string;
+    monthKey: string;
+    monthTitle: string;
+    targetSavings: number;
+    achievedSavings: number;
+    totalSpent: number;
+    spendableBudget: number;
+    isSuccess: boolean;
+  }>;
+  addMonthlyArchiveRecord: (record: {
+    id: string;
+    monthKey: string;
+    monthTitle: string;
+    targetSavings: number;
+    achievedSavings: number;
+    totalSpent: number;
+    spendableBudget: number;
+    isSuccess: boolean;
+  }) => void;
 };
 
 const initialIncomes: Income[] = [
@@ -159,6 +181,22 @@ export const useFinanceStore = create<FinanceState>()(
       setIsDarkMode: (isDarkMode) => set({ isDarkMode }),
       isHapticsEnabled: true,
       setIsHapticsEnabled: (isHapticsEnabled) => set({ isHapticsEnabled }),
+      isSmartNotificationsEnabled: true,
+      setIsSmartNotificationsEnabled: (isSmartNotificationsEnabled) => set({ isSmartNotificationsEnabled }),
+      monthlyArchives: [],
+      addMonthlyArchiveRecord: (record) => {
+        set((state) => {
+          const exists = state.monthlyArchives.some((item) => item.monthKey === record.monthKey);
+          if (exists) {
+            return {
+              monthlyArchives: state.monthlyArchives.map((item) => item.monthKey === record.monthKey ? record : item)
+            };
+          }
+          return {
+            monthlyArchives: [record, ...state.monthlyArchives]
+          };
+        });
+      },
       language: "tr",
       categoryLimits: {},
       setCategoryLimit: (categoryKey, amount) => {

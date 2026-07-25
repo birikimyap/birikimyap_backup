@@ -32,9 +32,10 @@ import { useFinanceStore } from "@/store/financeStore";
 import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatAmountInput, formatCurrency, parseAmount } from "@/utils/currency";
-import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus } from "@/utils/finance";
+import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus, getSpendableMonthlyBudget, getExpensesTotalForPeriod } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 import { syncSiriExpenses } from "@/utils/siriSync";
+import { syncWidgetData } from "@/utils/widgetSync";
 
 const mascotTR = require("../../pgn/mascot-cutout.png");
 const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
@@ -75,6 +76,10 @@ export default function HomeDashboardScreen() {
   const setLanguage = useFinanceStore((state) => state.setLanguage);
   const currency = useFinanceStore((state) => state.currency);
   const setCurrency = useFinanceStore((state) => state.setCurrency);
+  const isSmartNotificationsEnabled = useFinanceStore((state) => state.isSmartNotificationsEnabled);
+  const setIsSmartNotificationsEnabled = useFinanceStore((state) => state.setIsSmartNotificationsEnabled);
+  const monthlyArchives = useFinanceStore((state) => state.monthlyArchives);
+  const addMonthlyArchiveRecord = useFinanceStore((state) => state.addMonthlyArchiveRecord);
   const getRemainingLimitForPeriod = useFinanceStore((state) => state.getRemainingLimitForPeriod);
   const simulatedDateOffsetDays = useFinanceStore((state) => state.simulatedDateOffsetDays);
 
@@ -426,6 +431,31 @@ export default function HomeDashboardScreen() {
   const revisedSavingsInfo = useMemo(() => {
     return getRevisedSavingsStatus(incomes, expenses, savingsGoal, simulatedDate);
   }, [incomes, expenses, savingsGoal, simulatedDate]);
+
+  useEffect(() => {
+    syncWidgetData(incomes, expenses, savingsGoal, simulatedDate);
+
+    const monthKey = `${simulatedDate.getFullYear()}-${String(simulatedDate.getMonth() + 1).padStart(2, '0')}`;
+    const monthNameTr = simulatedDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+    const monthNameEn = simulatedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const monthTitle = language === 'tr' ? monthNameTr : monthNameEn;
+
+    const currentSpent = getExpensesTotalForPeriod(expenses, "monthly", simulatedDate);
+    const revInfo = getRevisedSavingsStatus(incomes, expenses, savingsGoal, simulatedDate);
+
+    if (savingsGoal.monthlyContribution > 0) {
+      addMonthlyArchiveRecord({
+        id: `archive-${monthKey}`,
+        monthKey,
+        monthTitle,
+        targetSavings: savingsGoal.monthlyContribution,
+        achievedSavings: revInfo.revisedSavings,
+        totalSpent: currentSpent,
+        spendableBudget: getSpendableMonthlyBudget(incomes, expenses, savingsGoal),
+        isSuccess: !revInfo.isOverused
+      });
+    }
+  }, [incomes, expenses, savingsGoal, simulatedDate, language, addMonthlyArchiveRecord]);
 
   const planDay = useMemo(() => {
     const start = new Date(savingsGoal.planStartDate || new Date());
@@ -2209,6 +2239,99 @@ export default function HomeDashboardScreen() {
             </View>
             <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
           </Pressable>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconWrap}>
+              <Feather name="bell" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text, fontWeight: "800" }]}>
+                {language === "tr" ? "Akıllı Bütçe Uyarı Bildirimleri" : "Smart Budget Notifications"}
+              </Text>
+            </View>
+            <Switch
+              value={isSmartNotificationsEnabled}
+              onValueChange={(val) => {
+                triggerHaptic();
+                setIsSmartNotificationsEnabled(val);
+                setToastConfig({
+                  visible: true,
+                  message: val 
+                    ? (language === "tr" ? "Akıllı Bildirimler Açıldı 🔔" : "Smart Notifications On 🔔")
+                    : (language === "tr" ? "Bildirimler Kapatıldı 🔕" : "Notifications Off 🔕"),
+                  subtext: val
+                    ? (language === "tr" ? "Günlük harcama limitine yaklaştığında akıllı uyarı alacaksın." : "You will receive smart alerts when approaching daily limit.")
+                    : (language === "tr" ? "Otomatik harcama bildirimleri durduruldu." : "Automatic spending alerts paused."),
+                  type: "success"
+                });
+              }}
+              trackColor={{ false: isDarkMode ? "#2D3748" : "#E2E8F0", true: "#00E58F" }}
+              thumbColor={isSmartNotificationsEnabled ? "#031D14" : "#94A3B8"}
+            />
+          </View>
+        </View>
+
+        {/* 🏆 Monthly Financial Archive Card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", padding: 16, marginTop: 14 }]}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Text style={{ fontSize: 16 }}>🏆</Text>
+              <Text style={{ fontSize: 15, fontWeight: "900", color: themeColors.text }}>
+                {language === "tr" ? "Geçmiş Birikim Arşivi" : "Past Savings Archive"}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 11, fontWeight: "800", color: themeColors.primary }}>
+              {monthlyArchives.length} {language === "tr" ? "Dönem" : "Period"}
+            </Text>
+          </View>
+
+          {monthlyArchives.length === 0 ? (
+            <View style={{ paddingVertical: 12, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ fontSize: 12.5, fontWeight: "600", color: themeColors.textMuted, textAlign: "center" }}>
+                {language === "tr" 
+                  ? "Dönem sonuna ulaşıldıkça başarı rozetleriniz ve birikim geçmişiniz burada arşivlenecektir." 
+                  : "Your achievement badges and savings history will be archived here as periods complete."}
+              </Text>
+            </View>
+          ) : (
+            monthlyArchives.map((archive) => (
+              <View
+                key={archive.id || archive.monthKey}
+                style={{
+                  marginBottom: 8,
+                  padding: 12,
+                  borderRadius: 14,
+                  backgroundColor: archive.isSuccess 
+                    ? (isDarkMode ? "rgba(0, 223, 137, 0.08)" : "rgba(0, 223, 137, 0.05)")
+                    : (isDarkMode ? "rgba(223, 122, 18, 0.08)" : "rgba(223, 122, 18, 0.05)"),
+                  borderWidth: 1,
+                  borderColor: archive.isSuccess ? "rgba(0, 223, 137, 0.25)" : "rgba(223, 122, 18, 0.25)",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between"
+                }}
+              >
+                <View style={{ gap: 2 }}>
+                  <Text style={{ fontSize: 13, fontWeight: "900", color: themeColors.text }}>
+                    {archive.monthTitle}
+                  </Text>
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: archive.isSuccess ? "#00E58F" : "#DF7A12" }}>
+                    {archive.isSuccess 
+                      ? (language === "tr" ? "🏆 Birikim Hedefi Başarıldı!" : "🏆 Goal Achieved!") 
+                      : (language === "tr" ? "⚠️ Birikim Revize Edildi" : "⚠️ Savings Revised")}
+                  </Text>
+                </View>
+                <View style={{ alignItems: "flex-end" }}>
+                  <Text style={{ fontSize: 14, fontWeight: "900", color: archive.isSuccess ? (isDarkMode ? "#00E58F" : "#009E60") : "#DF7A12" }}>
+                    {formatCurrency(archive.achievedSavings)}
+                  </Text>
+                  <Text style={{ fontSize: 10, fontWeight: "600", color: themeColors.textMuted }}>
+                    {language === "tr" ? `Hedef: ${formatCurrency(archive.targetSavings)}` : `Target: ${formatCurrency(archive.targetSavings)}`}
+                  </Text>
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
         {/* Support & Information Card */}

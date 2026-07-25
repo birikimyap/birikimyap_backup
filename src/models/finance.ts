@@ -49,3 +49,14 @@ export type FinancePlan = {
   selectedPeriodSpent: number;
   selectedPeriodRemaining: number;
 };
+
+export type MonthlyArchiveRecord = {
+  id: string;
+  monthKey: string;
+  monthTitle: string;
+  targetSavings: number;
+  achievedSavings: number;
+  totalSpent: number;
+  spendableBudget: number;
+  isSuccess: boolean;
+};
