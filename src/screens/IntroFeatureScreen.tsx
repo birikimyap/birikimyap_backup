@@ -38,6 +38,7 @@ const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
 
 export default function IntroFeatureScreen() {
   const language = useFinanceStore((state) => state.language);
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   const mascot = language === "tr" ? mascotTR : mascotEN;
   const [selectedFeature, setSelectedFeature] = useState<FeatureItem | null>(null);
 
@@ -53,7 +54,7 @@ export default function IntroFeatureScreen() {
         bgDark: "#0E2820",
         border: "#00DF89",
         iconBg: "#00DF89",
-        iconColor: "#FFFFFF",
+        iconColor: "#031D14",
         badgeBg: "#00DF89",
         textColor: "#065F46"
       },
@@ -158,7 +159,7 @@ export default function IntroFeatureScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: isDarkMode ? "#070E0B" : "#F6FAF7" }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -166,16 +167,20 @@ export default function IntroFeatureScreen() {
       >
         <View style={styles.hero}>
           <View style={styles.mascotStage}>
-            <View style={styles.softOval} />
+            {/* Glowing Backdrop Light */}
+            <LinearGradient
+              colors={isDarkMode ? ["rgba(0, 223, 137, 0.25)", "rgba(13, 50, 40, 0.02)"] : ["rgba(0, 223, 137, 0.2)", "rgba(13, 50, 40, 0.03)"]}
+              style={styles.glowingHalo}
+            />
             <Text style={[styles.sparkle, styles.sparkleLeft]}>✦</Text>
             <Text style={[styles.sparkle, styles.sparkleRight]}>✦</Text>
             <Image source={mascot} style={styles.mascot} resizeMode="contain" />
           </View>
 
-          <Text style={styles.heading}>
+          <Text style={[styles.heading, { color: isDarkMode ? "#FFFFFF" : "#0D3228" }]}>
             {language === "tr" ? "Paranı yönetmek artık daha kolay" : "Managing money is now easier"}
           </Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: isDarkMode ? "rgba(255,255,255,0.7)" : "#5C6661" }]}>
             {language === "tr" 
               ? "Gelirini, giderini ve birikim hedefini gir; sana özel harcama limitini oluşturalım." 
               : "Enter your income, expense and savings goal; let us create your personalized budget limits."}
@@ -194,11 +199,18 @@ export default function IntroFeatureScreen() {
 
         <Pressable
           onPress={() => router.push("/income")}
-          style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+          style={({ pressed }) => [styles.ctaWrapper, pressed && styles.ctaPressed]}
         >
-          <View style={styles.ctaSpacer} />
-          <Text style={styles.ctaText}>{language === "tr" ? "Başlayalım" : "Let's Start"}</Text>
-          <Feather name="arrow-right" size={24} color={colors.white} style={styles.ctaIcon} />
+          <LinearGradient
+            colors={["#00E58F", "#00BF76", "#048052"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.ctaGradient}
+          >
+            <View style={styles.ctaSpacer} />
+            <Text style={styles.ctaText}>{language === "tr" ? "Başlayalım" : "Let's Start"}</Text>
+            <Feather name="arrow-right" size={24} color="#031D14" style={styles.ctaIcon} />
+          </LinearGradient>
         </Pressable>
       </ScrollView>
 
@@ -214,7 +226,6 @@ export default function IntroFeatureScreen() {
 }
 
 function FeatureCard({ feature, onPress }: { feature: FeatureItem; onPress: () => void }) {
-  const language = useFinanceStore((state) => state.language);
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
   
   return (
@@ -225,34 +236,36 @@ function FeatureCard({ feature, onPress }: { feature: FeatureItem; onPress: () =
         {
           backgroundColor: isDarkMode ? feature.theme.bgDark : feature.theme.bgLight,
           borderColor: feature.theme.border,
-          borderWidth: 1.5,
+          borderWidth: 1.2,
+          borderLeftWidth: 3.5,
+          borderLeftColor: feature.theme.border,
           shadowColor: feature.theme.border,
           shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.08,
-          shadowRadius: 10,
-          elevation: 3
+          shadowOpacity: isDarkMode ? 0.2 : 0.1,
+          shadowRadius: 12,
+          elevation: 4
         },
-        pressed && { opacity: 0.82, transform: [{ scale: 0.98 }] }
+        pressed && { opacity: 0.84, transform: [{ scale: 0.98 }] }
       ]}
     >
-      <View style={[styles.iconBox, { backgroundColor: feature.theme.iconBg }]}>
+      <View style={[styles.iconBox, { backgroundColor: feature.theme.iconBg, shadowColor: feature.theme.iconBg, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6 }]}>
         <Feather name={feature.icon} size={22} color={feature.theme.iconColor} />
       </View>
 
       <View style={styles.featureCopy}>
         <View style={styles.titleRow}>
-          <Text style={[styles.featureTitle, { color: isDarkMode ? "#FFFFFF" : "#0D3228" }]}>
+          <Text style={[styles.featureTitle, { color: isDarkMode ? "#FFFFFF" : "#0D3228", fontWeight: "800" }]}>
             {feature.title}
           </Text>
           {feature.badgeLabel ? (
             <View style={[styles.badge, { backgroundColor: feature.theme.badgeBg }]}>
-              <Text style={[styles.badgeText, { color: "#FFFFFF" }]}>{feature.badgeLabel}</Text>
+              <Text style={[styles.badgeText, { color: feature.id === "income-expense" ? "#031D14" : "#FFFFFF" }]}>{feature.badgeLabel}</Text>
             </View>
           ) : null}
         </View>
         <Text 
           numberOfLines={2} 
-          style={[styles.featureDesc, { color: isDarkMode ? "rgba(255,255,255,0.7)" : "#5C6661" }]}
+          style={[styles.featureDesc, { color: isDarkMode ? "rgba(255,255,255,0.7)" : "#5C6661", fontWeight: "500" }]}
         >
           {feature.description}
         </Text>
@@ -263,7 +276,7 @@ function FeatureCard({ feature, onPress }: { feature: FeatureItem; onPress: () =
           width: 32,
           height: 32,
           borderRadius: 16,
-          backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.05)",
+          backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(13,50,40,0.06)",
           alignItems: "center",
           justifyContent: "center"
         }}>
@@ -280,21 +293,26 @@ function FeatureDetailModal({ feature, onClose }: { feature: FeatureItem; onClos
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" }}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}>
         <Pressable style={{ flex: 1 }} onPress={onClose} />
         <View style={{
-          backgroundColor: isDarkMode ? "#16231E" : "#FFFFFF",
+          backgroundColor: isDarkMode ? "#12231C" : "#FFFFFF",
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           padding: 24,
           maxHeight: "88%",
-          borderWidth: 1,
-          borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)"
+          borderWidth: 1.5,
+          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(13, 50, 40, 0.12)",
+          shadowColor: "#00DF89",
+          shadowOffset: { width: 0, height: -10 },
+          shadowOpacity: 0.2,
+          shadowRadius: 24,
+          elevation: 10
         }}>
           {/* Modal Header */}
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
-              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(0,223,137,0.14)", alignItems: "center", justifyContent: "center" }}>
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(0,223,137,0.18)", alignItems: "center", justifyContent: "center" }}>
                 <Feather name={feature.icon} size={22} color="#00DF89" />
               </View>
               <View style={{ flex: 1 }}>
@@ -313,10 +331,10 @@ function FeatureDetailModal({ feature, onClose }: { feature: FeatureItem; onClos
               <LinearGradient
                 colors={
                   feature.details.graphicType === "income" 
-                    ? ["#0D3228", "#1A5243"] 
+                    ? ["#0E2A20", "#17483B"] 
                     : feature.details.graphicType === "savings"
                     ? ["#2E1B4E", "#4C2882"]
-                    : ["#074737", "#00DF89"]
+                    : ["#0B3026", "#00DF89"]
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -375,7 +393,7 @@ function FeatureDetailModal({ feature, onClose }: { feature: FeatureItem; onClos
             </View>
 
             {/* Step-by-Step Guide Items */}
-            <Text style={{ fontSize: 15, fontWeight: "800", color: isDarkMode ? "#FFFFFF" : "#0D3228", marginBottom: 12 }}>
+            <Text style={{ fontSize: 15, fontWeight: "900", color: isDarkMode ? "#FFFFFF" : "#0D3228", marginBottom: 12 }}>
               {language === "tr" ? "Nasıl Çalışır?" : "How It Works?"}
             </Text>
 
@@ -391,10 +409,12 @@ function FeatureDetailModal({ feature, onClose }: { feature: FeatureItem; onClos
                   borderRadius: 16,
                   backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "#FAFAF9",
                   borderWidth: 1,
+                  borderLeftWidth: 3.5,
+                  borderLeftColor: "#00DF89",
                   borderColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#E7E5E4"
                 }}
               >
-                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(0,223,137,0.12)", alignItems: "center", justifyContent: "center", marginTop: 2 }}>
+                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(0,223,137,0.14)", alignItems: "center", justifyContent: "center", marginTop: 2 }}>
                   <Feather name={step.icon} size={16} color="#00DF89" />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -415,18 +435,28 @@ function FeatureDetailModal({ feature, onClose }: { feature: FeatureItem; onClos
                 {
                   marginTop: 8,
                   marginBottom: 12,
-                  paddingVertical: 14,
+                  height: 52,
                   borderRadius: 18,
-                  backgroundColor: "#00DF89",
-                  alignItems: "center",
-                  justifyContent: "center"
+                  overflow: "hidden",
+                  shadowColor: "#00E58F",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 10,
+                  elevation: 5
                 },
                 pressed && { opacity: 0.9 }
               ]}
             >
-              <Text style={{ fontSize: 15, fontWeight: "900", color: "#040907" }}>
-                {language === "tr" ? "Anladım, Harika! 👍" : "Got It, Great! 👍"}
-              </Text>
+              <LinearGradient
+                colors={["#00E58F", "#00BF76", "#048052"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: "900", color: "#031D14" }}>
+                  {language === "tr" ? "Anladım, Harika! 👍" : "Got It, Great! 👍"}
+                </Text>
+              </LinearGradient>
             </Pressable>
           </ScrollView>
         </View>
@@ -437,8 +467,7 @@ function FeatureDetailModal({ feature, onClose }: { feature: FeatureItem; onClos
 
 const styles = StyleSheet.create({
   safe: {
-    flex: 1,
-    backgroundColor: colors.background
+    flex: 1
   },
   content: {
     flexGrow: 1,
@@ -460,13 +489,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12
   },
-  softOval: {
+  glowingHalo: {
     position: "absolute",
-    bottom: 4,
-    width: 190,
-    height: 80,
-    borderRadius: 100,
-    backgroundColor: "rgba(13, 50, 40, 0.08)"
+    width: 200,
+    height: 100,
+    borderRadius: 100
   },
   mascot: {
     width: 170,
@@ -474,7 +501,7 @@ const styles = StyleSheet.create({
   },
   sparkle: {
     position: "absolute",
-    color: colors.primaryMuted,
+    color: "#00DF89",
     fontSize: 22,
     fontWeight: "800"
   },
@@ -490,8 +517,7 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 26,
     lineHeight: 32,
-    fontWeight: "800",
-    color: colors.primary,
+    fontWeight: "900",
     textAlign: "center",
     paddingHorizontal: 12
   },
@@ -500,7 +526,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     fontWeight: "600",
-    color: colors.textMuted,
     textAlign: "center",
     paddingHorizontal: 16
   },
@@ -526,14 +551,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 14
   },
-  iconBoxHighlighted: {
-    backgroundColor: colors.white,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2
-  },
   featureCopy: {
     flex: 1
   },
@@ -545,49 +562,40 @@ const styles = StyleSheet.create({
   },
   badge: {
     borderRadius: 8,
-    backgroundColor: colors.accent,
     paddingHorizontal: 6,
     paddingVertical: 2
   },
   badgeText: {
     fontSize: 9,
-    fontWeight: "900",
-    color: colors.white
+    fontWeight: "900"
   },
   featureTitle: {
     fontSize: 16,
-    lineHeight: 20,
-    fontWeight: "800",
-    color: colors.primary
+    lineHeight: 20
   },
   featureDesc: {
     marginTop: 4,
     fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "500",
-    color: colors.textMuted
+    lineHeight: 18
   },
-  exampleText: {
-    marginTop: 4,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: "600",
-    color: colors.primaryMuted
-  },
-  cta: {
+  ctaWrapper: {
     width: "100%",
     minHeight: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary,
+    overflow: "hidden",
+    shadowColor: "#00E58F",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.38,
+    shadowRadius: 14,
+    elevation: 7
+  },
+  ctaGradient: {
+    width: "100%",
+    minHeight: 56,
     paddingHorizontal: 24,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.16,
-    shadowRadius: 16,
-    elevation: 5
+    justifyContent: "space-between"
   },
   ctaPressed: {
     opacity: 0.9,
@@ -597,10 +605,10 @@ const styles = StyleSheet.create({
     width: 24
   },
   ctaText: {
-    fontSize: 17,
+    fontSize: 18,
     lineHeight: 22,
-    fontWeight: "800",
-    color: colors.white,
+    fontWeight: "900",
+    color: "#031D14",
     textAlign: "center"
   },
   ctaIcon: {
