@@ -1740,27 +1740,61 @@ export default function HomeDashboardScreen() {
         {/* Header with integrated User Profile */}
         <View style={[styles.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
           <View style={styles.greetingWrap}>
-            <Text style={[styles.greeting, { color: themeColors.text }]}>Gürkan 👋</Text>
-            <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("profileSubtitle")}</Text>
+            <Text style={[styles.greeting, { color: themeColors.text, fontWeight: "900" }]}>Gürkan 👋</Text>
+            <Text style={[styles.subtitle, { color: themeColors.textMuted, fontWeight: "600" }]}>{t("profileSubtitle")}</Text>
           </View>
-          <View style={[styles.profileAvatarHeader, { backgroundColor: themeColors.primary }]}>
-            <Text style={styles.profileAvatarHeaderText}>G</Text>
+          <View style={[
+            styles.profileAvatarHeader, 
+            { 
+              backgroundColor: "#00E58F",
+              borderWidth: 2,
+              borderColor: isDarkMode ? "#14251E" : "#FFFFFF",
+              shadowColor: "#00E58F",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.45,
+              shadowRadius: 10,
+              elevation: 5
+            }
+          ]}>
+            <Text style={[styles.profileAvatarHeaderText, { color: "#031D14", fontWeight: "900" }]}>G</Text>
           </View>
         </View>
 
         {/* Compact Side-by-Side Budget Summary Card */}
-        <View style={[styles.profileCardCompact, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
+        <View style={[
+          styles.profileCardCompact, 
+          { 
+            backgroundColor: themeColors.surface, 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(13, 50, 40, 0.12)",
+            borderWidth: 1.2,
+            borderLeftWidth: 3.5,
+            borderLeftColor: "#00DF89",
+            shadowColor: "#00DF89",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.08,
+            shadowRadius: 16,
+            elevation: 4
+          }
+        ]}>
           <View style={styles.profileBudgetCol}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: themeColors.primary }} />
-              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted }]}>{t("profileIncomeLabel")}</Text>
+              <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#00DF89" }} />
+              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted, fontWeight: "700" }]}>{t("profileIncomeLabel")}</Text>
             </View>
-            <Text style={[styles.profileBudgetValCompact, { color: themeColors.primary }]}>{formatCurrency(totalIncome)}</Text>
+            <Text style={[styles.profileBudgetValCompact, { color: isDarkMode ? "#00E58F" : "#065F46", fontWeight: "900" }]}>{formatCurrency(totalIncome)}</Text>
             <Pressable 
-              style={({ pressed }) => [styles.profileMiniBtn, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)" }, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.profileMiniBtn, 
+                { 
+                  backgroundColor: isDarkMode ? "rgba(0,223,137,0.14)" : "rgba(13,50,40,0.06)",
+                  borderWidth: 1,
+                  borderColor: "rgba(0,223,137,0.25)"
+                }, 
+                pressed && styles.pressed
+              ]}
               onPress={openIncomeEditModal}
             >
-              <Text style={[styles.profileMiniBtnText, { color: themeColors.primary }]}>{t("profileEditIncomeBtn")}</Text>
+              <Text style={[styles.profileMiniBtnText, { color: isDarkMode ? "#00E58F" : "#065F46", fontWeight: "800" }]}>{t("profileEditIncomeBtn")}</Text>
             </Pressable>
           </View>
 
@@ -1768,35 +1802,64 @@ export default function HomeDashboardScreen() {
 
           <View style={styles.profileBudgetCol}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#DF7A12" }} />
-              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted }]}>{t("profileFixedExpenseLabel")}</Text>
+              <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#DF7A12" }} />
+              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted, fontWeight: "700" }]}>{t("profileFixedExpenseLabel")}</Text>
             </View>
-            <Text style={[styles.profileBudgetValCompact, { color: "#DF7A12" }]}>{formatCurrency(totalFixedExpenses)}</Text>
+            <Text style={[styles.profileBudgetValCompact, { color: "#DF7A12", fontWeight: "900" }]}>{formatCurrency(totalFixedExpenses)}</Text>
             <Pressable 
-              style={({ pressed }) => [styles.profileMiniBtn, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(223,122,18,0.06)" }, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.profileMiniBtn, 
+                { 
+                  backgroundColor: isDarkMode ? "rgba(223,122,18,0.14)" : "rgba(223,122,18,0.08)",
+                  borderWidth: 1,
+                  borderColor: "rgba(223,122,18,0.25)"
+                }, 
+                pressed && styles.pressed
+              ]}
               onPress={openFixedExpenseEditModal}
             >
-              <Text style={[styles.profileMiniBtnText, { color: "#DF7A12" }]}>{t("profileEditExpenseBtn")}</Text>
+              <Text style={[styles.profileMiniBtnText, { color: "#DF7A12", fontWeight: "800" }]}>{t("profileEditExpenseBtn")}</Text>
             </Pressable>
           </View>
         </View>
 
         {/* Savings Goal Management Card */}
-        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", gap: 10, paddingVertical: 14 }]}>
-          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>{t("profileSavingsGoalHeader")}</Text>
+        <View style={[
+          styles.profileCard, 
+          { 
+            backgroundColor: themeColors.surface, 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(13, 50, 40, 0.12)",
+            borderWidth: 1.2,
+            borderLeftWidth: 3.5,
+            borderLeftColor: "#00DF89",
+            flexDirection: "column", 
+            gap: 10, 
+            paddingVertical: 14,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.04,
+            shadowRadius: 14,
+            elevation: 4
+          }
+        ]}>
+          <Text style={[styles.profileCardTitle, { color: themeColors.text, fontWeight: "900" }]}>{t("profileSavingsGoalHeader")}</Text>
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileGoalTarget")}</Text>
-            <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{formatCurrency(savingsGoal.targetAmount)}</Text>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted, fontWeight: "600" }]}>{t("profileGoalTarget")}</Text>
+            <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "900" }]}>{formatCurrency(savingsGoal.targetAmount)}</Text>
           </View>
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted }]}>{t("profileGoalSaved")}</Text>
-            <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "700" }]}>{formatCurrency(savingsGoal.currentAmount)}</Text>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted, fontWeight: "600" }]}>{t("profileGoalSaved")}</Text>
+            <Text style={[styles.profileBudgetVal, { color: isDarkMode ? "#00E58F" : "#009E60", fontWeight: "900" }]}>{formatCurrency(savingsGoal.currentAmount)}</Text>
           </View>
           
           <Pressable 
             style={({ pressed }) => [
               styles.profileEditButton, 
-              { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(13,50,40,0.06)" },
+              { 
+                backgroundColor: isDarkMode ? "rgba(0,223,137,0.14)" : "rgba(13,50,40,0.06)",
+                borderWidth: 1,
+                borderColor: "rgba(0,223,137,0.25)"
+              },
               pressed && styles.pressed
             ]}
             onPress={() => {
@@ -1807,13 +1870,28 @@ export default function HomeDashboardScreen() {
               setIsGoalModalVisible(true);
             }}
           >
-            <Text style={[styles.profileEditButtonText, { color: themeColors.primary }]}>{t("profileEditGoalBtn")}</Text>
+            <Text style={[styles.profileEditButtonText, { color: isDarkMode ? "#00E58F" : "#065F46", fontWeight: "800" }]}>{t("profileEditGoalBtn")}</Text>
           </Pressable>
         </View>
 
         {/* Savings Challenges Card */}
-        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", gap: 12, paddingVertical: 14 }]}>
-          <Text style={[styles.profileCardTitle, { color: themeColors.text }]}>
+        <View style={[
+          styles.profileCard, 
+          { 
+            backgroundColor: themeColors.surface, 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(13, 50, 40, 0.1)", 
+            borderWidth: 1.2,
+            flexDirection: "column", 
+            gap: 12, 
+            paddingVertical: 14,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.04,
+            shadowRadius: 14,
+            elevation: 4
+          }
+        ]}>
+          <Text style={[styles.profileCardTitle, { color: themeColors.text, fontWeight: "900" }]}>
             🏆 {language === "tr" ? "Meydan Okumalar" : "Savings Challenges"}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 10 }}>
@@ -1891,11 +1969,27 @@ export default function HomeDashboardScreen() {
         </View>
 
         {/* Settings Toggle Card */}
-        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", paddingVertical: 8 }]}>
+        <View style={[
+          styles.profileCard, 
+          { 
+            backgroundColor: themeColors.surface, 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(13, 50, 40, 0.1)", 
+            borderWidth: 1.2,
+            borderLeftWidth: 3.5,
+            borderLeftColor: "#00DF89",
+            flexDirection: "column", 
+            paddingVertical: 8,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.04,
+            shadowRadius: 14,
+            elevation: 4
+          }
+        ]}>
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
               <Feather name="moon" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>{t("profileSettingDarkMode")}</Text>
+              <Text style={[styles.settingLabel, { color: themeColors.text, fontWeight: "800" }]}>{t("profileSettingDarkMode")}</Text>
             </View>
             <Switch
               value={isDarkMode}
@@ -1903,7 +1997,7 @@ export default function HomeDashboardScreen() {
                 triggerHaptic();
                 setIsDarkMode(val);
               }}
-              trackColor={{ false: "#D1CFC7", true: themeColors.primary }}
+              trackColor={{ false: "#D1CFC7", true: "#00E58F" }}
               thumbColor={colors.white}
             />
           </View>
@@ -1913,7 +2007,7 @@ export default function HomeDashboardScreen() {
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
               <Feather name="activity" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>{t("profileSettingHaptics")}</Text>
+              <Text style={[styles.settingLabel, { color: themeColors.text, fontWeight: "800" }]}>{t("profileSettingHaptics")}</Text>
             </View>
             <Switch
               value={isHapticsEnabled}
@@ -1921,7 +2015,7 @@ export default function HomeDashboardScreen() {
                 Vibration.vibrate(10);
                 setIsHapticsEnabled(val);
               }}
-              trackColor={{ false: "#D1CFC7", true: themeColors.primary }}
+              trackColor={{ false: "#D1CFC7", true: "#00E58F" }}
               thumbColor={colors.white}
             />
           </View>
@@ -1931,20 +2025,20 @@ export default function HomeDashboardScreen() {
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
               <Feather name="globe" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>{t("profileSettingLanguage")}</Text>
+              <Text style={[styles.settingLabel, { color: themeColors.text, fontWeight: "800" }]}>{t("profileSettingLanguage")}</Text>
             </View>
             <View style={{ flexDirection: "row", gap: 6 }}>
               <Pressable 
                 onPress={() => { triggerHaptic(); setLanguage("tr"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "tr" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "tr" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
               >
-                <Text style={{ fontSize: 12, fontWeight: "800", color: language === "tr" ? colors.white : themeColors.text }}>TR</Text>
+                <Text style={{ fontSize: 12, fontWeight: "900", color: language === "tr" ? "#031D14" : themeColors.text }}>TR</Text>
               </Pressable>
               <Pressable 
                 onPress={() => { triggerHaptic(); setLanguage("en"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "en" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "en" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
               >
-                <Text style={{ fontSize: 12, fontWeight: "800", color: language === "en" ? colors.white : themeColors.text }}>EN</Text>
+                <Text style={{ fontSize: 12, fontWeight: "900", color: language === "en" ? "#031D14" : themeColors.text }}>EN</Text>
               </Pressable>
             </View>
           </View>
@@ -1954,28 +2048,28 @@ export default function HomeDashboardScreen() {
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
               <Feather name="dollar-sign" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
+              <Text style={[styles.settingLabel, { color: themeColors.text, fontWeight: "800" }]}>
                 {language === "tr" ? "Para Birimi" : "Currency"}
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: 6 }}>
               <Pressable 
                 onPress={() => { triggerHaptic(); setCurrency("TRY"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "TRY" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "TRY" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
               >
-                <Text style={{ fontSize: 12, fontWeight: "800", color: currency === "TRY" ? colors.white : themeColors.text }}>₺ (TL)</Text>
+                <Text style={{ fontSize: 12, fontWeight: "900", color: currency === "TRY" ? "#031D14" : themeColors.text }}>₺ (TL)</Text>
               </Pressable>
               <Pressable 
                 onPress={() => { triggerHaptic(); setCurrency("USD"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "USD" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "USD" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
               >
-                <Text style={{ fontSize: 12, fontWeight: "800", color: currency === "USD" ? colors.white : themeColors.text }}>$ (USD)</Text>
+                <Text style={{ fontSize: 12, fontWeight: "900", color: currency === "USD" ? "#031D14" : themeColors.text }}>$ (USD)</Text>
               </Pressable>
               <Pressable 
                 onPress={() => { triggerHaptic(); setCurrency("EUR"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "EUR" ? { backgroundColor: themeColors.primary } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "EUR" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
               >
-                <Text style={{ fontSize: 12, fontWeight: "800", color: currency === "EUR" ? colors.white : themeColors.text }}>€ (EUR)</Text>
+                <Text style={{ fontSize: 12, fontWeight: "900", color: currency === "EUR" ? "#031D14" : themeColors.text }}>€ (EUR)</Text>
               </Pressable>
             </View>
           </View>

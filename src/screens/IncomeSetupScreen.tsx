@@ -573,8 +573,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 8
   },
-  amountInput: { flex: 1, fontSize: 15, lineHeight: 20, fontWeight: "900", color: "#00DF89", paddingVertical: 4 },
-  currency: { marginLeft: 2, fontSize: 15, lineHeight: 20, fontWeight: "900", color: "#00DF89" },
+  amountInput: { flex: 1, fontSize: 15, lineHeight: 20, fontWeight: "900", color: colors.primary, paddingVertical: 4 },
+  currency: { marginLeft: 2, fontSize: 15, lineHeight: 20, fontWeight: "900", color: colors.primary },
   addButton: {
     marginTop: 6,
     minHeight: 52,
