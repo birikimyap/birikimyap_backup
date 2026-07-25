@@ -1197,18 +1197,37 @@ export default function HomeDashboardScreen() {
                     }}
                     style={({ pressed }) => [
                       styles.cardSegmentItem, 
-                      isSelected && [
-                        styles.cardSegmentActive, 
-                        { 
-                          backgroundColor: isDarkMode ? "#1C2521" : colors.white,
-                          shadowColor: "#000"
-                        }
-                      ],
+                      isSelected ? {
+                        backgroundColor: "#00DF89",
+                        borderColor: "#00DF89",
+                        borderWidth: 1.5,
+                        shadowColor: "#00DF89",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.4,
+                        shadowRadius: 8,
+                        elevation: 5
+                      } : {
+                        backgroundColor: "transparent",
+                        borderWidth: 1.5,
+                        borderColor: "transparent"
+                      },
                       pressed && styles.pressed
                     ]}
                   >
-                    <Feather name={period.icon} size={15} color={isSelected ? themeColors.primary : themeColors.textMuted} />
-                    <Text style={[styles.cardSegmentText, { color: isSelected ? themeColors.primary : themeColors.textMuted }]}>
+                    <Feather 
+                      name={period.icon} 
+                      size={15} 
+                      color={isSelected ? "#040907" : themeColors.textMuted} 
+                    />
+                    <Text 
+                      style={[
+                        styles.cardSegmentText, 
+                        { 
+                          color: isSelected ? "#040907" : themeColors.textMuted,
+                          fontWeight: isSelected ? "900" : "600"
+                        }
+                      ]}
+                    >
                       {period.label}
                     </Text>
                   </Pressable>
@@ -1323,38 +1342,59 @@ export default function HomeDashboardScreen() {
           <Pressable 
             style={[
               styles.segmentButton, 
-              analysisPeriod === "daily" && [styles.segmentButtonActive, { backgroundColor: themeColors.surface }]
+              analysisPeriod === "daily" ? {
+                backgroundColor: "#00DF89",
+                shadowColor: "#00DF89",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.35,
+                shadowRadius: 8,
+                elevation: 4
+              } : { backgroundColor: "transparent" }
             ]}
             onPress={() => {
               triggerHaptic();
               setAnalysisPeriod("daily");
             }}
           >
-            <Text style={[styles.segmentText, { color: analysisPeriod === "daily" ? themeColors.text : themeColors.textMuted }]}>{t("analysisPeriodDaily")}</Text>
+            <Text style={[styles.segmentText, { color: analysisPeriod === "daily" ? "#040907" : themeColors.textMuted, fontWeight: analysisPeriod === "daily" ? "900" : "600" }]}>{t("analysisPeriodDaily")}</Text>
           </Pressable>
           <Pressable 
             style={[
               styles.segmentButton, 
-              analysisPeriod === "weekly" && [styles.segmentButtonActive, { backgroundColor: themeColors.surface }]
+              analysisPeriod === "weekly" ? {
+                backgroundColor: "#00DF89",
+                shadowColor: "#00DF89",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.35,
+                shadowRadius: 8,
+                elevation: 4
+              } : { backgroundColor: "transparent" }
             ]}
             onPress={() => {
               triggerHaptic();
               setAnalysisPeriod("weekly");
             }}
           >
-            <Text style={[styles.segmentText, { color: analysisPeriod === "weekly" ? themeColors.text : themeColors.textMuted }]}>{t("analysisPeriodWeekly")}</Text>
+            <Text style={[styles.segmentText, { color: analysisPeriod === "weekly" ? "#040907" : themeColors.textMuted, fontWeight: analysisPeriod === "weekly" ? "900" : "600" }]}>{t("analysisPeriodWeekly")}</Text>
           </Pressable>
           <Pressable 
             style={[
               styles.segmentButton, 
-              analysisPeriod === "monthly" && [styles.segmentButtonActive, { backgroundColor: themeColors.surface }]
+              analysisPeriod === "monthly" ? {
+                backgroundColor: "#00DF89",
+                shadowColor: "#00DF89",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.35,
+                shadowRadius: 8,
+                elevation: 4
+              } : { backgroundColor: "transparent" }
             ]}
             onPress={() => {
               triggerHaptic();
               setAnalysisPeriod("monthly");
             }}
           >
-            <Text style={[styles.segmentText, { color: analysisPeriod === "monthly" ? themeColors.text : themeColors.textMuted }]}>{t("analysisPeriodMonthly")}</Text>
+            <Text style={[styles.segmentText, { color: analysisPeriod === "monthly" ? "#040907" : themeColors.textMuted, fontWeight: analysisPeriod === "monthly" ? "900" : "600" }]}>{t("analysisPeriodMonthly")}</Text>
           </Pressable>
         </View>
 
