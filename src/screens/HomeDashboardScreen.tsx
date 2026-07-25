@@ -2976,25 +2976,69 @@ function VoiceExpenseSheet({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={closeSheet}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
         <Pressable style={styles.sheetBackdrop} onPress={closeSheet} />
-        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
-          <View style={styles.sheetHandle} />
-          <Text style={[styles.sheetTitle, { color: themeColors.text }]}>{t("sheetTitle")}</Text>
-          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{t("sheetSubtitle")}</Text>
+        
+        {/* Premium Glassmorphic Sheet Container */}
+        <View style={[
+          styles.sheet, 
+          { 
+            backgroundColor: isDarkMode ? "#12231C" : "#FFFFFF", 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(13, 50, 40, 0.12)",
+            borderWidth: 1.5,
+            shadowColor: "#00DF89",
+            shadowOffset: { width: 0, height: -10 },
+            shadowOpacity: isDarkMode ? 0.25 : 0.08,
+            shadowRadius: 24,
+            elevation: 10
+          }
+        ]}>
+          <View style={[styles.sheetHandle, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(13,50,40,0.15)" }]} />
+          <Text style={[styles.sheetTitle, { color: themeColors.text, fontWeight: "900" }]}>{t("sheetTitle")}</Text>
+          <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted, fontWeight: "600" }]}>{t("sheetSubtitle")}</Text>
 
-          <View style={[styles.speechBubbleContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(13,50,40,0.02)", borderColor: themeColors.border }]}>
+          {/* Speech Bubble / Transcript Input Box */}
+          <View style={[
+            styles.speechBubbleContainer, 
+            { 
+              backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.06)" : "rgba(13, 50, 40, 0.03)", 
+              borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(13, 50, 40, 0.12)",
+              borderLeftWidth: 3.5,
+              borderLeftColor: "#00DF89"
+            }
+          ]}>
             <TextInput
               value={transcript}
               onChangeText={setTranscript}
               placeholder={isListening ? t("sheetListening") : t("sheetInputPlaceholder")}
               placeholderTextColor="#9CA19E"
-              style={[styles.speechBubbleInput, { color: themeColors.text }]}
+              style={[styles.speechBubbleInput, { color: themeColors.text, fontWeight: "700" }]}
               multiline
             />
           </View>
 
           <View style={styles.micControlRow}>
-            <Pressable style={({ pressed }) => [styles.sheetMicButton, isListening && styles.sheetMicButtonListening, pressed && styles.pressed]} onPress={handleMicPress}>
-              <Feather name={isListening ? "square" : "mic"} size={25} color={colors.white} />
+            <Pressable 
+              style={({ pressed }) => [
+                styles.sheetMicButton, 
+                isListening ? {
+                  backgroundColor: "#FF3B30",
+                  shadowColor: "#FF3B30",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.5,
+                  shadowRadius: 10,
+                  elevation: 6
+                } : {
+                  backgroundColor: "#00E58F",
+                  shadowColor: "#00E58F",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 10,
+                  elevation: 6
+                },
+                pressed && styles.pressed
+              ]} 
+              onPress={handleMicPress}
+            >
+              <Feather name={isListening ? "square" : "mic"} size={24} color={isListening ? "#FFFFFF" : "#031D14"} />
             </Pressable>
             <View style={styles.waveContainer}>
               {isListening ? (
@@ -3005,6 +3049,7 @@ function VoiceExpenseSheet({
                       style={[
                         styles.waveBar,
                         {
+                          backgroundColor: "#00DF89",
                           transform: [
                             {
                               scaleY: wave.interpolate({
@@ -3019,14 +3064,29 @@ function VoiceExpenseSheet({
                   ))}
                 </View>
               ) : (
-                <Text style={[styles.micHelperText, { color: themeColors.textMuted }]}>
+                <Text style={[styles.micHelperText, { color: themeColors.textMuted, fontWeight: "600" }]}>
                   {error || (permissionStatus === "unsupported" ? t("sheetHelperTextUnsupported") : t("sheetHelperTextVoice"))}
                 </Text>
               )}
             </View>
           </View>
 
-          <View style={[styles.formGroup, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.02)" : "#FFFFFF", borderColor: themeColors.border, borderWidth: 1.2 }]}>
+          {/* Form Group Card with Accent Edge */}
+          <View style={[
+            styles.formGroup, 
+            { 
+              backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "#FFFFFF", 
+              borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(13, 50, 40, 0.1)", 
+              borderWidth: 1.2,
+              borderLeftWidth: 3.5,
+              borderLeftColor: "#00DF89",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isDarkMode ? 0.2 : 0.04,
+              shadowRadius: 10,
+              elevation: 3
+            }
+          ]}>
             <View style={styles.formRow}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Feather name="tag" size={16} color={themeColors.primary} />
@@ -3046,7 +3106,7 @@ function VoiceExpenseSheet({
             <View style={styles.formDivider} />
             <View style={styles.formRow}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Feather name="dollar-sign" size={16} color="#00DF89" />
+                <Feather name="dollar-sign" size={17} color="#00DF89" />
                 <Text style={[styles.formLabel, { fontWeight: "900", color: "#00DF89" }]}>{t("sheetLabelAmount")}</Text>
               </View>
               <TextInput
@@ -3058,7 +3118,7 @@ function VoiceExpenseSheet({
                 keyboardType="decimal-pad"
                 placeholder="0,00"
                 placeholderTextColor="#9CA19E"
-                style={[styles.formInputAmount, { color: "#00DF89", fontWeight: "900" }]}
+                style={[styles.formInputAmount, { color: "#00DF89", fontWeight: "900", fontSize: 20 }]}
               />
             </View>
             <View style={styles.formDivider} />
@@ -3097,32 +3157,51 @@ function VoiceExpenseSheet({
             </View>
           </View>
 
+          {/* Action Buttons */}
           <View style={styles.sheetActions}>
             <Pressable 
               style={({ pressed }) => [
                 styles.cancelButton, 
-                { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#EFE8DD" },
+                { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#EFE8DD" },
                 pressed && styles.pressed
               ]} 
               onPress={closeSheet}
             >
-              <Text style={[styles.cancelButtonText, { color: themeColors.text }]}>{t("sheetCancelBtn")}</Text>
+              <Text style={[styles.cancelButtonText, { color: themeColors.text, fontWeight: "800" }]}>{t("sheetCancelBtn")}</Text>
             </Pressable>
             
             <Pressable 
               style={({ pressed }) => [
-                { flex: 1, borderRadius: 22, overflow: "hidden" }, 
+                { 
+                  flex: 1, 
+                  borderRadius: 22, 
+                  overflow: "hidden",
+                  shadowColor: "#00E58F",
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.38,
+                  shadowRadius: 12,
+                  elevation: 6
+                }, 
                 pressed && styles.pressed
               ]} 
               onPress={saveExpense}
             >
               <LinearGradient
-                colors={["#00DF89", "#0D3228"]}
+                colors={["#00E58F", "#00BF76", "#048052"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ flex: 1, minHeight: 52, alignItems: "center", justifyContent: "center" }}
+                style={{
+                  height: 54,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  gap: 8
+                }}
               >
-                <Text style={styles.saveButtonText}>{t("sheetSaveBtn")}</Text>
+                <Feather name="check" size={20} color="#031D14" />
+                <Text style={{ fontSize: 16, fontWeight: "900", color: "#031D14" }}>
+                  {t("sheetSaveBtn")}
+                </Text>
               </LinearGradient>
             </Pressable>
           </View>
