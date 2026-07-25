@@ -443,6 +443,15 @@ export default function HomeDashboardScreen() {
   const recentTotal = plan.selectedPeriodSpent;
   const selectedPeriodRemaining = plan.selectedPeriodRemaining;
   const goalTargetAmount = Math.max(savingsGoal.targetAmount || savingsGoal.monthlyContribution || 0, 0);
+
+  const estimatedPredictiveSavings = useMemo(() => {
+    const totalDailyLimit = plan.limits.daily || 1;
+    const daysInMonthPassed = Math.max(simulatedDate.getDate(), 1);
+    const expectedBudgetSpentSoFar = totalDailyLimit * daysInMonthPassed;
+    const actualSpentSoFar = recentTotal;
+    const difference = expectedBudgetSpentSoFar - actualSpentSoFar;
+    return Math.max(Math.round(savingsGoal.monthlyContribution + difference), 0);
+  }, [plan.limits.daily, simulatedDate, recentTotal, savingsGoal.monthlyContribution]);
   
   const spentToday = useMemo(() => {
     return expenses
@@ -1482,6 +1491,44 @@ export default function HomeDashboardScreen() {
                       ? `Tebrikler! Planlanan limitin içindesiniz. ${formatCurrency(analysisPeriodRemaining)} harcama limitiniz daha var. Böyle devam edin!`
                       : `Congratulations! You are within the limit. You have ${formatCurrency(analysisPeriodRemaining)} remaining limit. Keep it up!`)
                 }
+              </Text>
+            </View>
+          </View>
+
+          {/* Predictive Savings Forecast Card */}
+          <View style={{ 
+            marginTop: 8, 
+            padding: 12, 
+            borderRadius: 14, 
+            backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.06)" : "rgba(13, 50, 40, 0.04)", 
+            borderWidth: 1.2, 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(13, 50, 40, 0.08)",
+            flexDirection: "row",
+            gap: 10,
+            alignItems: "center"
+          }}>
+            <View style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.15)" : "rgba(13, 50, 40, 0.08)",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              <Feather name="trending-up" size={16} color={isDarkMode ? "#00E58F" : themeColors.primary} />
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ fontSize: 11, fontWeight: "800", color: isDarkMode ? "#00E58F" : themeColors.primary, textTransform: "uppercase", letterSpacing: 0.4 }}>
+                🚀 {language === "tr" ? "AY SONU BİRİKİM TAHMİNİ" : "MONTH-END SAVINGS FORECAST"}
+              </Text>
+              <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "600", color: themeColors.text }}>
+                {language === "tr"
+                  ? `Mevcut harcama temponuzla ay sonu hedeflenen ${formatCurrency(savingsGoal.monthlyContribution)} yerine `
+                  : `With your current spending pace, instead of ${formatCurrency(savingsGoal.monthlyContribution)} `}
+                <Text style={{ fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}>
+                  {formatCurrency(estimatedPredictiveSavings)}
+                </Text>
+                {language === "tr" ? " biriktirebilirsiniz!" : " at month end!"}
               </Text>
             </View>
           </View>
