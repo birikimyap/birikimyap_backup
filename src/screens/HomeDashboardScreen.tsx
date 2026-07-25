@@ -953,16 +953,16 @@ export default function HomeDashboardScreen() {
             </View>
 
             {selectedPeriodRemaining < 0 ? (
-              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900" }]}>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900", fontSize: 12.5 }]}>
                 {language === "tr" 
-                  ? `🚨 Bütçe ${formattedExceeded} Aşıldı! Ekstra harcama birikiminden düşüyor.` 
-                  : `🚨 Budget Exceeded by ${formattedExceeded}! Extra spending reduces savings.`}
+                  ? `🚨 Dikkat: Bütçe ${formattedExceeded} Aşıldı!` 
+                  : `🚨 Warning: Budget Exceeded by ${formattedExceeded}!`}
               </Text>
             ) : selectedPeriod === "daily" && dynamicDaily < selectedPeriodLimit ? (
-              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: isDarkMode ? "#FDBA74" : "#C8640E", fontWeight: "900" }]}>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: isDarkMode ? "#FDBA74" : "#C8640E", fontWeight: "900", fontSize: 12.5 }]}>
                 {language === "tr"
-                  ? `⚖️ Akıllı Dengeleme: Önerilen yeni günlük limitin ${formatCurrency(dynamicDaily)}.`
-                  : `⚖️ Smart Rebalancing: Suggested daily limit ${formatCurrency(dynamicDaily)}.`}
+                  ? `⚖️ Akıllı Dengeleme: Günlük Limit ${formatCurrency(dynamicDaily)}`
+                  : `⚖️ Smart Rebalancing: Daily Limit ${formatCurrency(dynamicDaily)}`}
               </Text>
             ) : (
               <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
