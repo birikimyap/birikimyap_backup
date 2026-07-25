@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.birikimyapsiri.app",
-      "buildNumber": "37"
+      "buildNumber": "38"
     },
     "android": {
       "package": "com.thewalkingman.birikimyap",

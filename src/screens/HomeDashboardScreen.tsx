@@ -953,19 +953,19 @@ export default function HomeDashboardScreen() {
             </View>
 
             {selectedPeriodRemaining < 0 ? (
-              <Text style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900" }]}>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900" }]}>
                 {language === "tr" 
-                  ? `🚨 Dikkat! ${selectedPeriod === "daily" ? "Bugün" : selectedPeriod === "weekly" ? "Bu hafta" : "Bu ay"} bütçen ${formattedExceeded} aşıldı! Yapılan harcamalar ${formatCurrency(savingsGoal.monthlyContribution)} birikiminden düşüyor.` 
-                  : `🚨 Warning! ${selectedPeriod === "daily" ? "Today" : selectedPeriod === "weekly" ? "This week" : "This month"} budget exceeded by ${formattedExceeded}! Extra spending reduces your ${formatCurrency(savingsGoal.monthlyContribution)} savings.`}
+                  ? `🚨 Bütçe ${formattedExceeded} Aşıldı! Ekstra harcama birikiminden düşüyor.` 
+                  : `🚨 Budget Exceeded by ${formattedExceeded}! Extra spending reduces savings.`}
               </Text>
             ) : selectedPeriod === "daily" && dynamicDaily < selectedPeriodLimit ? (
-              <Text style={[styles.subtitle, { color: isDarkMode ? "#FDBA74" : "#C8640E", fontWeight: "900" }]}>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: isDarkMode ? "#FDBA74" : "#C8640E", fontWeight: "900" }]}>
                 {language === "tr"
-                  ? `⚖️ Akıllı Dengeleme: Harcama temponuz hızlı gittiği için günlük limitiniz ${formatCurrency(dynamicDaily)} olarak güncellendi.`
-                  : `⚖️ Smart Rebalancing: Due to fast spending pace, your daily limit updated to ${formatCurrency(dynamicDaily)}.`}
+                  ? `⚖️ Akıllı Dengeleme: Önerilen yeni günlük limitin ${formatCurrency(dynamicDaily)}.`
+                  : `⚖️ Smart Rebalancing: Suggested daily limit ${formatCurrency(dynamicDaily)}.`}
               </Text>
             ) : (
-              <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("welcomeSub")}</Text>
             )}
           </View>
           <Pressable 
