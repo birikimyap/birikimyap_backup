@@ -148,10 +148,16 @@ function isExpenseInPeriod(expense: Expense, period: Period, now: Date) {
   }
 
   if (period === "weekly") {
-    return getWeekStart(occurredAt).getTime() === getWeekStart(now).getTime();
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    return occurredAt >= sevenDaysAgo && occurredAt <= now;
   }
 
-  return occurredAt.getFullYear() === now.getFullYear() && occurredAt.getMonth() === now.getMonth();
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  thirtyDaysAgo.setHours(0, 0, 0, 0);
+  return occurredAt >= thirtyDaysAgo && occurredAt <= now;
 }
 
 function getWeekStart(date: Date) {
