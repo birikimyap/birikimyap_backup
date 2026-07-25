@@ -50,6 +50,58 @@ export function buildSpendingLimits(incomes: Income[], expenses: Expense[], savi
   };
 }
 
+export function getDynamicDailyLimit(
+  incomes: Income[],
+  expenses: Expense[],
+  savingsGoal: SavingsGoal,
+  now = new Date()
+) {
+  const monthlyLimit = getMonthlyLimit(incomes, expenses, savingsGoal);
+  const monthlySpent = getExpensesTotalForPeriod(expenses, "monthly", now);
+  const remainingMonthlyBudget = monthlyLimit - monthlySpent;
+
+  const remainingDays = getRemainingDaysInMonth(now);
+
+  if (remainingMonthlyBudget <= 0) {
+    return 0;
+  }
+
+  return Math.round(remainingMonthlyBudget / remainingDays);
+}
+
+export function getRevisedSavingsStatus(
+  incomes: Income[],
+  expenses: Expense[],
+  savingsGoal: SavingsGoal,
+  now = new Date()
+) {
+  const monthlyIncome = getTotalIncome(incomes);
+  const totalFixed = getTotalFixedExpenses(expenses);
+  const monthlyRemaining = Math.max(monthlyIncome - totalFixed, 0);
+  const targetSavings = clamp(toSafeAmount(savingsGoal.monthlyContribution), 0, monthlyRemaining);
+  const spendableBudget = Math.max(monthlyRemaining - targetSavings, 0);
+
+  const monthlySpent = getExpensesTotalForPeriod(expenses, "monthly", now);
+  const budgetOveruse = monthlySpent - spendableBudget;
+
+  if (budgetOveruse <= 0) {
+    return {
+      isOverused: false,
+      overuseAmount: 0,
+      revisedSavings: targetSavings,
+      targetSavings
+    };
+  }
+
+  const revisedSavings = Math.max(0, targetSavings - budgetOveruse);
+  return {
+    isOverused: true,
+    overuseAmount: budgetOveruse,
+    revisedSavings,
+    targetSavings
+  };
+}
+
 export function getExpensesTotalForPeriod(expenses: Expense[], period: Period, now = new Date()) {
   return expenses
     .filter((expense) => !expense.isFixed && isExpenseInPeriod(expense, period, now))

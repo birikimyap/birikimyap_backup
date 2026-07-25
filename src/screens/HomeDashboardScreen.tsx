@@ -32,7 +32,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatAmountInput, formatCurrency, parseAmount } from "@/utils/currency";
-import { getExpensesForPeriod, getSimulatedDate } from "@/utils/finance";
+import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 import { syncSiriExpenses } from "@/utils/siriSync";
 
@@ -418,6 +418,14 @@ export default function HomeDashboardScreen() {
   const simulatedDate = useMemo(() => {
     return getSimulatedDate(simulatedDateOffsetDays || 0);
   }, [simulatedDateOffsetDays]);
+
+  const dynamicDaily = useMemo(() => {
+    return getDynamicDailyLimit(incomes, expenses, savingsGoal, simulatedDate);
+  }, [incomes, expenses, savingsGoal, simulatedDate]);
+
+  const revisedSavingsInfo = useMemo(() => {
+    return getRevisedSavingsStatus(incomes, expenses, savingsGoal, simulatedDate);
+  }, [incomes, expenses, savingsGoal, simulatedDate]);
 
   const planDay = useMemo(() => {
     const start = new Date(savingsGoal.planStartDate || new Date());
@@ -1135,8 +1143,8 @@ export default function HomeDashboardScreen() {
           >
             <SummaryMetric
               icon="credit-card"
-              title={copy.limit}
-              amount={selectedPeriodLimit}
+              title={selectedPeriod === "daily" ? (language === "tr" ? "Günlük Limit" : "Daily Limit") : copy.limit}
+              amount={selectedPeriod === "daily" ? dynamicDaily : selectedPeriodLimit}
               tone="green"
             />
             <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.14)" }]} />
@@ -1155,6 +1163,47 @@ export default function HomeDashboardScreen() {
             />
           </LinearGradient>
         </View>
+
+        {selectedPeriod === "daily" && (selectedPeriodRemaining <= 0 || dynamicDaily < selectedPeriodLimit) && (
+          <View style={{
+            marginTop: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 16,
+            backgroundColor: selectedPeriodRemaining <= 0
+              ? (isDarkMode ? "rgba(211, 47, 47, 0.14)" : "rgba(211, 47, 47, 0.08)")
+              : (isDarkMode ? "rgba(223, 122, 18, 0.14)" : "rgba(223, 122, 18, 0.08)"),
+            borderWidth: 1.2,
+            borderColor: selectedPeriodRemaining <= 0 ? "rgba(211, 47, 47, 0.35)" : "rgba(223, 122, 18, 0.35)",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10
+          }}>
+            {selectedPeriodRemaining <= 0 ? (
+              <>
+                <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(211, 47, 47, 0.2)", alignItems: "center", justifyContent: "center" }}>
+                  <Feather name="lock" size={15} color="#D32F2F" />
+                </View>
+                <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "700", color: "#D32F2F", flex: 1 }}>
+                  {language === "tr"
+                    ? `🚨 Harcama bütçeniz bitti! Yapılan ekstra harcamalar ${formatCurrency(savingsGoal.monthlyContribution)} birikiminizden düşüyor.`
+                    : `🚨 Spending budget depleted! Extra spending reduces your ${formatCurrency(savingsGoal.monthlyContribution)} savings.`}
+                </Text>
+              </>
+            ) : (
+              <>
+                <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(223, 122, 18, 0.2)", alignItems: "center", justifyContent: "center" }}>
+                  <Feather name="sliders" size={15} color="#DF7A12" />
+                </View>
+                <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "700", color: isDarkMode ? "#FDBA74" : "#C8640E", flex: 1 }}>
+                  {language === "tr"
+                    ? `⚖️ Akıllı Dengeleme: Harcama temponuz hızlı gittiği için günlük limitiniz ${formatCurrency(dynamicDaily)} olarak güncellendi.`
+                    : `⚖️ Smart Rebalancing: Due to fast spending pace, your daily limit updated to ${formatCurrency(dynamicDaily)}.`}
+                </Text>
+              </>
+            )}
+          </View>
+        )}
 
         <View style={styles.addExpenseButtonRow}>
           <Pressable 
@@ -1526,17 +1575,31 @@ export default function HomeDashboardScreen() {
               <Feather name="trending-up" size={16} color={isDarkMode ? "#00E58F" : themeColors.primary} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
-              <Text style={{ fontSize: 11, fontWeight: "800", color: isDarkMode ? "#00E58F" : themeColors.primary, textTransform: "uppercase", letterSpacing: 0.4 }}>
+              <Text style={{ fontSize: 11, fontWeight: "800", color: revisedSavingsInfo.isOverused ? "#D32F2F" : (isDarkMode ? "#00E58F" : themeColors.primary), textTransform: "uppercase", letterSpacing: 0.4 }}>
                 🚀 {language === "tr" ? "AY SONU BİRİKİM TAHMİNİ" : "MONTH-END SAVINGS FORECAST"}
               </Text>
               <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "600", color: themeColors.text }}>
-                {language === "tr"
-                  ? `Mevcut harcama temponuzla ay sonu hedeflenen ${formatCurrency(savingsGoal.monthlyContribution)} yerine `
-                  : `With your current spending pace, instead of ${formatCurrency(savingsGoal.monthlyContribution)} `}
-                <Text style={{ fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}>
-                  {formatCurrency(estimatedPredictiveSavings)}
-                </Text>
-                {language === "tr" ? " biriktirebilirsiniz!" : " at month end!"}
+                {revisedSavingsInfo.isOverused ? (
+                  language === "tr" ? (
+                    <>
+                      Harcama bütçeniz <Text style={{ fontWeight: "900", color: "#D32F2F" }}>{formatCurrency(revisedSavingsInfo.overuseAmount)}</Text> aşıldığı için gerçekleşen birikiminiz <Text style={{ fontWeight: "900", color: "#DF7A12" }}>{formatCurrency(revisedSavingsInfo.revisedSavings)}</Text> seviyesine geriledi ⚠️
+                    </>
+                  ) : (
+                    <>
+                      Overspent by <Text style={{ fontWeight: "900", color: "#D32F2F" }}>{formatCurrency(revisedSavingsInfo.overuseAmount)}</Text>, actual month-end savings reduced to <Text style={{ fontWeight: "900", color: "#DF7A12" }}>{formatCurrency(revisedSavingsInfo.revisedSavings)}</Text> ⚠️
+                    </>
+                  )
+                ) : (
+                  language === "tr" ? (
+                    <>
+                      Mevcut harcama temponuzla ay sonu hedeflenen <Text style={{ fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}>{formatCurrency(revisedSavingsInfo.targetSavings)}</Text> birikim hedefinize ulaşıyorsunuz! ✅
+                    </>
+                  ) : (
+                    <>
+                      With your current spending pace, you are hitting your <Text style={{ fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}>{formatCurrency(revisedSavingsInfo.targetSavings)}</Text> savings goal! ✅
+                    </>
+                  )
+                )}
               </Text>
             </View>
           </View>
