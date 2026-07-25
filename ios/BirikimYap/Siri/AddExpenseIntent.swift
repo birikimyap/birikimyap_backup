@@ -11,7 +11,7 @@ struct AddExpenseIntent: AppIntent {
     @Parameter(
         title: "Harcama Detayı",
         description: "Örn: Market 350",
-        requestValueDialog: IntentDialog("Ne kadar ve ne için harcama yaptınız? Örnek: Market 350")
+        requestValueDialog: IntentDialog("Ne, ne kadar?")
     )
     var input: String
 
@@ -51,8 +51,6 @@ struct BirikimYapShortcuts: AppShortcutsProvider {
                 "\(.applicationName) ile harcama ekle",
                 "\(.applicationName) sesli harcama",
                 "\(.applicationName) yeni harcama",
-                "\(.applicationName) harcaması",
-                "\(.applicationName) harcamam var",
                 "\(.applicationName) kaydet"
             ],
             shortTitle: "Harcama Ekle",
