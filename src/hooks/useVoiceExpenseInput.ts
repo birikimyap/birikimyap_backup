@@ -94,21 +94,23 @@ export function useVoiceExpenseInput() {
     setTranscript("");
 
     try {
-      speechModule.stop();
+      speechModule.abort();
     } catch {}
 
-    try {
-      speechModule.start({
-        lang: "tr-TR",
-        interimResults: true,
-        continuous: true,
-        requiresOnDeviceRecognition: true
-      });
-      setIsListening(true);
-    } catch (e) {
-      console.log("[voice-expense] start error", e);
-      setIsListening(false);
-    }
+    setTimeout(() => {
+      try {
+        speechModule.start({
+          lang: "tr-TR",
+          interimResults: true,
+          continuous: true,
+          addsPunctuation: true
+        });
+        setIsListening(true);
+      } catch (e) {
+        console.log("[voice-expense] start error", e);
+        setIsListening(false);
+      }
+    }, 50);
   }
 
   function stopListening() {

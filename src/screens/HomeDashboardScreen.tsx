@@ -1072,37 +1072,24 @@ export default function HomeDashboardScreen() {
                 </View>
               )}
               <Pressable onPress={handleMascotPress} style={({ pressed }) => pressed && styles.pressed}>
-                <LinearGradient
-                  colors={selectedPeriodRemaining < 0 ? ["#D32F2F", "#DF7A12"] : ["#00DF89", "#DF7A12"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{
-                    width: 100,
-                    height: 100,
-                    borderRadius: 50,
-                    padding: 3,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00DF89",
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: isDarkMode ? 0.35 : 0.15,
-                    shadowRadius: 12,
-                    elevation: 6
-                  }}
-                >
-                  <View style={[styles.heroMascot, { 
-                    position: "relative", 
-                    right: 0, 
-                    top: 0, 
-                    width: 94, 
-                    height: 94, 
-                    borderRadius: 47,
-                    backgroundColor: colors.white,
-                    shadowOpacity: 0
-                  }]}>
-                    <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
-                  </View>
-                </LinearGradient>
+                <View style={[styles.heroMascot, { 
+                  position: "relative", 
+                  right: 0, 
+                  top: 0, 
+                  width: 96, 
+                  height: 96, 
+                  borderRadius: 48,
+                  backgroundColor: colors.white,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: isDarkMode ? 0.25 : 0.08,
+                  shadowRadius: 10,
+                  elevation: 4
+                }]}>
+                  <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+                </View>
               </Pressable>
             </View>
           </LinearGradient>
@@ -3100,12 +3087,19 @@ function VoiceExpenseSheet({
   }, [isListening, stopListening, visible]);
 
   function handleMicPress() {
+    triggerHaptic();
     if (isListening) {
       stopListening();
       return;
     }
 
     isManualEditing.current = false;
+    setSpokenText("");
+    setAmount("");
+    setLabel("");
+    setCategory("");
+    setNote("");
+    setTranscript("");
     startListening();
   }
 
