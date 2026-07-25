@@ -45,10 +45,15 @@ struct BirikimYapShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: AddExpenseIntent(),
             phrases: [
-                "\(.applicationName) ile harcama ekle",
+                "\(.applicationName)",
+                "\(.applicationName) harcama",
                 "\(.applicationName) harcama ekle",
+                "\(.applicationName) ile harcama ekle",
                 "\(.applicationName) sesli harcama",
-                "\(.applicationName) harcama"
+                "\(.applicationName) yeni harcama",
+                "\(.applicationName) harcaması",
+                "\(.applicationName) harcamam var",
+                "\(.applicationName) kaydet"
             ],
             shortTitle: "Harcama Ekle",
             systemImageName: "plus.circle.fill"
