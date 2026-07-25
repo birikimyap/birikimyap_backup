@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -378,10 +379,20 @@ export default function FixedExpenseScreen() {
 
             {!isKeyboardVisible && (
               <>
-                <Pressable onPress={saveAndContinue} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
-                  <View style={styles.ctaSpacer} />
-                  <Text style={styles.ctaText}>{t("incomeNextBtn")}</Text>
-                  <Feather name="arrow-right" size={26} color={colors.white} style={styles.ctaIcon} />
+                <Pressable 
+                  onPress={saveAndContinue} 
+                  style={({ pressed }) => [styles.ctaWrapper, pressed && styles.ctaPressed]}
+                >
+                  <LinearGradient
+                    colors={["#00E58F", "#00BF76", "#048052"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.ctaGradient}
+                  >
+                    <View style={styles.ctaSpacer} />
+                    <Text style={styles.ctaText}>{t("incomeNextBtn")}</Text>
+                    <Feather name="arrow-right" size={24} color="#031D14" style={styles.ctaIcon} />
+                  </LinearGradient>
                 </Pressable>
 
                 <View style={styles.securityRow}>
@@ -519,21 +530,23 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: colors.white,
     borderWidth: 1.2,
-    borderColor: "rgba(13, 50, 40, 0.06)",
+    borderColor: "rgba(223, 122, 18, 0.12)",
+    borderLeftWidth: 3.5,
+    borderLeftColor: "#DF7A12",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 10,
     gap: 12,
-    shadowColor: "#000",
+    shadowColor: "#DF7A12",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.03,
+    shadowOpacity: 0.06,
     shadowRadius: 12,
-    elevation: 2
+    elevation: 3
   },
   iconBox: { width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  orangeIconBox: { backgroundColor: "#F8E5D4" },
-  amberIconBox: { backgroundColor: "#F7E9C8" },
+  orangeIconBox: { backgroundColor: "rgba(223, 122, 18, 0.12)" },
+  amberIconBox: { backgroundColor: "#FEF3C7" },
   blueIconBox: { backgroundColor: "#DFF1FA" },
   expenseCopy: { flex: 1, minWidth: 80 },
   expenseTitleInput: {
@@ -552,35 +565,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
-    color: colors.textMuted
+    color: "#747C78"
   },
   amountBox: {
     width: 145,
     minHeight: 44,
     borderRadius: 12,
-    backgroundColor: "rgba(13,50,40,0.03)",
+    backgroundColor: "rgba(223, 122, 18, 0.04)",
     borderWidth: 1,
-    borderColor: "rgba(13,50,40,0.04)",
+    borderColor: "rgba(223, 122, 18, 0.2)",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 8
   },
-  amountInput: { flex: 1, fontSize: 15, lineHeight: 20, fontWeight: "800", color: colors.primary, paddingVertical: 4 },
-  currency: { marginLeft: 2, fontSize: 15, lineHeight: 20, fontWeight: "800", color: colors.primaryMuted },
+  amountInput: { flex: 1, fontSize: 15, lineHeight: 20, fontWeight: "900", color: "#DF7A12", paddingVertical: 4 },
+  currency: { marginLeft: 2, fontSize: 15, lineHeight: 20, fontWeight: "900", color: "#DF7A12" },
   addButton: {
     marginTop: 6,
     minHeight: 52,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: "#DF7A12",
     borderStyle: "dashed",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "transparent"
+    backgroundColor: "rgba(223, 122, 18, 0.03)"
   },
-  addButtonText: { fontSize: 16, lineHeight: 22, fontWeight: "700", color: expenseAccent },
+  addButtonText: { fontSize: 16, lineHeight: 22, fontWeight: "800", color: expenseAccent },
   deleteAction: {
     width: 72,
     minHeight: 72,
@@ -594,25 +607,29 @@ const styles = StyleSheet.create({
   },
   deleteActionPressed: { opacity: 0.82 },
   deleteActionText: { fontSize: 14, lineHeight: 18, fontWeight: "700", color: colors.white },
-  cta: {
-    minHeight: 52,
-    borderRadius: 26,
-    backgroundColor: colors.primary,
+  ctaWrapper: {
+    minHeight: 56,
+    borderRadius: 28,
     marginTop: "auto",
+    overflow: "hidden",
+    shadowColor: "#00E58F",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.38,
+    shadowRadius: 14,
+    elevation: 7
+  },
+  ctaGradient: {
+    width: "100%",
+    minHeight: 56,
     paddingHorizontal: 24,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 3
+    justifyContent: "space-between"
   },
   ctaPressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
-  ctaSpacer: { width: 26 },
-  ctaText: { fontSize: 17, lineHeight: 22, fontWeight: "700", color: colors.white, textAlign: "center" },
-  ctaIcon: { width: 26 },
+  ctaSpacer: { width: 24 },
+  ctaText: { fontSize: 18, lineHeight: 22, fontWeight: "900", color: "#031D14", textAlign: "center" },
+  ctaIcon: { width: 24 },
   securityRow: { marginTop: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   securityText: { fontSize: 12, lineHeight: 16, fontWeight: "500", color: "#8B928E", textAlign: "center" }
 });

@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -107,10 +108,20 @@ export default function PlanReadyScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Pressable onPress={() => router.replace("/")} style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}>
-              <Feather name="star" size={25} color="#F2D38A" />
-              <Text style={styles.ctaText}>{language === "tr" ? "Finans panelime git" : "Go to my dashboard"}</Text>
-              <Feather name="arrow-right" size={29} color={colors.white} />
+            <Pressable 
+              onPress={() => router.replace("/")} 
+              style={({ pressed }) => [styles.ctaWrapper, pressed && styles.ctaPressed]}
+            >
+              <LinearGradient
+                colors={["#00E58F", "#00BF76", "#048052"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.ctaGradient}
+              >
+                <Feather name="star" size={24} color="#031D14" />
+                <Text style={styles.ctaText}>{language === "tr" ? "Finans panelime git" : "Go to my dashboard"}</Text>
+                <Feather name="arrow-right" size={24} color="#031D14" />
+              </LinearGradient>
             </Pressable>
 
             <View style={styles.securityRow}>
@@ -380,19 +391,23 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.textMuted
   },
-  cta: {
+  ctaWrapper: {
     minHeight: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary,
+    overflow: "hidden",
+    shadowColor: "#00E58F",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.38,
+    shadowRadius: 14,
+    elevation: 7
+  },
+  ctaGradient: {
+    width: "100%",
+    minHeight: 56,
     paddingHorizontal: 24,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.16,
-    shadowRadius: 16,
-    elevation: 5
+    justifyContent: "space-between"
   },
   ctaPressed: {
     opacity: 0.9,
@@ -404,10 +419,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
   ctaText: {
-    fontSize: 17,
+    fontSize: 18,
     lineHeight: 22,
-    fontWeight: "800",
-    color: colors.white,
+    fontWeight: "900",
+    color: "#031D14",
     textAlign: "center"
   },
   securityRow: {
