@@ -10,10 +10,6 @@ struct AddExpenseIntent: AppIntent {
     
     @Parameter(title: "Harcama Detayı", requestValueDialog: IntentDialog("Lütfen eklenecek harcamayı ve miktarını söyleyin (Örn: Market 350)"))
     var input: String?
-    
-    static var parameterSummary: ParameterSummary {
-        Summary("Birikim Yap'a harcama ekle \(\.$input)")
-    }
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
@@ -49,9 +45,7 @@ struct BirikimYapShortcuts: AppShortcutsProvider {
                 "\(.applicationName) harcama ekle",
                 "\(.applicationName) ile harcama ekle",
                 "\(.applicationName) sesli harcama",
-                "\(.applicationName) harcama",
-                "\(.applicationName) \(\.$input)",
-                "\(.applicationName) harcama \(\.$input)"
+                "\(.applicationName) harcama"
             ],
             shortTitle: "Harcama Ekle",
             systemImageName: "plus.circle.fill"
