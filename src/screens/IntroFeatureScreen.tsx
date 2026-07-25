@@ -118,12 +118,12 @@ export default function IntroFeatureScreen() {
     },
     {
       id: "voice-expense",
-      title: language === "tr" ? "Sesli Harcama Ekle" : "Add Voice Expense",
+      title: language === "tr" ? "Siri ile Sesli Harcama Ekle" : "Add Voice Expense with Siri",
       description: language === "tr" 
-        ? "Örneğin: ‘120 lira kahve harcadım’ dediğinde yapay zeka harcamanı otomatik kaydeder." 
-        : "For example: When you say 'spent 120 dollars on coffee', AI automatically records it.",
+        ? "‘Hey Siri, Birikim Yap’ demen yeterli! Siri ‘Ne, ne kadar?’ diye sorduğunda harcamanı söyle." 
+        : "Just say 'Hey Siri, Birikim Yap'! When Siri asks 'What & How much?', simply tell your expense.",
       icon: "mic",
-      badgeLabel: language === "tr" ? "YAPAY ZEKA" : "AI POWERED",
+      badgeLabel: language === "tr" ? "SIRI & YAPAY ZEKA" : "SIRI & AI",
       theme: {
         bgLight: "#FFF7ED",
         bgDark: "#2A1A0A",
@@ -134,23 +134,23 @@ export default function IntroFeatureScreen() {
         textColor: "#92400E"
       },
       details: {
-        subtitle: language === "tr" ? "Klavyeye basmadan saniyeler içinde harcama kaydı" : "Record expenses in seconds without typing",
+        subtitle: language === "tr" ? "Tuş kilitliyken bile Siri ile anında harcama ekle" : "Add expenses via Siri even when phone is locked",
         graphicType: "voice",
         steps: [
           {
-            icon: "mic",
-            title: language === "tr" ? "1. Mikrofona Dokun ve Konuş" : "1. Tap Mic & Speak",
-            desc: language === "tr" ? "‘Marketten 350 lira alışveriş yaptım’ demen yeterli." : "Simply say 'Spent 350 on grocery'."
+            icon: "volume-2",
+            title: language === "tr" ? "1. Siri'ye Seslen" : "1. Call Siri",
+            desc: language === "tr" ? "‘Hey Siri, Birikim Yap’ demen yeterlidir." : "Just say 'Hey Siri, Birikim Yap'."
           },
           {
-            icon: "cpu",
-            title: language === "tr" ? "2. Yapay Zeka Ayrıştırsın" : "2. AI Auto Parsing",
-            desc: language === "tr" ? "Tutar (₺350), kategori (Market) ve açıklama anında algılanır." : "Amount, category and label are recognized instantly."
+            icon: "help-circle",
+            title: language === "tr" ? "2. Siri Sorar: 'Ne, ne kadar?'" : "2. Siri Asks: 'What & How much?'",
+            desc: language === "tr" ? "Siri anında devreye girip harcama detayını sesli sorar." : "Siri prompts you for your expense details."
           },
           {
             icon: "check-circle",
-            title: language === "tr" ? "3. Bütçeden Otomatik Düşsün" : "3. Auto Budget Deduction",
-            desc: language === "tr" ? "Tek dokunuşla onaylayıp günlük kalan limitini güncelle." : "Confirm with one tap and update your daily remaining limit."
+            title: language === "tr" ? "3. Cevap Ver: 'Market 350'" : "3. Reply: 'Grocery 350'",
+            desc: language === "tr" ? "Sözlü cevabın yapay zeka ile ayrıştırılıp bütçene otomatik işlenir!" : "AI parses your voice response and adds it to your budget!"
           }
         ]
       }
@@ -357,15 +357,18 @@ function FeatureDetailModal({ feature, onClose }: { feature: FeatureItem; onClos
 
                 {feature.details.graphicType === "voice" && (
                   <View style={{ width: "100%", alignItems: "center" }}>
-                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.25)", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
                       <Feather name="mic" size={24} color="#FFFFFF" />
                     </View>
-                    <View style={{ backgroundColor: "#FFFFFF", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, marginBottom: 6 }}>
-                      <Text style={{ color: "#074737", fontWeight: "900", fontSize: 13 }}>🗣️ “120 lira kahve harcadım”</Text>
+                    <View style={{ backgroundColor: "rgba(255,255,255,0.18)", paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, marginBottom: 6 }}>
+                      <Text style={{ color: "#FFFFFF", fontWeight: "900", fontSize: 13 }}>🗣️ “Hey Siri, Birikim Yap”</Text>
                     </View>
-                    <Text style={{ color: "#040907", fontWeight: "900", fontSize: 12, backgroundColor: "#00DF89", paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 }}>
-                      ⚡ Kategori: Yiyecek & İçecek ➔ ₺120
-                    </Text>
+                    <View style={{ backgroundColor: "#00DF89", paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, marginBottom: 6 }}>
+                      <Text style={{ color: "#040907", fontWeight: "900", fontSize: 13 }}>🎙️ Siri: “Ne, ne kadar?”</Text>
+                    </View>
+                    <View style={{ backgroundColor: "#FFFFFF", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12 }}>
+                      <Text style={{ color: "#074737", fontWeight: "900", fontSize: 12 }}>💬 Siz: “Market 350” ➔ Otomatik Kayıt! 🐷</Text>
+                    </View>
                   </View>
                 )}
               </LinearGradient>
