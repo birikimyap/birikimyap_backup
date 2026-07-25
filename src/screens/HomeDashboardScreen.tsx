@@ -935,25 +935,25 @@ export default function HomeDashboardScreen() {
           marginTop: 8,
           borderRadius: 24,
           overflow: "hidden",
-          borderWidth: 1,
-          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(223, 122, 18, 0.15)",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: isDarkMode ? 0.2 : 0.05,
-          shadowRadius: 16,
-          elevation: 4
+          borderWidth: 1.2,
+          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(212, 160, 89, 0.35)",
+          shadowColor: isDarkMode ? "#00DF89" : "#B98E4B",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: isDarkMode ? 0.15 : 0.10,
+          shadowRadius: 20,
+          elevation: 5
         }}>
           <LinearGradient
-            colors={isDarkMode ? ["#14251E", "#0E1B15"] : ["#FAF3EB", "#F2E6D8"]}
+            colors={isDarkMode ? ["#162B23", "#0F1F19"] : ["#FCF8F3", "#F3E7D7"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ padding: 18, position: "relative" }}
           >
             <View style={{ width: "72%" }}>
               <View style={{ marginBottom: 12 }}>
-                <View style={[styles.goalBadge, { backgroundColor: isDarkMode ? "rgba(0,223,137,0.14)" : "rgba(13,50,40,0.06)" }]}>
+                <View style={[styles.goalBadge, { backgroundColor: isDarkMode ? "rgba(0,223,137,0.18)" : "rgba(13,50,40,0.08)" }]}>
                   <Text style={styles.goalBadgeIcon}>🎯</Text>
-                  <Text style={[styles.goalBadgeText, { color: themeColors.primary }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
+                  <Text style={[styles.goalBadgeText, { color: themeColors.primary, fontWeight: "900" }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
                 </View>
               </View>
 
@@ -970,12 +970,12 @@ export default function HomeDashboardScreen() {
                 <View style={{ width: 1.2, height: 28, backgroundColor: themeColors.border, opacity: 0.6 }} />
 
                 <View style={{
-                  backgroundColor: isDarkMode ? "rgba(0,229,143,0.12)" : "rgba(0,229,143,0.08)",
+                  backgroundColor: isDarkMode ? "rgba(0,229,143,0.16)" : "rgba(0,229,143,0.12)",
                   paddingHorizontal: 10,
                   paddingVertical: 4,
                   borderRadius: 12,
                   borderWidth: 1,
-                  borderColor: "rgba(0,229,143,0.2)"
+                  borderColor: "rgba(0,229,143,0.3)"
                 }}>
                   <Text style={{ fontSize: 9.5, fontWeight: "800", color: isDarkMode ? "#00E58F" : "#0D5D46", marginBottom: 1 }}>
                     {language === "tr" ? "BİRİKEN" : "SAVED SO FAR"}
@@ -1091,15 +1091,16 @@ export default function HomeDashboardScreen() {
           marginTop: 8,
           borderRadius: 22,
           overflow: "hidden",
-          borderWidth: 0,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: isDarkMode ? 0.2 : 0.05,
-          shadowRadius: 14,
-          elevation: 4
+          borderWidth: 1,
+          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(0, 223, 137, 0.15)",
+          shadowColor: "#00DF89",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: isDarkMode ? 0.25 : 0.10,
+          shadowRadius: 18,
+          elevation: 5
         }}>
           <LinearGradient
-            colors={isDarkMode ? ["#183228", "#1E3D31", "#142B22"] : ["#225344", "#2B6654", "#1D473A"]}
+            colors={isDarkMode ? ["#0E2A20", "#14372C", "#0A1F17"] : ["#17483B", "#1F594A", "#123A2F"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.summaryCard}
@@ -1110,14 +1111,14 @@ export default function HomeDashboardScreen() {
               amount={selectedPeriodLimit}
               tone="green"
             />
-            <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.12)" }]} />
+            <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.14)" }]} />
             <SummaryMetric
               icon="pie-chart"
               title={copy.spent}
               amount={recentTotal}
               tone="orange"
             />
-            <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.12)" }]} />
+            <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.14)" }]} />
             <SummaryMetric
               icon="shield"
               title={copy.remaining}
@@ -1135,11 +1136,25 @@ export default function HomeDashboardScreen() {
               setIsSheetVisible(true);
             }}
           >
-            <LinearGradient colors={["#074A31", colors.primary, "#063B28"]} start={{ x: 0, y: 0.1 }} end={{ x: 1, y: 1 }} style={styles.addGradient}>
-              <View style={styles.addIconWrap}>
-                <Feather name="plus" size={20} color={colors.primary} />
+            <LinearGradient 
+              colors={["#00E58F", "#00BF76", "#048052"]} 
+              start={{ x: 0, y: 0.1 }} 
+              end={{ x: 1, y: 1 }} 
+              style={[
+                styles.addGradient,
+                {
+                  shadowColor: "#00E58F",
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 14,
+                  elevation: 6
+                }
+              ]}
+            >
+              <View style={[styles.addIconWrap, { backgroundColor: "#031D14" }]}>
+                <Feather name="plus" size={20} color="#00E58F" />
               </View>
-              <Text style={styles.addText}>{t("addExpenseBtn")}</Text>
+              <Text style={[styles.addText, { color: "#031D14", fontWeight: "900" }]}>{t("addExpenseBtn")}</Text>
             </LinearGradient>
           </Pressable>
         </View>
