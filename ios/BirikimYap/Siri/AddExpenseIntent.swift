@@ -8,11 +8,11 @@ struct AddExpenseIntent: AppIntent {
     
     static var openAppWhenRun: Bool = false
     
-    @Parameter(title: "Harcama Detayı", description: "Örn: Market 350 veya Kahve 120")
+    @Parameter(title: "Harcama Detayı", requestValueDialog: IntentDialog("Lütfen eklenecek harcamayı ve miktarını söyleyin (Örn: Market 350)"))
     var input: String?
     
     static var parameterSummary: ParameterSummary {
-        Summary("Birikim Yap'a harcama ekle")
+        Summary("Birikim Yap'a harcama ekle \(\.$input)")
     }
 
     @MainActor
@@ -46,10 +46,12 @@ struct BirikimYapShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: AddExpenseIntent(),
             phrases: [
-                "\(.applicationName) ile harcama ekle",
                 "\(.applicationName) harcama ekle",
+                "\(.applicationName) ile harcama ekle",
                 "\(.applicationName) sesli harcama",
-                "\(.applicationName) harcama"
+                "\(.applicationName) harcama",
+                "\(.applicationName) \(\.$input)",
+                "\(.applicationName) harcama \(\.$input)"
             ],
             shortTitle: "Harcama Ekle",
             systemImageName: "plus.circle.fill"
