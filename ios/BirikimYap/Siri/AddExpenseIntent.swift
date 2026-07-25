@@ -8,14 +8,15 @@ struct AddExpenseIntent: AppIntent {
     
     static var openAppWhenRun: Bool = false
     
-    @Parameter(title: "Harcama Detayı", requestValueDialog: IntentDialog("Lütfen eklenecek harcamayı ve miktarını söyleyin. Örn: Market 350"))
+    @Parameter(title: "Harcama Detayı")
     var input: String?
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        let textToParse = input?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard !textToParse.isEmpty else {
-            return .result(dialog: "Lütfen eklenecek harcamayı ve miktarını söyleyin.")
+        guard let rawInput = input, !rawInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw $input.needsValue("Ne kadar ve ne için harcama yaptınız? (Örn: Market 350)")
         }
+        
+        let textToParse = rawInput.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // AppGroup Shared Storage
         let userDefaults = UserDefaults(suiteName: "group.com.birikimyapsiri.app") ?? UserDefaults.standard
