@@ -11,7 +11,6 @@ struct AddExpenseIntent: AppIntent {
     @Parameter(title: "Harcama Detayı", requestValueDialog: IntentDialog("Lütfen eklenecek harcamayı ve miktarını söyleyin. Örn: Market 350"))
     var input: String?
 
-    @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let textToParse = input?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !textToParse.isEmpty else {

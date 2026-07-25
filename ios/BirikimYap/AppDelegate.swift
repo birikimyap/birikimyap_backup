@@ -1,7 +1,6 @@
 import Expo
 import React
 import ReactAppDependencyProvider
-import Intents
 
 @UIApplicationMain
 public class AppDelegate: ExpoAppDelegate {
@@ -33,8 +32,6 @@ public class AppDelegate: ExpoAppDelegate {
     if #available(iOS 16.0, *) {
       BirikimYapShortcuts.updateAppShortcutParameters()
     }
-    
-    INPreferences.requestSiriAuthorization { _ in }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

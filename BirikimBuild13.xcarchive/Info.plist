@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ApplicationProperties</key>
+	<dict>
+		<key>ApplicationPath</key>
+		<string>Applications/BirikimYap.app</string>
+		<key>Architectures</key>
+		<array>
+			<string>arm64</string>
+		</array>
+		<key>CFBundleIdentifier</key>
+		<string>com.birikimyapsiri.app</string>
+		<key>CFBundleShortVersionString</key>
+		<string>1.0.0</string>
+		<key>CFBundleVersion</key>
+		<string>13</string>
+		<key>SigningIdentity</key>
+		<string>Apple Development: gurkanaygun6@gmail.com (J8D7J5Q2D3)</string>
+		<key>Team</key>
+		<string>TH26W2P688</string>
+	</dict>
+	<key>ArchiveVersion</key>
+	<integer>2</integer>
+	<key>CreationDate</key>
+	<date>2026-07-25T07:16:06Z</date>
+	<key>Name</key>
+	<string>BirikimYap</string>
+	<key>SchemeName</key>
+	<string>BirikimYap</string>
+</dict>
+</plist>
