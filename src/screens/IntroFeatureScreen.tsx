@@ -169,7 +169,9 @@ export default function IntroFeatureScreen() {
           <View style={styles.mascotStage}>
             {/* Glowing Backdrop Light */}
             <LinearGradient
-              colors={isDarkMode ? ["rgba(0, 223, 137, 0.25)", "rgba(13, 50, 40, 0.02)"] : ["rgba(0, 223, 137, 0.2)", "rgba(13, 50, 40, 0.03)"]}
+              colors={isDarkMode ? ["rgba(0, 223, 137, 0.22)", "rgba(0, 223, 137, 0.0)"] : ["rgba(0, 223, 137, 0.16)", "rgba(0, 223, 137, 0.0)"]}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
               style={styles.glowingHalo}
             />
             <Text style={[styles.sparkle, styles.sparkleLeft]}>✦</Text>
@@ -487,13 +489,15 @@ const styles = StyleSheet.create({
     height: 180,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12
+    marginBottom: 12,
+    position: "relative"
   },
   glowingHalo: {
     position: "absolute",
-    width: 200,
-    height: 100,
-    borderRadius: 100
+    bottom: 2,
+    width: 180,
+    height: 60,
+    borderRadius: 90
   },
   mascot: {
     width: 170,
