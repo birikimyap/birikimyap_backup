@@ -1179,8 +1179,8 @@ export default function HomeDashboardScreen() {
           >
             <SummaryMetric
               icon="credit-card"
-              title={selectedPeriod === "daily" ? (language === "tr" ? "Günlük Limit" : "Daily Limit") : copy.limit}
-              amount={selectedPeriod === "daily" ? dynamicDaily : selectedPeriodLimit}
+              title={copy.limit}
+              amount={selectedPeriodLimit}
               tone="green"
             />
             <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.14)" }]} />
