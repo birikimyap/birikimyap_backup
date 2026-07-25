@@ -38,8 +38,6 @@ struct AddExpenseIntent: AppIntent {
 
 @available(iOS 16.0, *)
 struct BirikimYapShortcuts: AppShortcutsProvider {
-    static var shortcutTileColor: ShortcutTileColor = .green
-    
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: AddExpenseIntent(),
