@@ -312,7 +312,106 @@ export const EXPENSE_DICTIONARY: DictionaryEntry[] = [
   },
 
   // ==========================================
-  // 11. MARKET (SUPERMARKET) - GENEL (GENERAL SHOPPING)
+  // 11. TEKNOLOJİ & ELEKTRONİK (ELECTRONICS)
+  // ==========================================
+  {
+    keywords: [
+      "telefon", "cep telefonu", "şarj", "sarj", "şarj kablosu", "sarj kablosu", "kulaklık", "kulaklik",
+      "airpods", "bluetooth", "kılıf", "kilif", "ekran koruyucu", "bilgisayar", "laptop", "tablet",
+      "ipad", "monitör", "monitor", "klavye", "mause", "fare", "powerbank", "hafıza kartı", "hafiza karti",
+      "harddisk", "ssd", "usb", "kablo", "televizyon", "tv", "teknosa", "vatan", "mediamarkt", "apple"
+    ],
+    enKeywords: [
+      "phone", "mobile", "charger", "charging cable", "headphones", "earphones", "airpods", "bluetooth",
+      "case", "screen protector", "computer", "laptop", "tablet", "ipad", "monitor", "keyboard",
+      "mouse", "powerbank", "memory card", "hard drive", "ssd", "usb", "cable", "television", "tv"
+    ],
+    categoryTr: "Teknoloji",
+    categoryEn: "Electronics",
+    subTr: "Elektronik & Aksesuar",
+    subEn: "Electronics & Accessories"
+  },
+
+  // ==========================================
+  // 12. EV & YAŞAM (HOME & LIVING)
+  // ==========================================
+  {
+    keywords: [
+      "mobilya", "koltuk", "sandalye", "masa", "yatak", "baza", "yastık", "yastik", "yorgan",
+      "nevresim", "çarşaf", "carsaf", "halı", "hali", "perde", "ampul", "avize", "tabak", "çanak",
+      "bardak", "tencere", "tava", "bıçak", "bicak", "çatal", "kutu", "düzenleyici", "ikea", "koçtaş",
+      "koctas", "tekzen", "english home", "madame coco", "karaca", "ev eşyası", "ev esyasi"
+    ],
+    enKeywords: [
+      "furniture", "couch", "sofa", "chair", "table", "bed", "pillow", "blanket", "bedsheet",
+      "rug", "carpet", "curtain", "bulb", "lamp", "plate", "cup", "glass", "pot", "pan", "knife",
+      "fork", "home decor", "kitchenware"
+    ],
+    categoryTr: "Ev & Yaşam",
+    categoryEn: "Home & Living",
+    subTr: "Ev Eşyası & Dekorasyon",
+    subEn: "Homeware & Decor"
+  },
+
+  // ==========================================
+  // 13. EVCİL HAYVAN (PET CARE)
+  // ==========================================
+  {
+    keywords: [
+      "kedi maması", "kedi mamasi", "köpek maması", "kopek mamasi", "mama", "kedi kumu", "kum",
+      "veteriner", "aşı", "asi", "petshop", "pet shop", "tasma", "ödül maması", "odul mamasi",
+      "kedi", "köpek", "kopek", "kuş", "kus", "yem", "akvaryum", "tırmalama"
+    ],
+    enKeywords: [
+      "cat food", "dog food", "pet food", "cat litter", "vet", "veterinarian", "vaccine",
+      "petshop", "pet shop", "leash", "cat treat", "dog treat", "cat", "dog", "bird", "bird food", "aquarium"
+    ],
+    categoryTr: "Evcil Hayvan",
+    categoryEn: "Pet Care",
+    subTr: "Mama & Veteriner",
+    subEn: "Food & Vet"
+  },
+
+  // ==========================================
+  // 14. EĞİTİM & KİTAP (EDUCATION & BOOKS)
+  // ==========================================
+  {
+    keywords: [
+      "kitap", "roman", "dergi", "kırtasiye", "kirtasiye", "defter", "kalem", "silgi", "çanta",
+      "okul", "kurs", "eğitim", "egitim", "özel ders", "ozel ders", "harç", "harc", "okul taksiti",
+      "udemy", "coursera", "sertifika", "sınav", "sinav", "kpss", "yks", "ales", "toefl", "fotokopi"
+    ],
+    enKeywords: [
+      "book", "novel", "magazine", "stationery", "notebook", "pen", "pencil", "eraser",
+      "school", "course", "education", "tutoring", "tuition", "certification", "exam", "test", "photocopy"
+    ],
+    categoryTr: "Eğitim",
+    categoryEn: "Education",
+    subTr: "Kitap & Kurs",
+    subEn: "Books & Courses"
+  },
+
+  // ==========================================
+  // 15. FATURA & ABONELİK (UTILITIES & BILLS)
+  // ==========================================
+  {
+    keywords: [
+      "fatura", "elektrik", "su", "doğalgaz", "dogalgaz", "gaz", "doğal gaz", "internet",
+      "wifi", "turk Telekom", "türk telekom", "vodafone", "turkcell", "aidat", "site aidatı",
+      "telefon faturası", "telefon faturasi", "tv faturası", "digiturk", "d-smart", "kablonet"
+    ],
+    enKeywords: [
+      "bill", "utility", "electricity", "water", "natural gas", "gas", "internet", "wifi",
+      "phone bill", "mobile bill", "maintenance fee", "dues", "cable tv"
+    ],
+    categoryTr: "Fatura",
+    categoryEn: "Utilities",
+    subTr: "Fatura & Aidat",
+    subEn: "Bills & Dues"
+  },
+
+  // ==========================================
+  // 16. MARKET (SUPERMARKET) - GENEL (GENERAL SHOPPING)
   // ==========================================
   {
     keywords: [
