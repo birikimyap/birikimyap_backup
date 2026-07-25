@@ -1072,24 +1072,43 @@ export default function HomeDashboardScreen() {
                 </View>
               )}
               <Pressable onPress={handleMascotPress} style={({ pressed }) => pressed && styles.pressed}>
-                <View style={[styles.heroMascot, { 
-                  position: "relative", 
-                  right: 0, 
-                  top: 0, 
-                  width: 96, 
-                  height: 96, 
-                  borderRadius: 48,
-                  backgroundColor: colors.white,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: isDarkMode ? 0.25 : 0.08,
-                  shadowRadius: 10,
-                  elevation: 4
-                }]}>
-                  <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
-                </View>
+                <LinearGradient
+                  colors={
+                    selectedPeriodRemaining < 0
+                      ? ["rgba(211, 47, 47, 0.6)", "rgba(223, 122, 18, 0.2)"]
+                      : ["rgba(0, 229, 143, 0.65)", "rgba(0, 191, 118, 0.2)"]
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 101,
+                    height: 101,
+                    borderRadius: 50.5,
+                    padding: 2.5,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00E58F",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: isDarkMode ? 0.45 : 0.22,
+                    shadowRadius: 12,
+                    elevation: 5
+                  }}
+                >
+                  <View style={[styles.heroMascot, { 
+                    position: "relative", 
+                    right: 0, 
+                    top: 0, 
+                    width: 96, 
+                    height: 96, 
+                    borderRadius: 48,
+                    backgroundColor: colors.white,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    shadowOpacity: 0
+                  }]}>
+                    <Image source={mascot} style={styles.heroMascotImage} resizeMode="contain" />
+                  </View>
+                </LinearGradient>
               </Pressable>
             </View>
           </LinearGradient>

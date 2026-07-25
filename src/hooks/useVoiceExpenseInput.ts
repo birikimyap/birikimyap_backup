@@ -40,6 +40,13 @@ export function useVoiceExpenseInput() {
   useEffect(() => {
     if (!speechModule) return undefined;
 
+    // PRE-REQUEST PERMISSION ON MOUNT SO IT WORKS ON FIRST TAP WITHOUT RESTART
+    speechModule.requestPermissionsAsync().then((res) => {
+      if (res.granted) {
+        setPermissionStatus("granted");
+      }
+    }).catch(() => {});
+
     const startListener = speechModule.addListener("start", () => {
       setIsListening(true);
       setError("");
