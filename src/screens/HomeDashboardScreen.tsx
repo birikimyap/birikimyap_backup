@@ -8,6 +8,8 @@ import {
   AppState,
   FlatList,
   Image,
+  InputAccessoryView,
+  Keyboard,
   KeyboardAvoidingView,
   Linking,
   Modal,
@@ -2618,6 +2620,7 @@ function IncomeEditModal({
                       setTempIncomes((prev) => prev.map((inc, i) => i === index ? { ...inc, amount: formatAmountInput(text) } : inc));
                     }}
                     keyboardType="decimal-pad"
+                    inputAccessoryViewID="modalIncomeKeyboardDone"
                     placeholder="0"
                     placeholderTextColor="#9CA19E"
                     style={{ fontSize: 15, fontWeight: "900", color: "#00DF89", textAlign: "right", minWidth: 64, padding: 0 }}
@@ -2780,6 +2783,7 @@ function FixedExpenseEditModal({
                       setTempFixedExpenses((prev) => prev.map((exp, i) => i === index ? { ...exp, amount: formatAmountInput(text) } : exp));
                     }}
                     keyboardType="decimal-pad"
+                    inputAccessoryViewID="modalExpenseKeyboardDone"
                     placeholder="0"
                     placeholderTextColor="#9CA19E"
                     style={{ fontSize: 15, fontWeight: "900", color: "#DF7A12", textAlign: "right", minWidth: 64, padding: 0 }}
@@ -2838,6 +2842,32 @@ function FixedExpenseEditModal({
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {Platform.OS === "ios" && (
+        <InputAccessoryView nativeID="modalExpenseKeyboardDone">
+          <View style={{
+            width: "100%",
+            height: 44,
+            backgroundColor: "#F0F1F2",
+            borderTopWidth: 0.5,
+            borderTopColor: "rgba(0,0,0,0.2)",
+            flexDirection: "row",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            paddingHorizontal: 16
+          }}>
+            <Pressable 
+              onPress={() => Keyboard.dismiss()} 
+              hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
+              style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+            >
+              <Text style={{ color: "#007AFF", fontWeight: "700", fontSize: 17 }}>
+                {language === "tr" ? "Bitti" : "Done"}
+              </Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      )}
     </Modal>
   );
 }

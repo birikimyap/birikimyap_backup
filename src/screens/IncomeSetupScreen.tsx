@@ -406,17 +406,21 @@ export default function IncomeSetupScreen() {
         <InputAccessoryView nativeID={inputAccessoryID}>
           <View style={{
             width: "100%",
-            height: 45,
-            backgroundColor: "#F9F9F9",
+            height: 44,
+            backgroundColor: "#F0F1F2",
             borderTopWidth: 0.5,
-            borderTopColor: "rgba(0,0,0,0.15)",
+            borderTopColor: "rgba(0,0,0,0.2)",
             flexDirection: "row",
             justifyContent: "flex-end",
             alignItems: "center",
             paddingHorizontal: 16
           }}>
-            <Pressable onPress={() => Keyboard.dismiss()} style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}>
-              <Text style={{ color: colors.primary, fontWeight: "700", fontSize: 16 }}>
+            <Pressable 
+              onPress={() => Keyboard.dismiss()} 
+              hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
+              style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+            >
+              <Text style={{ color: "#007AFF", fontWeight: "700", fontSize: 17 }}>
                 {language === "tr" ? "Bitti" : "Done"}
               </Text>
             </Pressable>
