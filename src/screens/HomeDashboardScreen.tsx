@@ -949,7 +949,7 @@ export default function HomeDashboardScreen() {
             end={{ x: 1, y: 1 }}
             style={{ padding: 18, position: "relative" }}
           >
-            <View style={{ width: "72%" }}>
+            <View style={{ width: "68%", paddingRight: 4 }}>
               <View style={{ marginBottom: 12 }}>
                 <View style={[styles.goalBadge, { backgroundColor: isDarkMode ? "rgba(0,223,137,0.18)" : "rgba(13,50,40,0.08)" }]}>
                   <Text style={styles.goalBadgeIcon}>🎯</Text>
@@ -957,12 +957,17 @@ export default function HomeDashboardScreen() {
                 </View>
               </View>
 
-              <View style={{ flexDirection: "row", marginTop: 4, marginBottom: 14, gap: 16, alignItems: "center" }}>
-                <View>
+              <View style={{ flexDirection: "row", marginTop: 4, marginBottom: 14, gap: 10, alignItems: "center" }}>
+                <View style={{ flexShrink: 1 }}>
                   <Text style={{ fontSize: 9.5, fontWeight: "800", color: isDarkMode ? "rgba(255,255,255,0.6)" : "#4B6358", marginBottom: 2 }}>
                     {language === "tr" ? "TOPLAM HEDEF" : "TOTAL GOAL"}
                   </Text>
-                  <Text style={{ fontSize: 21, fontWeight: "900", color: isDarkMode ? "#F1F5F9" : "#074A31" }}>
+                  <Text 
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                    style={{ fontSize: 19, fontWeight: "900", color: isDarkMode ? "#F1F5F9" : "#074A31" }}
+                  >
                     {formatCurrency(goalTargetAmount)}
                   </Text>
                 </View>
@@ -970,8 +975,9 @@ export default function HomeDashboardScreen() {
                 <View style={{ width: 1.2, height: 28, backgroundColor: themeColors.border, opacity: 0.6 }} />
 
                 <View style={{
+                  flexShrink: 1,
                   backgroundColor: isDarkMode ? "rgba(0,229,143,0.16)" : "rgba(0,229,143,0.12)",
-                  paddingHorizontal: 10,
+                  paddingHorizontal: 8,
                   paddingVertical: 4,
                   borderRadius: 12,
                   borderWidth: 1,
@@ -980,7 +986,12 @@ export default function HomeDashboardScreen() {
                   <Text style={{ fontSize: 9.5, fontWeight: "800", color: isDarkMode ? "#00E58F" : "#0D5D46", marginBottom: 1 }}>
                     {language === "tr" ? "BİRİKEN" : "SAVED SO FAR"}
                   </Text>
-                  <Text style={{ fontSize: 19, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}>
+                  <Text 
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.70}
+                    style={{ fontSize: 16.5, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}
+                  >
                     {formatCurrency(goalSavedAmount)}
                   </Text>
                 </View>
