@@ -50,6 +50,18 @@ export function buildSpendingLimits(incomes: Income[], expenses: Expense[], savi
   };
 }
 
+export function getRemainingDaysInPlan(savingsGoal: SavingsGoal, now = new Date()) {
+  const start = savingsGoal.planStartDate ? new Date(savingsGoal.planStartDate) : new Date();
+  const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const diffTime = dNow.getTime() - dStart.getTime();
+  const passedDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+  
+  const remainingDaysInCycle = 30 - (passedDays % 30);
+  return Math.max(remainingDaysInCycle, 1);
+}
+
 export function getDynamicDailyLimit(
   incomes: Income[],
   expenses: Expense[],
@@ -60,11 +72,11 @@ export function getDynamicDailyLimit(
   const monthlySpent = getExpensesTotalForPeriod(expenses, "monthly", now);
   const remainingMonthlyBudget = monthlyLimit - monthlySpent;
 
-  const remainingDays = getRemainingDaysInMonth(now);
-
   if (remainingMonthlyBudget <= 0) {
     return 0;
   }
+
+  const remainingDays = getRemainingDaysInPlan(savingsGoal, now);
 
   return Math.round(remainingMonthlyBudget / remainingDays);
 }
