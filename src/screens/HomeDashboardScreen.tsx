@@ -1180,7 +1180,7 @@ export default function HomeDashboardScreen() {
             <SummaryMetric
               icon="credit-card"
               title={copy.limit}
-              amount={selectedPeriodLimit}
+              amount={selectedPeriod === "daily" ? dynamicDaily : selectedPeriodLimit}
               tone="green"
             />
             <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.14)" }]} />
@@ -1194,7 +1194,7 @@ export default function HomeDashboardScreen() {
             <SummaryMetric
               icon="shield"
               title={copy.remaining}
-              amount={selectedPeriodRemaining}
+              amount={selectedPeriod === "daily" ? dynamicDaily - recentTotal : selectedPeriodRemaining}
               tone="green"
             />
           </LinearGradient>
