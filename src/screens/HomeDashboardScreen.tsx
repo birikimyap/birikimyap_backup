@@ -137,6 +137,7 @@ export default function HomeDashboardScreen() {
   // Analysis period & modal states
   const [analysisPeriod, setAnalysisPeriod] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
+  const [isGoalAchievedModalVisible, setIsGoalAchievedModalVisible] = useState(false);
   const [isCategoryLimitsModalVisible, setIsCategoryLimitsModalVisible] = useState(false);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
   const [isFaqModalVisible, setIsFaqModalVisible] = useState(false);
@@ -986,18 +987,24 @@ export default function HomeDashboardScreen() {
         </View>
 
         {/* Savings Goal Management (Mascot Card) */}
-        <View style={{
-          marginTop: 8,
-          borderRadius: 24,
-          overflow: "hidden",
-          borderWidth: 1.2,
-          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(212, 160, 89, 0.35)",
-          shadowColor: isDarkMode ? "#00DF89" : "#B98E4B",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: isDarkMode ? 0.15 : 0.10,
-          shadowRadius: 20,
-          elevation: 5
-        }}>
+        <Pressable 
+          onPress={() => {
+            triggerHaptic();
+            setIsGoalAchievedModalVisible(true);
+          }}
+          style={({ pressed }) => [{
+            marginTop: 8,
+            borderRadius: 24,
+            overflow: "hidden",
+            borderWidth: 1.2,
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(212, 160, 89, 0.35)",
+            shadowColor: isDarkMode ? "#00DF89" : "#B98E4B",
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: isDarkMode ? 0.15 : 0.10,
+            shadowRadius: 20,
+            elevation: 5
+          }, pressed && styles.pressed]}
+        >
           <LinearGradient
             colors={isDarkMode ? ["#162B23", "#0F1F19"] : ["#FCF8F3", "#F3E7D7"]}
             start={{ x: 0, y: 0 }}
@@ -1156,7 +1163,7 @@ export default function HomeDashboardScreen() {
               </Pressable>
             </View>
           </LinearGradient>
-        </View>
+        </Pressable>
 
         {/* Soft & Ultra-Balanced Emerald Summary Card */}
         <View style={{
@@ -2537,6 +2544,28 @@ export default function HomeDashboardScreen() {
         <FaqModal
           visible={isFaqModalVisible}
           onClose={() => setIsFaqModalVisible(false)}
+        />
+
+        <GoalAchievedModal
+          visible={isGoalAchievedModalVisible}
+          onClose={() => setIsGoalAchievedModalVisible(false)}
+          onIncreaseGoal={() => {
+            triggerHaptic();
+            setIsGoalAchievedModalVisible(false);
+            setTempGoalTitle(savingsGoal.title || (language === "tr" ? "Acil durum" : "Emergency fund"));
+            setTempGoalTarget(String(savingsGoal.monthlyContribution || 0));
+            setTempGoalSaved(String(savingsGoal.currentAmount || 0));
+            setIsGoalModalVisible(true);
+          }}
+          onNewPlan={() => {
+            triggerHaptic();
+            setIsGoalAchievedModalVisible(false);
+            setIsResetConfirmVisible(true);
+          }}
+          savingsGoal={savingsGoal}
+          language={language}
+          themeColors={themeColors}
+          isDarkMode={isDarkMode}
         />
 
         <ResetConfirmModal
@@ -5815,3 +5844,65 @@ const styles = StyleSheet.create({
     lineHeight: 18
   }
 });
+
+function GoalAchievedModal({
+  visible,
+  onClose,
+  onNewPlan,
+  onIncreaseGoal,
+  savingsGoal,
+  language,
+  themeColors,
+  isDarkMode
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onNewPlan: () => void;
+  onIncreaseGoal: () => void;
+  savingsGoal: any;
+  language: "tr" | "en";
+  themeColors: any;
+  isDarkMode: boolean;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+        <View style={{ width: "100%", maxWidth: 360, backgroundColor: themeColors.surface, borderRadius: 24, padding: 24, alignItems: "center", borderWidth: 1, borderColor: "rgba(0, 225, 143, 0.3)" }}>
+          <Text style={{ fontSize: 44, marginBottom: 12 }}>🏆🎉</Text>
+          <Text style={{ fontSize: 20, fontWeight: "900", color: themeColors.text, textAlign: "center", marginBottom: 6 }}>
+            {language === "tr" ? "Tebrikler! Birikim Hedefine Ulaştın!" : "Congratulations! Savings Goal Reached!"}
+          </Text>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: themeColors.textMuted, textAlign: "center", marginBottom: 20 }}>
+            {language === "tr" 
+              ? `${formatCurrency(savingsGoal.monthlyContribution)} tutarındaki aylık birikim hedefini başarıyla tamamladın.`
+              : `You have successfully completed your ${formatCurrency(savingsGoal.monthlyContribution)} monthly savings goal.`}
+          </Text>
+
+          <Pressable
+            onPress={onIncreaseGoal}
+            style={{ width: "100%", paddingVertical: 14, borderRadius: 16, backgroundColor: "#00E58F", alignItems: "center", marginBottom: 10 }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: "900", color: "#031D14" }}>
+              {language === "tr" ? "Birikim Hedefini Yükselt 📈" : "Increase Savings Goal 📈"}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={onNewPlan}
+            style={{ width: "100%", paddingVertical: 14, borderRadius: 16, backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)", alignItems: "center", borderWidth: 1, borderColor: themeColors.border }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: "800", color: themeColors.text }}>
+              {language === "tr" ? "Yeni Bütçe Planı Başlat 🚀" : "Start New Budget Plan 🚀"}
+            </Text>
+          </Pressable>
+
+          <Pressable onPress={onClose} style={{ marginTop: 14 }}>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+              {language === "tr" ? "Kapat" : "Close"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
