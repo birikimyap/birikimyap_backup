@@ -34,8 +34,9 @@ export function getDailyLimit(incomes: Income[], expenses: Expense[], savingsGoa
   return Math.round(spendableMonthlyBudget / 30);
 }
 
-export function getWeeklyLimit(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal) {
-  return Math.round(getSpendableMonthlyBudget(incomes, expenses, savingsGoal) / 4.3);
+export function getWeeklyLimit(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal, now = new Date()) {
+  const daily = getDailyLimit(incomes, expenses, savingsGoal, now);
+  return daily * 7;
 }
 
 export function getMonthlyLimit(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal) {
@@ -45,7 +46,7 @@ export function getMonthlyLimit(incomes: Income[], expenses: Expense[], savingsG
 export function buildSpendingLimits(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal, now = new Date()): SpendingLimits {
   return {
     daily: getDailyLimit(incomes, expenses, savingsGoal, now),
-    weekly: getWeeklyLimit(incomes, expenses, savingsGoal),
+    weekly: getWeeklyLimit(incomes, expenses, savingsGoal, now),
     monthly: getMonthlyLimit(incomes, expenses, savingsGoal)
   };
 }
@@ -68,6 +69,7 @@ export function getDynamicDailyLimit(
   savingsGoal: SavingsGoal,
   now = new Date()
 ) {
+  const baseDaily = getDailyLimit(incomes, expenses, savingsGoal, now);
   const monthlyLimit = getMonthlyLimit(incomes, expenses, savingsGoal);
   const monthlySpent = getExpensesTotalForPeriod(expenses, "monthly", now);
   const remainingMonthlyBudget = monthlyLimit - monthlySpent;
@@ -77,8 +79,12 @@ export function getDynamicDailyLimit(
   }
 
   const remainingDays = getRemainingDaysInPlan(savingsGoal, now);
+  const pacingDaily = Math.round(remainingMonthlyBudget / remainingDays);
 
-  return Math.round(remainingMonthlyBudget / remainingDays);
+  // ALTIN KURAL:
+  // Çok harcıyorsa limit kısılır (pacingDaily < baseDaily).
+  // Az harcıyorsa veya harcamadıysa günlük limit 1.000 TL üstüne çıkmaz!
+  return Math.min(pacingDaily, baseDaily);
 }
 
 export function getRevisedSavingsStatus(
