@@ -138,6 +138,8 @@ export default function HomeDashboardScreen() {
   const [analysisPeriod, setAnalysisPeriod] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
   const [isGoalAchievedModalVisible, setIsGoalAchievedModalVisible] = useState(false);
+  const [isLegalModalVisible, setIsLegalModalVisible] = useState(false);
+  const [legalTab, setLegalTab] = useState<"terms" | "privacy" | "disclaimer">("terms");
   const [isCategoryLimitsModalVisible, setIsCategoryLimitsModalVisible] = useState(false);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
   const [isFaqModalVisible, setIsFaqModalVisible] = useState(false);
@@ -1979,7 +1981,7 @@ export default function HomeDashboardScreen() {
           </View>
           <View style={styles.profileBudgetRow}>
             <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted, fontWeight: "600" }]}>{t("profileGoalSaved")}</Text>
-            <Text style={[styles.profileBudgetVal, { color: isDarkMode ? "#00E58F" : "#009E60", fontWeight: "900" }]}>{formatCurrency(savingsGoal.currentAmount)}</Text>
+            <Text style={[styles.profileBudgetVal, { color: isDarkMode ? "#00E58F" : "#009E60", fontWeight: "900" }]}>{formatCurrency(goalSavedAmount)}</Text>
           </View>
           
           <Pressable 
@@ -2367,6 +2369,24 @@ export default function HomeDashboardScreen() {
             </View>
             <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
           </Pressable>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              setIsLegalModalVisible(true);
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="file-text" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
+                {language === "tr" ? "Kullanıcı Sözleşmesi & Gizlilik" : "Terms & Privacy Policy"}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
+          </Pressable>
         </View>
 
         {/* Danger Zone Card */}
@@ -2554,6 +2574,16 @@ export default function HomeDashboardScreen() {
         <FaqModal
           visible={isFaqModalVisible}
           onClose={() => setIsFaqModalVisible(false)}
+        />
+
+        <LegalModal
+          visible={isLegalModalVisible}
+          onClose={() => setIsLegalModalVisible(false)}
+          legalTab={legalTab}
+          setLegalTab={setLegalTab}
+          language={language}
+          themeColors={themeColors}
+          isDarkMode={isDarkMode}
         />
 
         <GoalAchievedModal
@@ -5941,6 +5971,124 @@ function GoalAchievedModal({
           <Pressable onPress={onClose} style={{ marginTop: 14 }}>
             <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
               {language === "tr" ? "Kapat" : "Close"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function LegalModal({
+  visible,
+  onClose,
+  legalTab,
+  setLegalTab,
+  language,
+  themeColors,
+  isDarkMode
+}: {
+  visible: boolean;
+  onClose: () => void;
+  legalTab: "terms" | "privacy" | "disclaimer";
+  setLegalTab: (tab: "terms" | "privacy" | "disclaimer") => void;
+  language: "tr" | "en";
+  themeColors: any;
+  isDarkMode: boolean;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" }}>
+        <View style={{ width: "100%", height: "82%", backgroundColor: themeColors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Feather name="file-text" size={20} color="#00E58F" />
+              <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.text }}>
+                {language === "tr" ? "Hukuki & Gizlilik Metinleri" : "Legal & Privacy Terms"}
+              </Text>
+            </View>
+            <Pressable onPress={onClose} style={{ padding: 4 }}>
+              <Feather name="x" size={22} color={themeColors.textMuted} />
+            </Pressable>
+          </View>
+
+          {/* Tab Selector */}
+          <View style={{ flexDirection: "row", backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)", borderRadius: 14, padding: 3, marginBottom: 16 }}>
+            <Pressable
+              onPress={() => setLegalTab("terms")}
+              style={{ flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 12, backgroundColor: legalTab === "terms" ? "#00E58F" : "transparent" }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: "900", color: legalTab === "terms" ? "#031D14" : themeColors.textMuted }}>
+                {language === "tr" ? "Kullanım Koşulları" : "Terms"}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setLegalTab("privacy")}
+              style={{ flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 12, backgroundColor: legalTab === "privacy" ? "#00E58F" : "transparent" }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: "900", color: legalTab === "privacy" ? "#031D14" : themeColors.textMuted }}>
+                {language === "tr" ? "Gizlilik" : "Privacy"}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setLegalTab("disclaimer")}
+              style={{ flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 12, backgroundColor: legalTab === "disclaimer" ? "#00E58F" : "transparent" }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: "900", color: legalTab === "disclaimer" ? "#031D14" : themeColors.textMuted }}>
+                {language === "tr" ? "Sorumluluk Reddi" : "Disclaimer"}
+              </Text>
+            </Pressable>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+            {legalTab === "terms" && (
+              <View style={{ gap: 12 }}>
+                <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text }}>1. Lisans ve Kullanım Şartları</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: themeColors.textMuted, fontWeight: "600" }}>
+                  Birikim Yap uygulaması, kişisel finansal planlama ve bütçe takibi amacıyla kullanıcıya sunulmuştur. Uygulama içerisindeki tüm görsel, yazılımsal ve algoritma hakları saklıdır.
+                </Text>
+                <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text, marginTop: 8 }}>2. Kullanıcı Yükümlülükleri</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: themeColors.textMuted, fontWeight: "600" }}>
+                  Kullanıcı, uygulamaya girdiği verilerin doğruluğundan bizzat sorumludur. Cihaz güvenliği ve yerel verilerin korunması kullanıcının kendi sorumluluğundadır.
+                </Text>
+              </View>
+            )}
+
+            {legalTab === "privacy" && (
+              <View style={{ gap: 12 }}>
+                <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text }}>1. %100 Yerel Veri Gizliliği (KVKK / GDPR)</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: themeColors.textMuted, fontWeight: "600" }}>
+                  Birikim Yap uygulaması, bütçe, gelir ve harcama verilerinizi hiçbir harici sunucuya veya 3. şahısa AKTARMAZ. Tüm verileriniz yalnızca kendi cihazınızın güvenli yerel hafızasında (AsyncStorage) şifreli biçimde saklanır.
+                </Text>
+                <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text, marginTop: 8 }}>2. Sesli Harcama ve İzinler</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: themeColors.textMuted, fontWeight: "600" }}>
+                  Sesli harcama özelliği için kullanılan mikrofon izinleri yalnızca anlık harcama kaydı dönüştürme işlemi için cihaz üzerinde işlenir ve hiçbir ses kaydı harici sunucularda depolanmaz.
+                </Text>
+              </View>
+            )}
+
+            {legalTab === "disclaimer" && (
+              <View style={{ gap: 12 }}>
+                <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text }}>1. Finansal Danışmanlık Reddi Beyanı</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: themeColors.textMuted, fontWeight: "600" }}>
+                  Bu uygulama resmi bir yatırım, finans, vergi veya bankacılık danışmanlığı aracı DEĞİLDİR. Uygulama içerisindeki limitler, grafikler, dengeleme tavsiyeleri ve hesaplamalar yalnızca kişisel takip ve bilgilendirme amaçlı algoritmik simülasyonlardır.
+                </Text>
+                <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text, marginTop: 8 }}>2. Sorumluluk Sınırı</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: themeColors.textMuted, fontWeight: "600" }}>
+                  Gürkan Aygün / Birikim Yap, kullanıcının finansal kararlarından, harcamalarından veya bütçe sonuçlarından doğabilecek doğrudan ya da dolaylı zararlardan sorumlu tutulamaz.
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+
+          <Pressable
+            onPress={onClose}
+            style={{ width: "100%", paddingVertical: 14, borderRadius: 16, backgroundColor: "#00E58F", alignItems: "center", marginTop: 10 }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: "900", color: "#031D14" }}>
+              {language === "tr" ? "Anladım ve Kabul Ediyorum" : "I Understand & Accept"}
             </Text>
           </Pressable>
         </View>
