@@ -481,7 +481,7 @@ export default function HomeDashboardScreen() {
 
   const copy = periodCopy[selectedPeriod];
   const selectedPeriodLimit = plan.limits[selectedPeriod];
-  const periodExpenses = useMemo(() => getExpensesForPeriod(expenses, selectedPeriod, simulatedDate), [expenses, selectedPeriod, simulatedDate]);
+  const periodExpenses = useMemo(() => getExpensesForPeriod(expenses, selectedPeriod, simulatedDate, savingsGoal.planStartDate), [expenses, selectedPeriod, simulatedDate, savingsGoal.planStartDate]);
   const periodExpenseRows = useMemo(() => buildExpenseRows(periodExpenses), [periodExpenses]);
   const recentTotal = plan.selectedPeriodSpent;
   const selectedPeriodRemaining = plan.selectedPeriodRemaining;
@@ -2603,6 +2603,7 @@ export default function HomeDashboardScreen() {
             setIsResetConfirmVisible(true);
           }}
           savingsGoal={savingsGoal}
+          goalSavedAmount={goalSavedAmount}
           language={language}
           themeColors={themeColors}
           isDarkMode={isDarkMode}
@@ -5923,6 +5924,7 @@ function GoalAchievedModal({
   onNewPlan,
   onIncreaseGoal,
   savingsGoal,
+  goalSavedAmount,
   language,
   themeColors,
   isDarkMode
@@ -5932,22 +5934,58 @@ function GoalAchievedModal({
   onNewPlan: () => void;
   onIncreaseGoal: () => void;
   savingsGoal: any;
+  goalSavedAmount: number;
   language: "tr" | "en";
   themeColors: any;
   isDarkMode: boolean;
 }) {
+  const target = Math.max(savingsGoal.targetAmount || 0, 1);
+  const ratio = Math.min(goalSavedAmount / target, 1.0);
+  const percent = Math.round(ratio * 100);
+
+  let icon = "🥉🎉";
+  let title = language === "tr" ? "Yolun Çeyreği Tamam!" : "First Quarter Reached!";
+  let badgeText = language === "tr" ? "%25 BAŞARI ROZETİ" : "25% MILESTONE BADGE";
+  let desc = language === "tr" ? "İlk adımı harika attın, birikim alışkanlığın güçleniyor!" : "Great start! Your savings habit is getting stronger!";
+
+  if (percent >= 100) {
+    icon = "🏆🎉";
+    title = language === "tr" ? "Muazzam Başarı! Hedefe Tam Ulaştın!" : "Outstanding! Goal Fully Reached!";
+    badgeText = language === "tr" ? "%100 ŞAMPİYONLUK KUPASI" : "100% CHAMPION TROPHY";
+    desc = language === "tr" ? `Tebrikler! ${formatCurrency(goalSavedAmount)} biriktirerek hedefini %100 tamamladın.` : `Congrats! You saved ${formatCurrency(goalSavedAmount)} and fully met your goal.`;
+  } else if (percent >= 75) {
+    icon = "🥇✨";
+    title = language === "tr" ? "Zirveye Çok Az Kaldı!" : "Almost at the Peak!";
+    badgeText = language === "tr" ? "%75 İLERLEME ROZETİ" : "75% PROGRESS BADGE";
+    desc = language === "tr" ? "Disiplinin meyvesini veriyor, hedefine adım adım yaklaştın!" : "Your discipline pays off, you are step by step to your goal!";
+  } else if (percent >= 50) {
+    icon = "🥈🔥";
+    title = language === "tr" ? "Yolun Yarısı Kat Edildi!" : "Halfway There!";
+    badgeText = language === "tr" ? "%50 GELİŞİM ROZETİ" : "50% GROWTH BADGE";
+    desc = language === "tr" ? "Hedefinin tam yarısına ulaştın, temposunu koru!" : "You hit half of your target, keep this great pace!";
+  } else if (percent < 25) {
+    icon = "🚀💪";
+    title = language === "tr" ? "30 Günlük Dönem Tamamlandı!" : "30-Day Period Completed!";
+    badgeText = language === "tr" ? "HARİKA ÇABA" : "GREAT EFFORT";
+    desc = language === "tr" ? `30 günlük bütçe periyodu bitti. ${formatCurrency(goalSavedAmount)} birikimin cebinde güvende!` : `Your 30-day budget period ends. Your ${formatCurrency(goalSavedAmount)} savings are safe!`;
+  }
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "center", alignItems: "center", padding: 20 }}>
-        <View style={{ width: "100%", maxWidth: 360, backgroundColor: themeColors.surface, borderRadius: 24, padding: 24, alignItems: "center", borderWidth: 1, borderColor: "rgba(0, 225, 143, 0.3)" }}>
-          <Text style={{ fontSize: 44, marginBottom: 12 }}>🏆🎉</Text>
-          <Text style={{ fontSize: 20, fontWeight: "900", color: themeColors.text, textAlign: "center", marginBottom: 6 }}>
-            {language === "tr" ? "Tebrikler! Birikim Hedefine Ulaştın!" : "Congratulations! Savings Goal Reached!"}
+        <View style={{ width: "100%", maxWidth: 360, backgroundColor: themeColors.surface, borderRadius: 28, padding: 24, alignItems: "center", borderWidth: 1.5, borderColor: "rgba(0, 229, 143, 0.4)" }}>
+          <Text style={{ fontSize: 48, marginBottom: 8 }}>{icon}</Text>
+          
+          <View style={{ backgroundColor: "rgba(0, 229, 143, 0.12)", paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10, marginBottom: 12 }}>
+            <Text style={{ fontSize: 10, fontWeight: "900", color: "#00E58F", letterSpacing: 0.5 }}>{badgeText}</Text>
+          </View>
+
+          <Text style={{ fontSize: 19, fontWeight: "900", color: themeColors.text, textAlign: "center", marginBottom: 6 }}>
+            {title}
           </Text>
-          <Text style={{ fontSize: 13, fontWeight: "600", color: themeColors.textMuted, textAlign: "center", marginBottom: 20 }}>
-            {language === "tr" 
-              ? `${formatCurrency(savingsGoal.monthlyContribution)} tutarındaki aylık birikim hedefini başarıyla tamamladın.`
-              : `You have successfully completed your ${formatCurrency(savingsGoal.monthlyContribution)} monthly savings goal.`}
+          
+          <Text style={{ fontSize: 12.5, fontWeight: "600", color: themeColors.textMuted, textAlign: "center", marginBottom: 20, lineHeight: 18 }}>
+            {desc}
           </Text>
 
           <Pressable
@@ -5964,7 +6002,7 @@ function GoalAchievedModal({
             style={{ width: "100%", paddingVertical: 14, borderRadius: 16, backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)", alignItems: "center", borderWidth: 1, borderColor: themeColors.border }}
           >
             <Text style={{ fontSize: 14, fontWeight: "800", color: themeColors.text }}>
-              {language === "tr" ? "Yeni Bütçe Planı Başlat 🚀" : "Start New Budget Plan 🚀"}
+              {language === "tr" ? "Yeni 30 Günlük Dönem Başlat 🚀" : "Start New 30-Day Period 🚀"}
             </Text>
           </Pressable>
 

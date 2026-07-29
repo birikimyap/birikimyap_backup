@@ -129,9 +129,9 @@ export function getRevisedSavingsStatus(
   };
 }
 
-export function getExpensesTotalForPeriod(expenses: Expense[], period: Period, now = new Date()) {
+export function getExpensesTotalForPeriod(expenses: Expense[], period: Period, now = new Date(), planStartDateStr?: string) {
   return expenses
-    .filter((expense) => !expense.isFixed && isExpenseInPeriod(expense, period, now))
+    .filter((expense) => !expense.isFixed && isExpenseInPeriod(expense, period, now, planStartDateStr))
     .reduce((total, expense) => total + toSafeAmount(expense.amount), 0);
 }
 
@@ -177,8 +177,8 @@ export function calculateFinancePlan(
   };
 }
 
-export function getExpensesForPeriod(expenses: Expense[], period: Period, now = new Date()) {
-  return expenses.filter((expense) => !expense.isFixed && isExpenseInPeriod(expense, period, now));
+export function getExpensesForPeriod(expenses: Expense[], period: Period, now = new Date(), planStartDateStr?: string) {
+  return expenses.filter((expense) => !expense.isFixed && isExpenseInPeriod(expense, period, now, planStartDateStr));
 }
 
 export function getSimulatedDate(offsetDays = 0) {
@@ -211,35 +211,51 @@ export function getZeroSpendingStreak(expenses: Expense[], now = new Date()) {
   return streak;
 }
 
-function isExpenseInPeriod(expense: Expense, period: Period, now: Date) {
-  if (!expense.occurredAt) {
-    return false;
-  }
+export function getExpensePlanWeekIndex(expenseDate: Date, planStartDate: Date): number {
+  const dExp = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate());
+  const dStart = new Date(planStartDate.getFullYear(), planStartDate.getMonth(), planStartDate.getDate());
+  const diffTime = Math.max(0, dExp.getTime() - dStart.getTime());
+  const dayInPlan = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const dayInCycle = ((dayInPlan - 1) % 30) + 1;
+
+  if (dayInCycle <= 7) return 1;
+  if (dayInCycle <= 14) return 2;
+  if (dayInCycle <= 21) return 3;
+  return 4;
+}
+
+export function isExpenseInPeriod(expense: Expense, period: Period, now = new Date(), planStartDateStr?: string) {
+  if (!expense.occurredAt) return false;
 
   const occurredAt = new Date(expense.occurredAt);
-
-  if (Number.isNaN(occurredAt.getTime())) {
-    return false;
-  }
+  const startOfNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   if (period === "daily") {
-    return occurredAt.toDateString() === now.toDateString();
+    const occurredStart = new Date(occurredAt.getFullYear(), occurredAt.getMonth(), occurredAt.getDate());
+    return occurredStart.getTime() === startOfNow.getTime();
   }
 
-  const endOfNow = new Date(now);
-  endOfNow.setHours(23, 59, 59, 999);
+  const pStart = planStartDateStr ? new Date(planStartDateStr) : now;
 
   if (period === "weekly") {
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
-    return occurredAt >= sevenDaysAgo && occurredAt <= endOfNow;
+    const currentWeekIndex = getExpensePlanWeekIndex(now, pStart);
+    const expWeekIndex = getExpensePlanWeekIndex(occurredAt, pStart);
+    
+    const dExp = new Date(occurredAt.getFullYear(), occurredAt.getMonth(), occurredAt.getDate());
+    const dStart = new Date(pStart.getFullYear(), pStart.getMonth(), pStart.getDate());
+    const diffDays = Math.floor(Math.max(0, dExp.getTime() - dStart.getTime()) / (1000 * 60 * 60 * 24));
+    const nowDiffDays = Math.floor(Math.max(0, startOfNow.getTime() - dStart.getTime()) / (1000 * 60 * 60 * 24));
+
+    const isSameCycle = Math.floor(diffDays / 30) === Math.floor(nowDiffDays / 30);
+    return isSameCycle && expWeekIndex === currentWeekIndex;
   }
 
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  thirtyDaysAgo.setHours(0, 0, 0, 0);
-  return occurredAt >= thirtyDaysAgo && occurredAt <= endOfNow;
+  const dExp = new Date(occurredAt.getFullYear(), occurredAt.getMonth(), occurredAt.getDate());
+  const dStart = new Date(pStart.getFullYear(), pStart.getMonth(), pStart.getDate());
+  const diffDays = Math.floor(Math.max(0, dExp.getTime() - dStart.getTime()) / (1000 * 60 * 60 * 24));
+  const nowDiffDays = Math.floor(Math.max(0, startOfNow.getTime() - dStart.getTime()) / (1000 * 60 * 60 * 24));
+
+  return Math.floor(diffDays / 30) === Math.floor(nowDiffDays / 30);
 }
 
 function getWeekStart(date: Date) {
