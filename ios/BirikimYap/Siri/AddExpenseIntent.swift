@@ -45,10 +45,6 @@ struct BirikimYapShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: AddExpenseIntent(),
             phrases: [
-                "\(.applicationName) \(\.$input)",
-                "\(.applicationName) ile \(\.$input)",
-                "\(.applicationName) harcama \(\.$input)",
-                "\(.applicationName) ekle \(\.$input)",
                 "\(.applicationName)",
                 "\(.applicationName) harcama",
                 "\(.applicationName) harcama ekle",
