@@ -1197,7 +1197,7 @@ export default function HomeDashboardScreen() {
             <SummaryMetric
               icon="credit-card"
               title={copy.limit}
-              amount={selectedPeriod === "daily" ? ((getExpensesTotalForPeriod(expenses, "daily", simulatedDate) <= getDailyLimit(incomes, expenses, savingsGoal, simulatedDate)) ? getDailyLimit(incomes, expenses, savingsGoal, simulatedDate) : dynamicDaily) : selectedPeriodLimit}
+              amount={selectedPeriod === "daily" ? dynamicDaily : selectedPeriodLimit}
               tone="green"
             />
             <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.14)" }]} />
@@ -1211,7 +1211,7 @@ export default function HomeDashboardScreen() {
             <SummaryMetric
               icon="shield"
               title={copy.remaining}
-              amount={selectedPeriod === "daily" ? (((getExpensesTotalForPeriod(expenses, "daily", simulatedDate) <= getDailyLimit(incomes, expenses, savingsGoal, simulatedDate)) ? getDailyLimit(incomes, expenses, savingsGoal, simulatedDate) : dynamicDaily) - getExpensesTotalForPeriod(expenses, "daily", simulatedDate)) : selectedPeriodRemaining}
+              amount={selectedPeriod === "daily" ? (dynamicDaily - getExpensesTotalForPeriod(expenses, "daily", simulatedDate)) : selectedPeriodRemaining}
               tone="green"
             />
           </LinearGradient>

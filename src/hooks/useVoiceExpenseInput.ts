@@ -124,15 +124,17 @@ export function useVoiceExpenseInput() {
           setIsListening(true);
         } catch (e2) {
           setIsListening(false);
+          setError("Mikrofon başlatılamadı, lütfen tekrar deneyin.");
         }
       }
-    }, 150);
+    }, 200);
   }
 
   function stopListening() {
     if (!speechModule) return;
     try {
       speechModule.stop();
+      speechModule.abort();
     } catch {}
     setIsListening(false);
   }
