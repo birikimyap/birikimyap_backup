@@ -253,8 +253,9 @@ function toMonthlyAmount(amount: number, period: Period) {
   return amount;
 }
 
-function toSafeAmount(amount: number) {
-  return Number.isFinite(amount) ? Math.max(amount, 0) : 0;
+export function toSafeAmount(val: any): number {
+  if (val === undefined || val === null || isNaN(Number(val))) return 0;
+  return Number(val);
 }
 
 function clamp(value: number, min: number, max: number) {

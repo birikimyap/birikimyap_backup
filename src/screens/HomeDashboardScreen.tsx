@@ -32,7 +32,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatAmountInput, formatCurrency, parseAmount } from "@/utils/currency";
-import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus, getSpendableMonthlyBudget, getExpensesTotalForPeriod } from "@/utils/finance";
+import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus, getSpendableMonthlyBudget, getExpensesTotalForPeriod, toSafeAmount } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 import { syncSiriExpenses } from "@/utils/siriSync";
 import { syncWidgetData } from "@/utils/widgetSync";
@@ -503,10 +503,20 @@ export default function HomeDashboardScreen() {
       .reduce((sum, exp) => sum + exp.amount, 0);
   }, [expenses, simulatedDate]);
 
-  const overspentToday = Math.max(spentToday - plan.limits.daily, 0);
   const goalSavedAmount = useMemo(() => {
-    return Math.max((savingsGoal.currentAmount || 0) - overspentToday, 0);
-  }, [savingsGoal.currentAmount, overspentToday]);
+    const spendableMonthly = getSpendableMonthlyBudget(incomes, expenses, savingsGoal);
+    const monthlySpent = getExpensesTotalForPeriod(expenses, "monthly", simulatedDate);
+    const targetSavings = toSafeAmount(savingsGoal.monthlyContribution);
+
+    if (monthlySpent <= spendableMonthly) {
+      const dailyContribution = targetSavings > 0 ? targetSavings / 30 : 0;
+      const accrued = Math.min(targetSavings, Math.round(planDay * dailyContribution));
+      return Math.max(accrued, toSafeAmount(savingsGoal.currentAmount));
+    } else {
+      const budgetOveruse = monthlySpent - spendableMonthly;
+      return targetSavings - budgetOveruse;
+    }
+  }, [incomes, expenses, savingsGoal, simulatedDate, planDay]);
 
   const goalProgress = getProgress(goalSavedAmount, goalTargetAmount);
   const goalProgressPercent = goalTargetAmount > 0 ? Math.round(goalProgress * 100) : 0;
@@ -3117,6 +3127,24 @@ function SwipeableExpenseRow({
     })
   ).current;
 
+  const d = new Date(item.expense.occurredAt || new Date());
+  const dayNum = d.getDate();
+  let weekColor = "#00E58F";
+  let weekName = "1. Hafta";
+  if (dayNum <= 7) {
+    weekColor = "#00E58F";
+    weekName = "1. Hafta";
+  } else if (dayNum <= 14) {
+    weekColor = "#3B82F6";
+    weekName = "2. Hafta";
+  } else if (dayNum <= 21) {
+    weekColor = "#8B5CF6";
+    weekName = "3. Hafta";
+  } else {
+    weekColor = "#F59E0B";
+    weekName = "4. Hafta";
+  }
+
   const resetPosition = () => {
     Animated.spring(panX, {
       toValue: 0,
@@ -3157,13 +3185,18 @@ function SwipeableExpenseRow({
         {...panResponder.panHandlers}
       >
         <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
-          <View style={styles.expenseRow}>
+          <View style={[styles.expenseRow, { borderLeftWidth: 3, borderLeftColor: weekColor, paddingLeft: 10 }]}>
             <View style={[styles.expenseIcon, { backgroundColor: iconConfig.bg, alignItems: "center", justifyContent: "center" }]}>
               <Feather name={iconConfig.name} size={15} color={iconConfig.color} />
             </View>
             <View style={styles.expenseCopy}>
-              <Text style={[styles.expenseTitle, { color: themeColors.text, fontWeight: "800", fontSize: 14.5 }]}>{item.expense.label}</Text>
-              <Text style={[styles.expenseCategory, { color: themeColors.textMuted, fontWeight: "600", fontSize: 11 }]}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text style={[styles.expenseTitle, { color: themeColors.text, fontWeight: "800", fontSize: 14.5 }]}>{item.expense.label}</Text>
+                <View style={{ backgroundColor: `${weekColor}22`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginLeft: 6 }}>
+                  <Text style={{ color: weekColor, fontSize: 9.5, fontWeight: "900" }}>{weekName}</Text>
+                </View>
+              </View>
+              <Text style={[styles.expenseCategory, { color: themeColors.textMuted, fontWeight: "600", fontSize: 11, marginTop: 2 }]}>
                 {item.expense.category}{item.expense.subtitle && item.expense.subtitle !== item.expense.category ? ` • ${item.expense.subtitle}` : ""}
               </Text>
             </View>
