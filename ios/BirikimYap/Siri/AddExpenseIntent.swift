@@ -39,12 +39,16 @@ struct AddExpenseIntent: AppIntent {
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 16.0, watchOS 9.0, *)
 struct BirikimYapShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: AddExpenseIntent(),
             phrases: [
+                "\(.applicationName) \(\.$input)",
+                "\(.applicationName) ile \(\.$input)",
+                "\(.applicationName) harcama \(\.$input)",
+                "\(.applicationName) ekle \(\.$input)",
                 "\(.applicationName)",
                 "\(.applicationName) harcama",
                 "\(.applicationName) harcama ekle",
