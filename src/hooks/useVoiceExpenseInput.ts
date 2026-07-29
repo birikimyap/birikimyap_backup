@@ -101,6 +101,7 @@ export function useVoiceExpenseInput() {
     setTranscript("");
 
     try {
+      speechModule.stop();
       speechModule.abort();
     } catch {}
 
@@ -109,15 +110,23 @@ export function useVoiceExpenseInput() {
         speechModule.start({
           lang: "tr-TR",
           interimResults: true,
-          continuous: true,
+          continuous: false,
           addsPunctuation: true
         });
         setIsListening(true);
       } catch (e) {
         console.log("[voice-expense] start error", e);
-        setIsListening(false);
+        try {
+          speechModule.start({
+            lang: "tr-TR",
+            interimResults: true
+          });
+          setIsListening(true);
+        } catch (e2) {
+          setIsListening(false);
+        }
       }
-    }, 50);
+    }, 150);
   }
 
   function stopListening() {

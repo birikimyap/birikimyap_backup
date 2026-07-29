@@ -32,7 +32,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatAmountInput, formatCurrency, parseAmount } from "@/utils/currency";
-import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus, getSpendableMonthlyBudget, getExpensesTotalForPeriod, toSafeAmount } from "@/utils/finance";
+import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus, getSpendableMonthlyBudget, getExpensesTotalForPeriod, toSafeAmount, getDailyLimit } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 import { syncSiriExpenses } from "@/utils/siriSync";
 import { syncWidgetData } from "@/utils/widgetSync";
@@ -1197,7 +1197,7 @@ export default function HomeDashboardScreen() {
             <SummaryMetric
               icon="credit-card"
               title={copy.limit}
-              amount={selectedPeriod === "daily" ? dynamicDaily : selectedPeriodLimit}
+              amount={selectedPeriod === "daily" ? ((getExpensesTotalForPeriod(expenses, "daily", simulatedDate) <= getDailyLimit(incomes, expenses, savingsGoal, simulatedDate)) ? getDailyLimit(incomes, expenses, savingsGoal, simulatedDate) : dynamicDaily) : selectedPeriodLimit}
               tone="green"
             />
             <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.14)" }]} />
@@ -1211,7 +1211,7 @@ export default function HomeDashboardScreen() {
             <SummaryMetric
               icon="shield"
               title={copy.remaining}
-              amount={selectedPeriod === "daily" ? Math.max(0, dynamicDaily - getExpensesTotalForPeriod(expenses, "daily", simulatedDate)) : selectedPeriodRemaining}
+              amount={selectedPeriod === "daily" ? (((getExpensesTotalForPeriod(expenses, "daily", simulatedDate) <= getDailyLimit(incomes, expenses, savingsGoal, simulatedDate)) ? getDailyLimit(incomes, expenses, savingsGoal, simulatedDate) : dynamicDaily) - getExpensesTotalForPeriod(expenses, "daily", simulatedDate)) : selectedPeriodRemaining}
               tone="green"
             />
           </LinearGradient>
@@ -3127,17 +3127,26 @@ function SwipeableExpenseRow({
     })
   ).current;
 
-  const d = new Date(item.expense.occurredAt || new Date());
-  const dayNum = d.getDate();
+  const planStartDate = useFinanceStore((state) => state.savingsGoal.planStartDate);
+  const expDate = new Date(item.expense.occurredAt || new Date());
+  const startDate = planStartDate ? new Date(planStartDate) : expDate;
+  
+  const dExp = new Date(expDate.getFullYear(), expDate.getMonth(), expDate.getDate());
+  const dStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+  
+  const diffTime = Math.max(0, dExp.getTime() - dStart.getTime());
+  const dayInPlan = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const dayInCycle = ((dayInPlan - 1) % 30) + 1;
+
   let weekColor = "#00E58F";
   let weekName = "1. Hafta";
-  if (dayNum <= 7) {
+  if (dayInCycle <= 7) {
     weekColor = "#00E58F";
     weekName = "1. Hafta";
-  } else if (dayNum <= 14) {
+  } else if (dayInCycle <= 14) {
     weekColor = "#3B82F6";
     weekName = "2. Hafta";
-  } else if (dayNum <= 21) {
+  } else if (dayInCycle <= 21) {
     weekColor = "#8B5CF6";
     weekName = "3. Hafta";
   } else {
