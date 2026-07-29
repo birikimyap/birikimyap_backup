@@ -51,16 +51,38 @@ export function buildSpendingLimits(incomes: Income[], expenses: Expense[], savi
   };
 }
 
+export function getPlanDayNumber(planStartDate?: string, now = new Date()): number {
+  const start = planStartDate ? new Date(planStartDate) : now;
+  const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const diffTime = Math.max(0, dNow.getTime() - dStart.getTime());
+  const passedDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  
+  return Math.min(30, passedDays);
+}
+
+export function isPlanCompleted(planStartDate?: string, now = new Date()): boolean {
+  const start = planStartDate ? new Date(planStartDate) : now;
+  const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const diffTime = Math.max(0, dNow.getTime() - dStart.getTime());
+  const passedDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  
+  return passedDays >= 30;
+}
+
 export function getRemainingDaysInPlan(savingsGoal: SavingsGoal, now = new Date()) {
   const start = savingsGoal.planStartDate ? new Date(savingsGoal.planStartDate) : new Date();
   const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
   const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   
-  const diffTime = dNow.getTime() - dStart.getTime();
-  const passedDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+  const diffTime = Math.max(0, dNow.getTime() - dStart.getTime());
+  const passedDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
   
-  const remainingDaysInCycle = 30 - (passedDays % 30);
-  return Math.max(remainingDaysInCycle, 1);
+  const remaining = 30 - Math.min(30, passedDays);
+  return Math.max(remaining, 1);
 }
 
 export function getDynamicDailyLimit(

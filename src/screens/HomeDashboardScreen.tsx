@@ -464,9 +464,9 @@ export default function HomeDashboardScreen() {
     const start = new Date(savingsGoal.planStartDate || new Date());
     const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
     const dSim = new Date(simulatedDate.getFullYear(), simulatedDate.getMonth(), simulatedDate.getDate());
-    const diffTime = dSim.getTime() - dStart.getTime();
+    const diffTime = Math.max(0, dSim.getTime() - dStart.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(diffDays + 1, 1);
+    return Math.min(30, diffDays + 1);
   }, [simulatedDate, savingsGoal.planStartDate]);
 
   const formattedSimulatedDate = useMemo(() => {
