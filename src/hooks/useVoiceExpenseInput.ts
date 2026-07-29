@@ -110,10 +110,9 @@ export function useVoiceExpenseInput() {
         speechModule.start({
           lang: "tr-TR",
           interimResults: true,
-          continuous: false,
+          continuous: true,
           addsPunctuation: true
         });
-        setIsListening(true);
       } catch (e) {
         console.log("[voice-expense] start error", e);
         try {
@@ -121,13 +120,12 @@ export function useVoiceExpenseInput() {
             lang: "tr-TR",
             interimResults: true
           });
-          setIsListening(true);
         } catch (e2) {
           setIsListening(false);
           setError("Mikrofon başlatılamadı, lütfen tekrar deneyin.");
         }
       }
-    }, 200);
+    }, 250);
   }
 
   function stopListening() {

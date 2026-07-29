@@ -71,19 +71,28 @@ export function getDynamicDailyLimit(
 ) {
   const baseDaily = getDailyLimit(incomes, expenses, savingsGoal, now);
   const monthlyLimit = getMonthlyLimit(incomes, expenses, savingsGoal);
-  const monthlySpent = getExpensesTotalForPeriod(expenses, "monthly", now);
-  const remainingMonthlyBudget = monthlyLimit - monthlySpent;
 
-  if (remainingMonthlyBudget <= 0) {
-    return 0;
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const pastExpensesTotal = expenses
+    .filter((e) => !e.isFixed && e.occurredAt && new Date(e.occurredAt) < todayStart)
+    .reduce((sum, e) => sum + toSafeAmount(e.amount), 0);
+
+  const start = savingsGoal.planStartDate ? new Date(savingsGoal.planStartDate) : now;
+  const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const diffTime = Math.max(0, todayStart.getTime() - dStart.getTime());
+  const pastDaysCount = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  const expectedPastBudget = pastDaysCount * baseDaily;
+  const pastOveruse = Math.max(0, pastExpensesTotal - expectedPastBudget);
+
+  if (pastOveruse <= 0) {
+    return baseDaily;
   }
 
   const remainingDays = getRemainingDaysInPlan(savingsGoal, now);
-  const pacingDaily = Math.round(remainingMonthlyBudget / remainingDays);
+  const remainingBudgetForCycle = Math.max(0, monthlyLimit - pastExpensesTotal);
+  const pacingDaily = Math.round(remainingBudgetForCycle / remainingDays);
 
-  // ALTIN KURAL:
-  // Çok harcıyorsa limit kısılır (pacingDaily < baseDaily).
-  // Az harcıyorsa veya harcamadıysa günlük limit 1.000 TL üstüne çıkmaz!
   return Math.min(pacingDaily, baseDaily);
 }
 
