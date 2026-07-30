@@ -1801,7 +1801,7 @@ export default function HomeDashboardScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>{t("analysisCategoryHeader")}</Text>
             <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>
-              {t("analysisCategoryTotal")}: {formatCurrency(selectedChartLabel ? analysisTotal : recentTotal)}
+              {t("analysisCategoryTotal")}: {formatCurrency(analysisTotal)}
             </Text>
           </View>
 
@@ -1816,12 +1816,16 @@ export default function HomeDashboardScreen() {
               <View style={{ gap: 20 }}>
                 {analysisCategoryData.map((item) => {
                   const categoryKey = getCategoryKey(item.category);
-                  const limit = categoryLimits[categoryKey] || 0;
-                  const hasLimit = limit > 0;
-                  const isLimitExceeded = hasLimit && item.amount > limit;
+                  const baseMonthlyLimit = categoryLimits[categoryKey] || 0;
+                  // Döneme göre limit çarpanı (Aylık -> 1, Haftalık -> 1/4.3, Günlük -> 1/30)
+                  const periodLimit = baseMonthlyLimit > 0
+                    ? (analysisPeriod === "daily" ? Math.round(baseMonthlyLimit / 30) : analysisPeriod === "weekly" ? Math.round(baseMonthlyLimit / 4.3) : baseMonthlyLimit)
+                    : 0;
+                  const hasLimit = periodLimit > 0;
+                  const isLimitExceeded = hasLimit && item.amount > periodLimit;
                   
                   const progressPercent = hasLimit 
-                    ? Math.min((item.amount / limit) * 100, 100) 
+                    ? Math.min((item.amount / periodLimit) * 100, 100) 
                     : item.percentage;
                   
                   const barColor = isLimitExceeded ? "#D32F2F" : themeColors.primary;
@@ -1841,7 +1845,7 @@ export default function HomeDashboardScreen() {
                           </View>
                           <Text style={[styles.categoryAmount, { color: amountColor, fontWeight: "800", fontSize: 13 }]}>
                             {hasLimit 
-                              ? `${formatCurrency(item.amount)} / ${formatCurrency(limit)}`
+                              ? `${formatCurrency(item.amount)} / ${formatCurrency(periodLimit)}`
                               : `${formatCurrency(item.amount)} (${Math.round(item.percentage)}%)`
                             }
                           </Text>
