@@ -38,100 +38,72 @@ export const formatCurrency = (value: number) => {
   return isNegative ? `-${currencySign}${formatted}` : `${currencySign}${formatted}`;
 };
 
-export function parseAmount(value: string | number) {
+export function parseAmount(value: string | number): number {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : 0;
   }
 
-  const raw = value.trim().replace(/\s/g, "");
+  if (!value) return 0;
+  const str = String(value).trim();
+  if (!str) return 0;
 
-  if (!raw) {
-    return 0;
+  // Virgül (,) varsa ondalık/küsurat kısmıdır. Örn: "250.000,50" -> 250000.5
+  if (str.includes(",")) {
+    const parts = str.split(",");
+    const intPart = parts[0].replace(/\D/g, "");
+    const decPart = parts.slice(1).join("").replace(/\D/g, "");
+    
+    const combined = `${intPart || "0"}.${decPart || "0"}`;
+    const parsed = Number.parseFloat(combined);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 
-  const match = raw.match(/\d+(?:[.,]\d+)*/);
+  // Virgül yoksa tamamı tam sayıdır. Örn: "250.000" -> 250000
+  const cleanInt = str.replace(/\D/g, "");
+  if (!cleanInt) return 0;
 
-  if (!match) {
-    return 0;
-  }
-
-  const numeric = match[0];
-  const lastComma = numeric.lastIndexOf(",");
-  const lastDot = numeric.lastIndexOf(".");
-  const decimalSeparator = getDecimalSeparator(numeric, lastComma, lastDot);
-  const normalized = decimalSeparator
-    ? numeric
-        .replace(new RegExp(`\\${decimalSeparator === "," ? "." : ","}`, "g"), "")
-        .replace(decimalSeparator, ".")
-    : numeric.replace(/[.,]/g, "");
-  const parsed = Number.parseFloat(normalized);
-
+  const parsed = Number.parseInt(cleanInt, 10);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
 /**
- * Kullanıcı miktar alanına (TextInput) veri girerken:
- * - Rakamları canlı olarak binlik ayırıcı ile biçimlendirir (Örn: 250000 -> 250.000).
- * - Küsurat (virgül) eklendiğinde küsuratı korur (Örn: 250.000,50).
+ * Kullanıcı miktar alanına (TextInput) veri girerken ve SİLERKEN:
+ * - Rakamları canlı olarak binlik ayırıcı nokta (.) ile biçimlendirir (Örn: 250000 -> 250.000).
+ * - Silme tuşuna basıldığında rakamlar eksiksiz ve takılmadan silinir (Asla nokta virgüle dönüşmez).
+ * - Kullanıcı açıkça virgül (,) koyarsa küsuratı korur (Örn: 250.000,50).
  */
 export function formatAmountInput(val: string): string {
   if (!val) return "";
 
-  // Sadece rakamlar, nokta ve virgüle izin ver
+  // Sadece rakamlar, nokta ve virgül
   const raw = val.replace(/[^0-9.,]/g, "");
   if (!raw) return "";
 
-  // Eğer metinde virgül (,) varsa ondalık kısmı ayrıştır
+  // Eğer kullanıcı açıkça virgül (,) kullandıysa ondalık/küsurat vardır
   if (raw.includes(",")) {
     const parts = raw.split(",");
-    const integerRaw = parts[0].replace(/\D/g, "");
-    const decimalRaw = parts.slice(1).join("").replace(/\D/g, "").slice(0, 2);
+    const intRaw = parts[0].replace(/\D/g, "");
+    const decRaw = parts.slice(1).join("").replace(/\D/g, "").slice(0, 2);
 
-    let formattedInteger = "0";
-    if (integerRaw) {
-      formattedInteger = integerRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    let formattedInt = "";
+    if (intRaw) {
+      formattedInt = intRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    } else {
+      formattedInt = "0";
     }
 
-    return `${formattedInteger},${decimalRaw}`;
-  }
-
-  // Eğer metinde sadece nokta (.) varsa ve noktadan sonra tam 1 veya 2 basamak varsa (küsurat gibi)
-  // ama birden fazla nokta yoksa ondalık virgülüne çevir
-  const dotParts = raw.split(".");
-  if (dotParts.length === 2 && dotParts[1].length > 0 && dotParts[1].length < 3) {
-    const integerRaw = dotParts[0].replace(/\D/g, "");
-    const decimalRaw = dotParts[1].replace(/\D/g, "").slice(0, 2);
-    let formattedInteger = "0";
-    if (integerRaw) {
-      formattedInteger = integerRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    // Virgülden sonraki karakter sildiyse veya virgülde durduysa (Örn: "250,")
+    if (parts.length > 1 && parts[1] === "") {
+      return `${formattedInt},`;
     }
-    return `${formattedInteger},${decimalRaw}`;
+
+    return `${formattedInt},${decRaw}`;
   }
 
-  // Sadece tam sayı (tüm binlik noktaları temizle ve sıfırdan canlı binlik noktaları koy)
-  const integerRaw = raw.replace(/\D/g, "");
-  if (!integerRaw) return "";
+  // Virgül yoksa tamamı tam sayıdır. Rakam dışı her şeyi silip binlik noktalarını sıfırdan koy!
+  const intRaw = raw.replace(/\D/g, "");
+  if (!intRaw) return "";
 
-  return integerRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
-
-function getDecimalSeparator(value: string, lastComma: number, lastDot: number) {
-  if (lastComma === -1 && lastDot === -1) {
-    return "";
-  }
-
-  if (lastComma !== -1 && lastDot !== -1) {
-    return lastComma > lastDot ? "," : ".";
-  }
-
-  const separator = lastComma !== -1 ? "," : ".";
-  const parts = value.split(separator);
-  const lastPart = parts[parts.length - 1];
-
-  if (parts.length > 2 || lastPart.length === 3) {
-    return "";
-  }
-
-  return separator;
+  return intRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
