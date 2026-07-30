@@ -4445,18 +4445,6 @@ function SavingsGoalEditModal({
                 style={[styles.formInput, { color: themeColors.text, fontWeight: "700" }]}
               />
             </View>
-            <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
-            <View style={styles.formRow}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Feather name="lock" size={13} color={themeColors.textMuted} />
-                <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>{t("editGoalSavedLabel")}</Text>
-              </View>
-              <View style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: isDarkMode ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)" }}>
-                <Text style={{ fontSize: 15, fontWeight: "800", color: "#00E58F" }}>
-                  {formatCurrency(parseAmount(currentAmount))}
-                </Text>
-              </View>
-            </View>
           </View>
 
           <View style={styles.sheetActions}>
