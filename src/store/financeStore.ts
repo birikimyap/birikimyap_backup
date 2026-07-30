@@ -239,14 +239,13 @@ export const useFinanceStore = create<FinanceState>()(
         if (prevCurrency === newCurrency) return;
 
         const convert = (val: number) => {
-          const EXCHANGE_RATES = {
-            TRY: 1,
-            USD: 33.0,
-            EUR: 36.0
-          };
-          const valueInTry = val * EXCHANGE_RATES[prevCurrency];
-          const rawConverted = valueInTry / EXCHANGE_RATES[newCurrency];
-          return Math.round(rawConverted * 100) / 100;
+          const liveRates = get().exchangeRates || { TRY: 1, USD: 0.025, EUR: 0.023 };
+          const fromRate = liveRates[prevCurrency] || 1;
+          const toRate = liveRates[newCurrency] || 1;
+          
+          const amountInTRY = val / fromRate;
+          const converted = amountInTRY * toRate;
+          return Math.round(converted * 100) / 100;
         };
 
         const incomes = get().incomes.map((income) => ({

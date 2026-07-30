@@ -2218,6 +2218,25 @@ export default function HomeDashboardScreen() {
             </View>
           </View>
 
+          {/* Canlı Piyasa Kurları Rozeti & Genişletilmiş Bilgi Kartı */}
+          <View style={{ backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.08)" : "#F0FDF4", borderRadius: 14, paddingVertical: 14, paddingHorizontal: 16, marginHorizontal: 16, marginVertical: 10, borderWidth: 1, borderColor: "rgba(0, 229, 143, 0.35)" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Feather name="activity" size={17} color="#00E58F" />
+                <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text }}>
+                  {language === "tr" ? "Canlı Piyasa Kurları" : "Live Exchange Rates"}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>
+                {language === "tr" ? `Saat Başı (${lastRatesUpdated})` : `Hourly (${lastRatesUpdated})`}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12, paddingHorizontal: 4 }}>
+              <Text style={{ fontSize: 13.5, fontWeight: "800", color: themeColors.text }}>🇺🇸 1 USD = {(1 / (exchangeRates.USD || 0.025)).toFixed(2)} ₺</Text>
+              <Text style={{ fontSize: 13.5, fontWeight: "800", color: themeColors.text }}>🇪🇺 1 EUR = {(1 / (exchangeRates.EUR || 0.023)).toFixed(2)} ₺</Text>
+            </View>
+          </View>
+
           <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
 
           <Pressable 
@@ -2336,7 +2355,9 @@ export default function HomeDashboardScreen() {
             style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
             onPress={async () => {
               triggerHaptic();
-              const mailUrl = "mailto:destek@birikimyap.co?subject=Birikim%20Yap%20Destek%20Talebi";
+              const targetEmail = language === "tr" ? "destek@birikimyap.co" : "support@birikimyap.co";
+              const subjectText = language === "tr" ? "Birikim Yap Destek Talebi" : "Birikim Yap Support Request";
+              const mailUrl = `mailto:${targetEmail}?subject=${encodeURIComponent(subjectText)}`;
               try {
                 const canOpen = await Linking.canOpenURL(mailUrl);
                 if (canOpen) {
@@ -2344,15 +2365,15 @@ export default function HomeDashboardScreen() {
                 } else {
                   setToastConfig({
                     visible: true,
-                    message: "Destek E-postası",
-                    subtext: "E-posta adresimiz: destek@birikimyap.co"
+                    message: language === "tr" ? "Destek E-postası" : "Support Email",
+                    subtext: `${language === "tr" ? "E-posta adresimiz" : "Our email"}: ${targetEmail}`
                   });
                 }
               } catch (e) {
                 setToastConfig({
                   visible: true,
-                  message: "Destek E-postası",
-                  subtext: "E-posta adresimiz: destek@birikimyap.co"
+                  message: language === "tr" ? "Destek E-postası" : "Support Email",
+                  subtext: `${language === "tr" ? "E-posta adresimiz" : "Our email"}: ${targetEmail}`
                 });
               }
             }}
