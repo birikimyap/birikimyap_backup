@@ -2336,7 +2336,7 @@ export default function HomeDashboardScreen() {
             style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
             onPress={async () => {
               triggerHaptic();
-              const mailUrl = "mailto:destek@birikimyap.com?subject=Birikim%20Yap%20Destek%20Talebi";
+              const mailUrl = "mailto:destek@birikimyap.co?subject=Birikim%20Yap%20Destek%20Talebi";
               try {
                 const canOpen = await Linking.canOpenURL(mailUrl);
                 if (canOpen) {
@@ -2345,14 +2345,14 @@ export default function HomeDashboardScreen() {
                   setToastConfig({
                     visible: true,
                     message: "Destek E-postası",
-                    subtext: "E-posta adresimiz: destek@birikimyap.com"
+                    subtext: "E-posta adresimiz: destek@birikimyap.co"
                   });
                 }
               } catch (e) {
                 setToastConfig({
                   visible: true,
                   message: "Destek E-postası",
-                  subtext: "E-posta adresimiz: destek@birikimyap.com"
+                  subtext: "E-posta adresimiz: destek@birikimyap.co"
                 });
               }
             }}
