@@ -2446,13 +2446,33 @@ export default function HomeDashboardScreen() {
             style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
             onPress={() => {
               triggerHaptic();
+              setLegalTab("terms");
               setIsLegalModalVisible(true);
             }}
           >
             <View style={styles.settingIconWrap}>
               <Feather name="file-text" size={20} color={themeColors.text} />
               <Text style={[styles.settingLabel, { color: themeColors.text }]}>
-                {language === "tr" ? "Kullanıcı Sözleşmesi & Gizlilik" : "Terms & Privacy Policy"}
+                {language === "tr" ? "Kullanım Koşulları" : "Terms of Service"}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
+          </Pressable>
+
+          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              setLegalTab("privacy");
+              setIsLegalModalVisible(true);
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="lock" size={20} color={themeColors.text} />
+              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
+                {language === "tr" ? "Gizlilik Politikası" : "Privacy Policy"}
               </Text>
             </View>
             <Feather name="chevron-right" size={20} color={themeColors.textMuted} />

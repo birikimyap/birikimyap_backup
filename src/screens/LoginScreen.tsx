@@ -18,6 +18,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, spacing, typography } from "@/theme";
 import { useFinanceStore } from "@/store/financeStore";
+import { LegalModal } from "@/components/LegalModal";
+import { TERMS_OF_SERVICE, PRIVACY_POLICY, LegalDoc } from "@/utils/legalTexts";
 import { translations } from "@/utils/translations";
 import { signInWithGoogle, getCheckSession, signUpWithEmail, signInWithEmail, checkUserProfileExist, loadUserPlanFromCloud } from "@/utils/supabaseAuth";
 import { signInWithApple } from "@/utils/appleAuth";
@@ -47,6 +49,7 @@ export default function LoginScreen() {
   const [emailVal, setEmailVal] = useState("");
   const [passwordVal, setPasswordVal] = useState("");
   const [loadingEmail, setLoadingEmail] = useState(false);
+  const [legalModalDoc, setLegalModalDoc] = useState<LegalDoc | null>(null);
 
   const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
 
@@ -304,16 +307,27 @@ export default function LoginScreen() {
           <View style={styles.legalBlock}>
             {language === "tr" ? (
               <Text style={styles.legalText}>
-                Devam ederek <Text style={styles.legalLink}>Kullanım Şartları</Text> ve{"\n"}
-                <Text style={styles.legalLink}>Gizlilik Politikası</Text>’nı kabul etmiş olursun.
+                Devam ederek{" "}
+                <Text style={styles.legalLink} onPress={() => setLegalModalDoc(TERMS_OF_SERVICE)}>Kullanım Koşulları</Text>
+                {" "}ve{" "}
+                <Text style={styles.legalLink} onPress={() => setLegalModalDoc(PRIVACY_POLICY)}>Gizlilik Politikası</Text>
+                {'\u2019'}nı kabul etmiş olursun.
               </Text>
             ) : (
               <Text style={styles.legalText}>
-                By continuing, you agree to our <Text style={styles.legalLink}>Terms of Use</Text> and{"\n"}
-                <Text style={styles.legalLink}>Privacy Policy</Text>.
+                By continuing, you agree to our{" "}
+                <Text style={styles.legalLink} onPress={() => setLegalModalDoc(TERMS_OF_SERVICE)}>Terms of Service</Text>
+                {" "}and{" "}
+                <Text style={styles.legalLink} onPress={() => setLegalModalDoc(PRIVACY_POLICY)}>Privacy Policy</Text>.
               </Text>
             )}
           </View>
+
+          <LegalModal
+            visible={legalModalDoc !== null}
+            doc={legalModalDoc}
+            onClose={() => setLegalModalDoc(null)}
+          />
 
           <View style={styles.trustRow}>
             <View style={styles.line} />
