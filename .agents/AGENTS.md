@@ -39,3 +39,8 @@
   * Zustand store'da yapılan değişiklikler yerel depolamada (`AsyncStorage`) kayıtlı eski şemalarla çakışmamalıdır.
   * Store rehydrated olduğunda, planın tutarlılığını garanti etmek için `state.refreshPlan()` işlevi çağrılarak hesaplamaların güncelliği doğrulanmalıdır.
   * Gerekli durumlarda geliştiricinin test verilerini sıfırlayabilmesi için giriş sayfasındaki test aracı sıfırlama butonu muhafaza edilecektir.
+
+- **Hibrit Kullanıcı ve Bütçe Depolama Mimarisi (Hybrid Storage & Cloud Sync):**
+  * Kullanıcı kimliği doğrulandığında (Google, Apple, Email), bütçe verileri hem cihaz diskinde `user_plan_${userId}` mühürüyle hem de Supabase `profiles` tablosuna çift yedeklemeli (Dual-Backup: `user_data` + `website`) olarak kaydedilmelidir.
+  * Kullanıcı çıkış yapıp aynı hesapla tekrar girdiğinde `loadUserPlanFromCloud(userId)` işlevi çağrılarak bütçe planı saniyeler içinde geri yüklenmeli ve kullanıcı Ad-Soyad ekranına sokulmadan doğrudan Ana Sayfaya (`/home-dashboard`) aktarılmalıdır.
+  * Uygulama başlangıcında otomatik oturum atlaması yapılmamalı, uygulama her açıldığında Giriş Sayfası (`LoginScreen`) ekranda sabit tutulmalıdır.

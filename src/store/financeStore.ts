@@ -81,6 +81,11 @@ type FinanceState = {
     spendableBudget: number;
     isSuccess: boolean;
   }) => void;
+  userProfile: { id: string; email: string; fullName: string } | null;
+  setUserProfile: (profile: { id: string; email: string; fullName: string } | null) => void;
+  hasCompletedOnboarding: boolean;
+  setHasCompletedOnboarding: (completed: boolean) => void;
+  resetAllData: () => void;
 };
 
 const initialIncomes: Income[] = [
@@ -171,6 +176,10 @@ export const useFinanceStore = create<FinanceState>()(
   persist(
     (set, get) => ({
       hasHydrated: false,
+      userProfile: null,
+      setUserProfile: (userProfile) => set({ userProfile }),
+      hasCompletedOnboarding: false,
+      setHasCompletedOnboarding: (hasCompletedOnboarding) => set({ hasCompletedOnboarding }),
       simulatedDateOffsetDays: 0,
       incomes: initialIncomes,
       expenses: initialFixedExpenses,
@@ -429,7 +438,40 @@ export const useFinanceStore = create<FinanceState>()(
           plan: next.plan
         });
       },
-      getZeroSpendingStreak: () => getZeroSpendingStreak(get().expenses, getSimulatedDate(get().simulatedDateOffsetDays))
+      getZeroSpendingStreak: () => getZeroSpendingStreak(get().expenses, getSimulatedDate(get().simulatedDateOffsetDays)),
+      resetAllData: () => {
+        const cleanGoal: SavingsGoal = {
+          title: "Acil durum",
+          selectedGoal: "Acil durum",
+          targetAmount: 0,
+          currentAmount: 0,
+          monthlyContribution: 0,
+          dailyTarget: 0,
+          planStartDate: new Date().toISOString()
+        };
+        const cleanIncomes: Income[] = [
+          { id: "salary", label: "Maaş", amount: 0, period: "monthly" },
+          { id: "freelance", label: "Freelance", amount: 0, period: "monthly" },
+          { id: "extra", label: "Ek gelir", amount: 0, period: "monthly" }
+        ];
+        const cleanFixed: Expense[] = [
+          { id: "rent", label: "Kira", amount: 0, period: "monthly", isFixed: true },
+          { id: "bills", label: "Faturalar", amount: 0, period: "monthly", isFixed: true },
+          { id: "transport", label: "Ulaşım", amount: 0, period: "monthly", isFixed: true }
+        ];
+        const cleanPlan = calculateFinancePlan(cleanIncomes, cleanFixed, cleanGoal, "daily");
+        set({
+          userProfile: null,
+          hasCompletedOnboarding: false,
+          incomes: cleanIncomes,
+          expenses: cleanFixed,
+          savingsGoal: cleanGoal,
+          selectedPeriod: "daily",
+          plan: cleanPlan,
+          simulatedDateOffsetDays: 0,
+          monthlyArchives: []
+        });
+      }
     }),
     {
       name: "birikim-yap-finance-storage",

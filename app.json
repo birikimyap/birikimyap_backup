@@ -11,7 +11,8 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.birikimyapsiri.app",
-      "buildNumber": "73"
+      "buildNumber": "73",
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.thewalkingman.birikimyap",
@@ -19,6 +20,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-apple-authentication",
       [
         "expo-speech-recognition",
         {
@@ -29,7 +31,8 @@
           ]
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

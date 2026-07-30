@@ -31,11 +31,11 @@
 		C74A32352D57CED1C46F15CB /* libPods-BirikimYap.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BirikimYap.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = BirikimYap/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* BirikimYap-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "BirikimYap-Bridging-Header.h"; path = "BirikimYap/BirikimYap-Bridging-Header.h"; sourceTree = "<group>"; };
+		FFF6EF8F56093731AAC6175A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = BirikimYap/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		SR1000002D0307B40044C1D9 /* AddExpenseIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AddExpenseIntent.swift; path = BirikimYap/Siri/AddExpenseIntent.swift; sourceTree = "<group>"; };
 		SR1000022D0307B40044C1D9 /* SiriBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SiriBridge.swift; path = BirikimYap/Siri/SiriBridge.swift; sourceTree = "<group>"; };
 		SR1000042D0307B40044C1D9 /* SiriBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SiriBridge.m; path = BirikimYap/Siri/SiriBridge.m; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* BirikimYap-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "BirikimYap-Bridging-Header.h"; path = "BirikimYap/BirikimYap-Bridging-Header.h"; sourceTree = "<group>"; };
-		FFF6EF8F56093731AAC6175A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = BirikimYap/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -260,6 +260,7 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-BirikimYap/Pods-BirikimYap-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
@@ -269,6 +270,7 @@
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",

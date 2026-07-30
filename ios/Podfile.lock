@@ -1,4 +1,6 @@
 PODS:
+  - EXApplication (7.0.8):
+    - ExpoModulesCore
   - EXConstants (18.0.13):
     - ExpoModulesCore
   - Expo (54.0.34):
@@ -26,7 +28,11 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - ExpoAppleAuthentication (8.0.8):
+    - ExpoModulesCore
   - ExpoAsset (12.0.13):
+    - ExpoModulesCore
+  - ExpoCrypto (15.0.9):
     - ExpoModulesCore
   - ExpoFileSystem (19.0.22):
     - ExpoModulesCore
@@ -65,6 +71,8 @@ PODS:
     - ReactNativeDependencies
     - Yoga
   - ExpoSpeechRecognition (3.1.3):
+    - ExpoModulesCore
+  - ExpoWebBrowser (15.0.11):
     - ExpoModulesCore
   - FBLazyVector (0.81.5)
   - hermes-engine (0.81.5):
@@ -2007,9 +2015,12 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
+  - EXApplication (from `../node_modules/expo-auth-session/node_modules/expo-application/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - Expo (from `../node_modules/expo`)
+  - ExpoAppleAuthentication (from `../node_modules/expo-apple-authentication/ios`)
   - ExpoAsset (from `../node_modules/expo/node_modules/expo-asset/ios`)
+  - ExpoCrypto (from `../node_modules/expo-auth-session/node_modules/expo-crypto/ios`)
   - ExpoFileSystem (from `../node_modules/expo/node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
   - ExpoHead (from `../node_modules/expo-router/ios`)
@@ -2018,6 +2029,7 @@ DEPENDENCIES:
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSpeechRecognition (from `../node_modules/expo-speech-recognition/ios`)
+  - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -2094,12 +2106,18 @@ DEPENDENCIES:
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 EXTERNAL SOURCES:
+  EXApplication:
+    :path: "../node_modules/expo-auth-session/node_modules/expo-application/ios"
   EXConstants:
     :path: "../node_modules/expo-constants/ios"
   Expo:
     :path: "../node_modules/expo"
+  ExpoAppleAuthentication:
+    :path: "../node_modules/expo-apple-authentication/ios"
   ExpoAsset:
     :path: "../node_modules/expo/node_modules/expo-asset/ios"
+  ExpoCrypto:
+    :path: "../node_modules/expo-auth-session/node_modules/expo-crypto/ios"
   ExpoFileSystem:
     :path: "../node_modules/expo/node_modules/expo-file-system/ios"
   ExpoFont:
@@ -2116,6 +2134,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoSpeechRecognition:
     :path: "../node_modules/expo-speech-recognition/ios"
+  ExpoWebBrowser:
+    :path: "../node_modules/expo-web-browser/ios"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
@@ -2265,9 +2285,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  EXApplication: 13420f8139864183f8a04fd6099077bdf8cfb186
   EXConstants: 3feb66fd1d94202fc1f0946d74e029d8b224b60e
   Expo: e165e0db6ee12e51b5a914ef0758d309f28bdb4a
+  ExpoAppleAuthentication: 31bb6cdc57d7169e5d994fff7ec4b97c62423534
   ExpoAsset: cc98e16f65a64e58079d9ccad3b5eec2b57b9263
+  ExpoCrypto: 069f975653b104f248ff5af13c1903b1ca5a4e40
   ExpoFileSystem: dc2c00cc568d432efc36ea1d994c25050909d23d
   ExpoFont: cc2be150f9c107bc8cd072eb0cd15388d6081479
   ExpoHead: 3f6ed6cbda48f13bcaddae98f8e5dc525dcfb34f
@@ -2276,6 +2299,7 @@ SPEC CHECKSUMS:
   ExpoLinking: 4f1fc07ec4b3c10d60ec91617db973575104ec7e
   ExpoModulesCore: 92b8d81c177eb970ee6e01b86e85bf296533c179
   ExpoSpeechRecognition: fd574043a94289bc4d3505b7135bdf0acb385c8f
+  ExpoWebBrowser: 93acaae9a851370332e0c1310cbcd1437c0b4377
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990

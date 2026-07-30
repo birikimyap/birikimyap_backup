@@ -8,6 +8,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { colors, radius } from "@/theme";
 import { formatCurrency } from "@/utils/currency";
 import { translations } from "@/utils/translations";
+import { saveUserPlanToCloud } from "@/utils/supabaseAuth";
 
 const mascotTR = require("../../pgn/mascot-cutout.png");
 const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
@@ -109,7 +110,11 @@ export default function PlanReadyScreen() {
 
           <View style={styles.footer}>
             <Pressable 
-              onPress={() => router.replace("/")} 
+              onPress={async () => {
+                useFinanceStore.getState().setHasCompletedOnboarding(true);
+                await saveUserPlanToCloud();
+                router.replace("/");
+              }} 
               style={({ pressed }) => [styles.ctaWrapper, pressed && styles.ctaPressed]}
             >
               <LinearGradient

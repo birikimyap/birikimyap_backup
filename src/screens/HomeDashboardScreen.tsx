@@ -28,6 +28,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useVoiceExpenseInput } from "@/hooks/useVoiceExpenseInput";
 import { Expense, Period } from "@/models/finance";
+import { signOutUser } from "@/utils/supabaseAuth";
 import { useFinanceStore } from "@/store/financeStore";
 import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
@@ -890,12 +891,14 @@ export default function HomeDashboardScreen() {
     const isDeficit = selectedPeriodRemaining < 0;
     const highestCat = topCategoryInfo?.category || (language === "tr" ? "Genel" : "General");
     const streak = useFinanceStore.getState().getZeroSpendingStreak();
+    const userProfileState = useFinanceStore.getState().userProfile;
+    const userFirstName = userProfileState?.fullName?.trim().split(" ")[0] || (userProfileState?.email ? userProfileState.email.split("@")[0] : (language === "tr" ? "Kullanıcı" : "User"));
 
     const streakQuotes = language === "tr" ? [
-      `Tebrikler Gürkan! Tam ${streak} gündür sıfır harcama yaptın, harika gidiyorsun! 🏆🐖`,
+      `Tebrikler ${userFirstName}! Tam ${streak} gündür sıfır harcama yaptın, harika gidiyorsun! 🏆🐖`,
       `Müthiş! ${streak} günlük sıfır harcama serin var, tasarruf şampiyonusun! 🔥✨`
     ] : [
-      `Congratulations Gurkan! You haven't spent anything for ${streak} days, you are doing great! 🏆🐖`,
+      `Congratulations ${userFirstName}! You haven't spent anything for ${streak} days, you are doing great! 🏆🐖`,
       `Awesome! You have a ${streak}-day zero spending streak, you are a savings champion! 🔥✨`
     ];
 
@@ -912,12 +915,12 @@ export default function HomeDashboardScreen() {
     ];
 
     const healthyQuotes = language === "tr" ? [
-      "Harika gidiyoruz Gürkan! Böyle devam edersek hedef cepte! 🎯",
+      `Harika gidiyoruz ${userFirstName}! Böyle devam edersek hedef cepte! 🎯`,
       "Bugün kahveyi evde demleyip tasarrufa katkı sağlamaya ne dersin? ☕",
       "Bütçemiz güvende, maskotun senden çok memnun! 🐖✨",
       "Küçük birikimler büyük hedeflere ulaştırır, harika gidiyorsun! 💸"
     ] : [
-      "We are doing great! Keep it up and we will hit our target! 🎯",
+      `We are doing great ${userFirstName}! Keep it up and we will hit our target! 🎯`,
       "How about making coffee at home today to save a bit? ☕",
       "Our budget is safe, your piggy bank is very happy! 🐖✨",
       "Small savings lead to big targets. Keep up the good work! 💸"
@@ -1867,12 +1870,14 @@ export default function HomeDashboardScreen() {
   }
 
   function renderProfileTab() {
+    const profState = useFinanceStore.getState().userProfile;
+    const displayFullName = profState?.fullName?.trim() || (profState?.email ? profState.email.split("@")[0] : (language === "tr" ? "Kullanıcı" : "User"));
     return (
       <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         {/* Header with integrated User Profile */}
         <View style={[styles.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
           <View style={styles.greetingWrap}>
-            <Text style={[styles.greeting, { color: themeColors.text, fontWeight: "900" }]}>Gürkan 👋</Text>
+            <Text style={[styles.greeting, { color: themeColors.text, fontWeight: "900" }]}>{displayFullName} 👋</Text>
             <Text style={[styles.subtitle, { color: themeColors.textMuted, fontWeight: "600" }]}>{t("profileSubtitle")}</Text>
           </View>
           <View style={[
@@ -2403,6 +2408,41 @@ export default function HomeDashboardScreen() {
               <Text style={[styles.settingLabel, { color: themeColors.danger }]}>{t("profileSettingReset")}</Text>
             </View>
             <Feather name="chevron-right" size={20} color={themeColors.danger} />
+          </Pressable>
+        </View>
+
+        {/* Log Out Card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: "#EF4444", borderWidth: 1.5, flexDirection: "column", paddingVertical: 8, marginTop: 14 }]}>
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              Alert.alert(
+                language === "tr" ? "Çıkış Yap" : "Log Out",
+                language === "tr" ? "Hesabınızdan çıkış yapmak istediğinize emin misiniz?" : "Are you sure you want to log out?",
+                [
+                  { text: language === "tr" ? "İptal" : "Cancel", style: "cancel" },
+                  {
+                    text: language === "tr" ? "Çıkış Yap" : "Log Out",
+                    style: "destructive",
+                    onPress: async () => {
+                      triggerHaptic();
+                      await signOutUser();
+                      useFinanceStore.getState().resetAllData();
+                      router.replace("/");
+                    }
+                  }
+                ]
+              );
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="log-out" size={20} color="#EF4444" />
+              <Text style={[styles.settingLabel, { color: "#EF4444", fontWeight: "800" }]}>
+                {language === "tr" ? "Hesaptan Çıkış Yap" : "Log Out"}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={20} color="#EF4444" />
           </Pressable>
         </View>
       </ScrollView>
