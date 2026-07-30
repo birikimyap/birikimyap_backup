@@ -200,7 +200,7 @@ export default function IntroFeatureScreen() {
         </View>
 
         <Pressable
-          onPress={() => router.push("/income")}
+          onPress={() => router.push("/legal-consent")}
           style={({ pressed }) => [styles.ctaWrapper, pressed && styles.ctaPressed]}
         >
           <LinearGradient

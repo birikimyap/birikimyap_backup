@@ -115,83 +115,13 @@ export default function PlanReadyScreen() {
           </View>
 
           <View style={styles.footer}>
-            {/* Legal Consent Box */}
-            <View style={{ 
-              backgroundColor: termsAccepted ? "rgba(0,229,143,0.08)" : "rgba(255,255,255,0.04)",
-              borderWidth: 1.5,
-              borderColor: termsAccepted ? "rgba(0,229,143,0.4)" : "rgba(255,255,255,0.12)",
-              borderRadius: 16,
-              padding: 14,
-              marginBottom: 14,
-              flexDirection: "row",
-              alignItems: "flex-start",
-              gap: 12
-            }}>
-              <Pressable
-                onPress={() => setTermsAccepted(!termsAccepted)}
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 7,
-                  borderWidth: 2,
-                  borderColor: termsAccepted ? "#00E58F" : "rgba(255,255,255,0.3)",
-                  backgroundColor: termsAccepted ? "#00E58F" : "transparent",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: 1,
-                  flexShrink: 0
-                }}
-              >
-                {termsAccepted && <Feather name="check" size={14} color="#031D14" />}
-              </Pressable>
-              <View style={{ flex: 1 }}>
-                {language === "tr" ? (
-                  <Text style={{ fontSize: 13, lineHeight: 20, color: "rgba(255,255,255,0.8)", fontWeight: "600" }}>
-                    <Text 
-                      style={{ color: "#00E58F", fontWeight: "800", textDecorationLine: "underline" }}
-                      onPress={() => setLegalModalDoc(TERMS_OF_SERVICE)}
-                    >
-                      Kullanım Koşulları
-                    </Text>
-                    {" "}ve{" "}
-                    <Text 
-                      style={{ color: "#00E58F", fontWeight: "800", textDecorationLine: "underline" }}
-                      onPress={() => setLegalModalDoc(PRIVACY_POLICY)}
-                    >
-                      Gizlilik Politikası
-                    </Text>
-                    {'\u2019'}nı okudum ve kabul ediyorum.
-                  </Text>
-                ) : (
-                  <Text style={{ fontSize: 13, lineHeight: 20, color: "rgba(255,255,255,0.8)", fontWeight: "600" }}>
-                    I have read and agree to the{" "}
-                    <Text 
-                      style={{ color: "#00E58F", fontWeight: "800", textDecorationLine: "underline" }}
-                      onPress={() => setLegalModalDoc(TERMS_OF_SERVICE)}
-                    >
-                      Terms of Service
-                    </Text>
-                    {" "}and{" "}
-                    <Text 
-                      style={{ color: "#00E58F", fontWeight: "800", textDecorationLine: "underline" }}
-                      onPress={() => setLegalModalDoc(PRIVACY_POLICY)}
-                    >
-                      Privacy Policy
-                    </Text>
-                    .
-                  </Text>
-                )}
-              </View>
-            </View>
-
             <Pressable 
               onPress={async () => {
-                if (!termsAccepted) return;
                 useFinanceStore.getState().setHasCompletedOnboarding(true);
                 await saveUserPlanToCloud();
                 router.replace("/");
               }} 
-              style={({ pressed }) => [styles.ctaWrapper, pressed && termsAccepted && styles.ctaPressed, !termsAccepted && { opacity: 0.4 }]}
+              style={({ pressed }) => [styles.ctaWrapper, pressed && styles.ctaPressed]}
             >
               <LinearGradient
                 colors={["#00E58F", "#00BF76", "#048052"]}
