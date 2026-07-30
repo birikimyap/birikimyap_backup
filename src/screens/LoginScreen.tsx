@@ -304,31 +304,6 @@ export default function LoginScreen() {
             </KeyboardAvoidingView>
           </Modal>
 
-          <View style={styles.legalBlock}>
-            {language === "tr" ? (
-              <Text style={styles.legalText}>
-                Devam ederek{" "}
-                <Text style={styles.legalLink} onPress={() => setLegalModalDoc(TERMS_OF_SERVICE)}>Kullanım Koşulları</Text>
-                {" "}ve{" "}
-                <Text style={styles.legalLink} onPress={() => setLegalModalDoc(PRIVACY_POLICY)}>Gizlilik Politikası</Text>
-                {'\u2019'}nı kabul etmiş olursun.
-              </Text>
-            ) : (
-              <Text style={styles.legalText}>
-                By continuing, you agree to our{" "}
-                <Text style={styles.legalLink} onPress={() => setLegalModalDoc(TERMS_OF_SERVICE)}>Terms of Service</Text>
-                {" "}and{" "}
-                <Text style={styles.legalLink} onPress={() => setLegalModalDoc(PRIVACY_POLICY)}>Privacy Policy</Text>.
-              </Text>
-            )}
-          </View>
-
-          <LegalModal
-            visible={legalModalDoc !== null}
-            doc={legalModalDoc}
-            onClose={() => setLegalModalDoc(null)}
-          />
-
           <View style={styles.trustRow}>
             <View style={styles.line} />
             <View style={styles.shieldWrap}>
