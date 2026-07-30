@@ -86,6 +86,9 @@ export default function HomeDashboardScreen() {
   const fetchExchangeRates = useFinanceStore((state) => state.fetchExchangeRates);
   const lastRatesUpdated = useFinanceStore((state) => state.lastRatesUpdated);
   const exchangeRates = useFinanceStore((state) => state.exchangeRates);
+  const userProfile = useFinanceStore((state) => state.userProfile);
+  const setUserProfile = useFinanceStore((state) => state.setUserProfile);
+  const userFirstName = userProfile?.fullName ? userProfile.fullName.trim().split(" ")[0] : "";
 
   useEffect(() => {
     fetchExchangeRates();
@@ -217,6 +220,10 @@ export default function HomeDashboardScreen() {
   
   // Analysis Chart filter state
   const [selectedChartLabel, setSelectedChartLabel] = useState<string | null>(null);
+
+  // Profile Edit Modal State
+  const [isProfileEditModalVisible, setIsProfileEditModalVisible] = useState(false);
+  const [editFullNameInput, setEditFullNameInput] = useState(userProfile?.fullName || "");
 
   // Listen for incoming deep links for Siri / Kestirmeler (Shortcuts) integration and sync Siri AppGroup expenses
   useEffect(() => {
@@ -967,7 +974,9 @@ export default function HomeDashboardScreen() {
       <View style={styles.tabContentContainer}>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
-            <Text style={[styles.greeting, { color: themeColors.text }]}>{t("welcomeUser")}</Text>
+            <Text style={[styles.greeting, { color: themeColors.text }]}>
+              {t("welcomeUser", { name: userFirstName || (language === "tr" ? "Kullanıcı" : "User") })}
+            </Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4, marginBottom: 2 }}>
               <Feather name="calendar" size={13} color={themeColors.primary} />
               <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.primary }}>
@@ -1879,6 +1888,8 @@ export default function HomeDashboardScreen() {
   function renderProfileTab() {
     const profState = useFinanceStore.getState().userProfile;
     const displayFullName = profState?.fullName?.trim() || (profState?.email ? profState.email.split("@")[0] : (language === "tr" ? "Kullanıcı" : "User"));
+    const initialLetter = userFirstName ? userFirstName[0].toUpperCase() : (displayFullName ? displayFullName[0].toUpperCase() : "K");
+
     return (
       <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
         {/* Header with integrated User Profile */}
@@ -1887,21 +1898,29 @@ export default function HomeDashboardScreen() {
             <Text style={[styles.greeting, { color: themeColors.text, fontWeight: "900" }]}>{displayFullName} 👋</Text>
             <Text style={[styles.subtitle, { color: themeColors.textMuted, fontWeight: "600" }]}>{t("profileSubtitle")}</Text>
           </View>
-          <View style={[
-            styles.profileAvatarHeader, 
-            { 
-              backgroundColor: "#00E58F",
-              borderWidth: 2,
-              borderColor: isDarkMode ? "#14251E" : "#FFFFFF",
-              shadowColor: "#00E58F",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.45,
-              shadowRadius: 10,
-              elevation: 5
-            }
-          ]}>
-            <Text style={[styles.profileAvatarHeaderText, { color: "#031D14", fontWeight: "900" }]}>G</Text>
-          </View>
+          <Pressable 
+            onPress={() => {
+              triggerHaptic();
+              setEditFullNameInput(profState?.fullName || userFirstName || "");
+              setIsProfileEditModalVisible(true);
+            }}
+            style={({ pressed }) => [
+              styles.profileAvatarHeader, 
+              { 
+                backgroundColor: "#00E58F",
+                borderWidth: 2,
+                borderColor: isDarkMode ? "#14251E" : "#FFFFFF",
+                shadowColor: "#00E58F",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.45,
+                shadowRadius: 10,
+                elevation: 5,
+                opacity: pressed ? 0.8 : 1
+              }
+            ]}
+          >
+            <Text style={[styles.profileAvatarHeaderText, { color: "#031D14", fontWeight: "900" }]}>{initialLetter}</Text>
+          </Pressable>
         </View>
 
         {/* Compact Side-by-Side Budget Summary Card */}
@@ -2565,6 +2584,101 @@ export default function HomeDashboardScreen() {
           onClose={() => setIsNotificationsVisible(false)}
           notifications={notifications}
         />
+
+        {/* Profile Name Edit Modal */}
+        <Modal
+          visible={isProfileEditModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsProfileEditModalVisible(false)}
+        >
+          <Pressable 
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 }}
+            onPress={() => setIsProfileEditModalVisible(false)}
+          >
+            <Pressable 
+              style={{ width: "100%", maxWidth: 360, backgroundColor: themeColors.surface, borderRadius: 20, padding: 24, borderWidth: 1, borderColor: themeColors.border, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 20, elevation: 8 }}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#00E58F", justifyContent: "center", alignItems: "center" }}>
+                    <Feather name="user" size={20} color="#031D14" />
+                  </View>
+                  <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.text }}>
+                    {language === "tr" ? "Profili Düzenle" : "Edit Profile"}
+                  </Text>
+                </View>
+                <Pressable onPress={() => setIsProfileEditModalVisible(false)}>
+                  <Feather name="x" size={22} color={themeColors.textMuted} />
+                </Pressable>
+              </View>
+
+              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.textMuted, marginBottom: 8 }}>
+                {language === "tr" ? "Adınız Soyadınız" : "Full Name"}
+              </Text>
+              <TextInput
+                value={editFullNameInput}
+                onChangeText={setEditFullNameInput}
+                placeholder={language === "tr" ? "Adınız Soyadınız" : "Full Name"}
+                placeholderTextColor={themeColors.textMuted}
+                style={{
+                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                  borderWidth: 1.2,
+                  borderColor: themeColors.border,
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  fontSize: 15,
+                  fontWeight: "700",
+                  color: themeColors.text,
+                  marginBottom: 20
+                }}
+              />
+
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <Pressable
+                  onPress={() => setIsProfileEditModalVisible(false)}
+                  style={{ flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: themeColors.border, alignItems: "center" }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: "800", color: themeColors.text }}>
+                    {language === "tr" ? "İptal" : "Cancel"}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={async () => {
+                    triggerHaptic();
+                    const trimmedName = editFullNameInput.trim();
+                    if (trimmedName) {
+                      const curProfile = useFinanceStore.getState().userProfile;
+                      const updatedProfile = {
+                        id: curProfile?.id || "local-user",
+                        email: curProfile?.email || "user@birikimyap.co",
+                        fullName: trimmedName
+                      };
+                      useFinanceStore.getState().setUserProfile(updatedProfile);
+                      if (updatedProfile.id) {
+                        const { saveUserPlanToCloud } = await import("@/utils/supabaseAuth");
+                        await saveUserPlanToCloud();
+                      }
+                      setToastConfig({
+                        visible: true,
+                        message: language === "tr" ? "Profil Güncellendi! ✨" : "Profile Updated! ✨",
+                        subtext: language === "tr" ? `Hoş geldin ${trimmedName.split(" ")[0]}!` : `Welcome ${trimmedName.split(" ")[0]}!`
+                      });
+                    }
+                    setIsProfileEditModalVisible(false);
+                  }}
+                  style={{ flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: "#00E58F", alignItems: "center" }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: "900", color: "#031D14" }}>
+                    {language === "tr" ? "Kaydet" : "Save"}
+                  </Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
 
         <CategoryLimitsModal
           visible={isCategoryLimitsModalVisible}

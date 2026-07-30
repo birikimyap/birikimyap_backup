@@ -3,7 +3,7 @@ export const translations = {
     // General / Common
     welcome: "Hoş geldin",
     welcomeSub: "Bugün finansal hedeflerine bir adım daha yaklaştın.",
-    welcomeUser: "Hoş geldin 👋",
+    welcomeUser: "Hoş geldin {{name}} 👋",
     cancel: "İptal",
     save: "Kaydet",
     close: "Kapat",
@@ -170,7 +170,7 @@ export const translations = {
     // General / Common
     welcome: "Welcome",
     welcomeSub: "Today you are one step closer to your financial goals.",
-    welcomeUser: "Welcome, Gurkan 👋",
+    welcomeUser: "Welcome, {{name}} 👋",
     cancel: "Cancel",
     save: "Save",
     close: "Close",
