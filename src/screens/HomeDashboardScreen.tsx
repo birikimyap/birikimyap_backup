@@ -83,6 +83,13 @@ export default function HomeDashboardScreen() {
   const addMonthlyArchiveRecord = useFinanceStore((state) => state.addMonthlyArchiveRecord);
   const getRemainingLimitForPeriod = useFinanceStore((state) => state.getRemainingLimitForPeriod);
   const simulatedDateOffsetDays = useFinanceStore((state) => state.simulatedDateOffsetDays);
+  const fetchExchangeRates = useFinanceStore((state) => state.fetchExchangeRates);
+  const lastRatesUpdated = useFinanceStore((state) => state.lastRatesUpdated);
+  const exchangeRates = useFinanceStore((state) => state.exchangeRates);
+
+  useEffect(() => {
+    fetchExchangeRates();
+  }, []);
 
   const t = (key: keyof typeof translations["tr"], variables?: Record<string, string>): string => {
     let str: string = translations[language][key] || key;
@@ -2327,13 +2334,27 @@ export default function HomeDashboardScreen() {
         <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, flexDirection: "column", paddingVertical: 8, marginTop: 14 }]}>
           <Pressable 
             style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
-            onPress={() => {
+            onPress={async () => {
               triggerHaptic();
-              setToastConfig({
-                visible: true,
-                message: t("sheetContactToast"),
-                subtext: t("sheetContactToastSub")
-              });
+              const mailUrl = "mailto:destek@birikimyap.com?subject=Birikim%20Yap%20Destek%20Talebi";
+              try {
+                const canOpen = await Linking.canOpenURL(mailUrl);
+                if (canOpen) {
+                  await Linking.openURL(mailUrl);
+                } else {
+                  setToastConfig({
+                    visible: true,
+                    message: "Destek E-postası",
+                    subtext: "E-posta adresimiz: destek@birikimyap.com"
+                  });
+                }
+              } catch (e) {
+                setToastConfig({
+                  visible: true,
+                  message: "Destek E-postası",
+                  subtext: "E-posta adresimiz: destek@birikimyap.com"
+                });
+              }
             }}
           >
             <View style={styles.settingIconWrap}>

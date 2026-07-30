@@ -10,7 +10,7 @@
 				<string>arm64</string>
 			</array>
 			<key>buildNumber</key>
-			<string>57</string>
+			<string>73</string>
 			<key>certificate</key>
 			<dict>
 				<key>SHA1</key>
@@ -119,6 +119,10 @@
 				<string>TH26W2P688.com.birikimyapsiri.app</string>
 				<key>beta-reports-active</key>
 				<true/>
+				<key>com.apple.developer.applesignin</key>
+				<array>
+					<string>Default</string>
+				</array>
 				<key>com.apple.developer.team-identifier</key>
 				<string>TH26W2P688</string>
 				<key>get-task-allow</key>
@@ -129,7 +133,7 @@
 			<key>profile</key>
 			<dict>
 				<key>UUID</key>
-				<string>4e679161-b6a8-4173-bd90-c9118fb52640</string>
+				<string>fea9ba00-dc79-40f9-a7bd-764dce093dbe</string>
 				<key>dateExpires</key>
 				<string>25.07.2027</string>
 				<key>name</key>

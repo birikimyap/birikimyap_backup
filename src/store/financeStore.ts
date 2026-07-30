@@ -18,6 +18,7 @@ import {
   getZeroSpendingStreak
 } from "@/utils/finance";
 import { parseAmount } from "@/utils/currency";
+import { getLiveExchangeRates } from "@/utils/exchangeRates";
 
 type FinanceState = {
   hasHydrated: boolean;
@@ -55,6 +56,9 @@ type FinanceState = {
   setLanguage: (lang: "tr" | "en") => void;
   currency: "TRY" | "USD" | "EUR";
   setCurrency: (currency: "TRY" | "USD" | "EUR") => void;
+  exchangeRates: Record<string, number>;
+  lastRatesUpdated: string;
+  fetchExchangeRates: () => Promise<void>;
   categoryLimits: Record<string, number>;
   setCategoryLimit: (categoryKey: string, amount: number) => void;
   simulatedDateOffsetDays: number;
@@ -221,6 +225,15 @@ export const useFinanceStore = create<FinanceState>()(
         get().setCurrency(language === "tr" ? "TRY" : "USD");
       },
       currency: "TRY",
+      exchangeRates: { TRY: 1, USD: 0.025, EUR: 0.023, GBP: 0.019 },
+      lastRatesUpdated: "İşleniyor...",
+      fetchExchangeRates: async () => {
+        const result = await getLiveExchangeRates();
+        set({
+          exchangeRates: result.rates,
+          lastRatesUpdated: result.lastUpdated,
+        });
+      },
       setCurrency: (newCurrency) => {
         const prevCurrency = get().currency;
         if (prevCurrency === newCurrency) return;

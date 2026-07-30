@@ -1,4 +1,23 @@
 import { useFinanceStore } from "@/store/financeStore";
+import { ExchangeRates } from "./exchangeRates";
+
+export const convertCurrency = (amount: number, from: string, to: string, rates?: ExchangeRates): number => {
+  if (from === to || !amount) return amount;
+
+  const activeRates = rates || {
+    TRY: 1,
+    USD: 0.025,
+    EUR: 0.023,
+    GBP: 0.019,
+  };
+
+  const fromRate = activeRates[from] || 1;
+  const toRate = activeRates[to] || 1;
+
+  // Önce TRY bazına çevir, sonra Hedef birime çevir
+  const amountInTRY = amount / fromRate;
+  return amountInTRY * toRate;
+};
 
 export const formatCurrency = (value: number) => {
   const currency = useFinanceStore.getState().currency || "TRY";
