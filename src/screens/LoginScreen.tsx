@@ -21,7 +21,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { LegalModal } from "@/components/LegalModal";
 import { TERMS_OF_SERVICE, PRIVACY_POLICY, LegalDoc } from "@/utils/legalTexts";
 import { translations } from "@/utils/translations";
-import { signInWithGoogle, getCheckSession, signUpWithEmail, signInWithEmail, checkUserProfileExist, loadUserPlanFromCloud } from "@/utils/supabaseAuth";
+import { signInWithGoogle, getCheckSession, signUpWithEmail, signInWithEmail, resetPasswordForEmail, checkUserProfileExist, loadUserPlanFromCloud } from "@/utils/supabaseAuth";
 import { signInWithApple } from "@/utils/appleAuth";
 import { Modal, TextInput } from "react-native";
 
@@ -50,6 +50,7 @@ export default function LoginScreen() {
   const [passwordVal, setPasswordVal] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
+  const [loadingReset, setLoadingReset] = useState(false);
   const [legalModalDoc, setLegalModalDoc] = useState<LegalDoc | null>(null);
 
   const t = (key: keyof typeof translations["tr"]) => translations[language][key] || key;
@@ -128,12 +129,46 @@ export default function LoginScreen() {
     setLoadingEmail(false);
 
     if (result.success) {
+      if (result.requiresConfirmation) {
+        Alert.alert(
+          language === "tr" ? "Doğrulama E-Postası Gönderildi 📩" : "Verification Email Sent 📩",
+          result.message
+        );
+        return;
+      }
       setIsEmailModalVisible(false);
       await routeUserAfterAuth(result.user);
     } else if (result.error) {
       Alert.alert(
-        language === "tr" ? "Hata" : "Error",
+        language === "tr" ? "Giriş / Kayıt Hatası" : "Auth Error",
         typeof result.error === "string" ? result.error : JSON.stringify(result.error)
+      );
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!emailVal.trim()) {
+      Alert.alert(
+        language === "tr" ? "E-posta Adresi Gerekli" : "Email Required",
+        language === "tr" ? "Lütfen şifre sıfırlama e-postası alabilmek için e-posta adresinizi girin." : "Please enter your email address to receive a password reset email."
+      );
+      return;
+    }
+
+    triggerHaptic();
+    setLoadingReset(true);
+    const res = await resetPasswordForEmail(emailVal);
+    setLoadingReset(false);
+
+    if (res.success) {
+      Alert.alert(
+        language === "tr" ? "Şifre Sıfırlama E-Postası Gönderildi 📩" : "Password Reset Email Sent 📩",
+        res.message || (language === "tr" ? "Lütfen e-posta kutunuzu kontrol edin." : "Please check your inbox.")
+      );
+    } else {
+      Alert.alert(
+        language === "tr" ? "Hata" : "Error",
+        typeof res.error === "string" ? res.error : JSON.stringify(res.error)
       );
     }
   };
@@ -274,9 +309,20 @@ export default function LoginScreen() {
                 </View>
 
                 {/* Password Input */}
-                <Text style={{ fontSize: 13, fontWeight: "800", color: "#0C1411", marginBottom: 6 }}>
-                  {language === "tr" ? "Şifre (En az 6 karakter)" : "Password (Min 6 chars)"}
-                </Text>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <Text style={{ fontSize: 13, fontWeight: "800", color: "#0C1411" }}>
+                    {language === "tr" ? "Şifre (En az 6 karakter)" : "Password (Min 6 chars)"}
+                  </Text>
+                  {emailMode === "signin" && (
+                    <Pressable onPress={handleForgotPassword} disabled={loadingReset} style={{ paddingVertical: 2 }}>
+                      <Text style={{ fontSize: 12, fontWeight: "800", color: "#0D3228", textDecorationLine: "underline" }}>
+                        {loadingReset 
+                          ? (language === "tr" ? "Gönderiliyor..." : "Sending...") 
+                          : (language === "tr" ? "Şifremi Unuttum?" : "Forgot Password?")}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
                 <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#F8FAFC", borderWidth: 1.5, borderColor: "#E2E8F0", borderRadius: 14, paddingHorizontal: 14, height: 52, marginBottom: 22 }}>
                   <Feather name="lock" size={18} color="#0D3228" style={{ marginRight: 10 }} />
                   <TextInput

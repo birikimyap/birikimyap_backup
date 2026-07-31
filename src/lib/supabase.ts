@@ -40,6 +40,7 @@ export const supabase = {
         signInWithPassword: async () => ({ data: { user: null, session: null }, error: new Error('Supabase not configured') }),
         setSession: async () => ({ data: { session: null, user: null }, error: null }),
         exchangeCodeForSession: async () => ({ data: { session: null, user: null }, error: null }),
+        resetPasswordForEmail: async () => ({ data: null, error: new Error('Supabase not configured') }),
         signOut: async () => {},
       };
     }

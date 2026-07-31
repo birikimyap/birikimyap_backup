@@ -118,10 +118,25 @@ export async function signUpWithEmail(email: string, password: string) {
 
     if (error) throw error;
 
-    return { success: true, user: data.user, session: data.session };
+    // Eğer oturum yoksa e-posta doğrulama linki gönderilmiştir
+    const requiresConfirmation = !!(data.user && !data.session);
+
+    return {
+      success: true,
+      user: data.user,
+      session: data.session,
+      requiresConfirmation,
+      message: requiresConfirmation
+        ? 'Hesabınız oluşturuldu! Lütfen e-posta kutunuzu (Spam dahil) kontrol ederek doğrulama bağlantısına tıklayın.'
+        : 'Kayıt başarılı!'
+    };
   } catch (err: any) {
     console.error('Email Sign Up Error:', err);
-    return { success: false, error: err?.message || err };
+    let errMsg = err?.message || err;
+    if (typeof errMsg === 'string' && errMsg.toLowerCase().includes('user already registered')) {
+      errMsg = 'Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapmayı deneyin.';
+    }
+    return { success: false, error: errMsg };
   }
 }
 
@@ -143,7 +158,40 @@ export async function signInWithEmail(email: string, password: string) {
     return { success: true, user: data.user, session: data.session };
   } catch (err: any) {
     console.error('Email Sign In Error:', err);
-    return { success: false, error: err?.message || err };
+    let errMsg = err?.message || err;
+    if (typeof errMsg === 'string') {
+      if (errMsg.toLowerCase().includes('email not confirmed')) {
+        errMsg = 'E-posta adresiniz henüz doğrulanmamış. Lütfen e-posta kutunuza (veya Spam klasörüne) gelen doğrulama bağlantısına tıklayın ya da Şifremi Unuttum seçeneğini kullanın.';
+      } else if (errMsg.toLowerCase().includes('invalid login credentials')) {
+        errMsg = 'E-posta adresi veya şifre hatalı. Lütfen kontrol edip tekrar deneyin.';
+      }
+    }
+    return { success: false, error: errMsg };
+  }
+}
+
+/**
+ * E-posta ile Şifre Sıfırlama Bağlantısı Gönderme (Forgot Password)
+ */
+export async function resetPasswordForEmail(email: string) {
+  try {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Supabase ayarları eksik.' };
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    if (error) throw error;
+
+    return {
+      success: true,
+      message: 'Şifre sıfırlama e-postası başarıyla gönderildi. Lütfen e-posta kutunuzu (Spam dahil) kontrol edin.'
+    };
+  } catch (err: any) {
+    console.error('Reset Password Error:', err);
+    let errMsg = err?.message || err;
+    if (typeof errMsg === 'string' && errMsg.toLowerCase().includes('rate limit')) {
+      errMsg = 'Çok fazla istek gönderildi. Lütfen birkaç dakika bekleyip tekrar deneyin.';
+    }
+    return { success: false, error: errMsg };
   }
 }
 
