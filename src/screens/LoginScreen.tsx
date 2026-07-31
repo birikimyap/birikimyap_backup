@@ -48,6 +48,7 @@ export default function LoginScreen() {
   const [emailMode, setEmailMode] = useState<"signup" | "signin">("signup");
   const [emailVal, setEmailVal] = useState("");
   const [passwordVal, setPasswordVal] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [legalModalDoc, setLegalModalDoc] = useState<LegalDoc | null>(null);
 
@@ -265,10 +266,19 @@ export default function LoginScreen() {
                     style={{ flex: 1, fontSize: 15, fontWeight: "600", color: "#0C1411" }}
                     placeholder="••••••••"
                     placeholderTextColor="#94A3B8"
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     value={passwordVal}
                     onChangeText={setPasswordVal}
                   />
+                  <Pressable 
+                    onPress={() => {
+                      triggerHaptic();
+                      setShowPassword(!showPassword);
+                    }}
+                    style={{ padding: 4 }}
+                  >
+                    <Feather name={showPassword ? "eye" : "eye-off"} size={18} color="#94A3B8" />
+                  </Pressable>
                 </View>
 
                 {/* Action Button */}
