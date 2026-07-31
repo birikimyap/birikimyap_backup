@@ -2841,29 +2841,22 @@ export default function HomeDashboardScreen() {
         <ResetConfirmModal
           visible={isResetConfirmVisible}
           onClose={() => setIsResetConfirmVisible(false)}
-          onConfirm={() => {
+          onConfirm={async () => {
             triggerHaptic();
-            // Clear variable expenses
-            setExpenses([]);
-            // Clear incomes
-            setIncomes([
-              { id: "salary", label: "Maaş", amount: 0, period: "monthly" },
-              { id: "freelance", label: "Freelance", amount: 0, period: "monthly" },
-              { id: "extra", label: "Ek gelir", amount: 0, period: "monthly" }
-            ]);
-            // Clear savings goal
-            setSavingsGoal({
-              title: "Acil durum",
-              selectedGoal: "Acil durum",
-              targetAmount: 0,
-              currentAmount: 0,
-              monthlyContribution: 0,
-              dailyTarget: 0,
-              planStartDate: new Date().toISOString()
-            });
-            useFinanceStore.getState().resetSimulatedDate();
+            const currentProfile = useFinanceStore.getState().userProfile;
+            
+            // Tüm bütçe ve harcama verilerini sıfırla
+            useFinanceStore.getState().resetAllData();
+            
+            // Giriş yapmış kullanıcının profilini koru
+            if (currentProfile) {
+              useFinanceStore.getState().setUserProfile(currentProfile);
+            }
+            
             setIsResetConfirmVisible(false);
-            router.replace("/");
+            
+            // Doğrudan Sabit Gelir Ekleme (Yeni Plan Oluşturma) Ekranına Yönlendir!
+            router.replace("/income-setup" as any);
           }}
         />
 
