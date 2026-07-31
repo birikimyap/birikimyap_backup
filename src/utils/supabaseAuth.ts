@@ -97,6 +97,7 @@ export async function signOutUser() {
       await supabase.auth.signOut();
     }
     await AsyncStorage.removeItem('birikim-yap-finance-storage');
+    await AsyncStorage.removeItem('latest_local_plan');
     useFinanceStore.getState().resetAllData();
   } catch (e) {
     console.log('Signout error:', e);
@@ -330,41 +331,30 @@ export async function loadUserPlanFromCloud(userId: string): Promise<boolean> {
       }
     }
 
-    // C) CİHAZDAKİ DİĞER LOKAL YEDEKLERE VEYA GENEL PLAN KAYDINA BAK
-    const fallbackStr = await AsyncStorage.getItem('latest_local_plan');
-    if (fallbackStr) {
+    // B) EĞER BULUTTA BULUNAMADIYSA, BU KULLANICININ CİHAZ YEDEĞİNE BAK (user_plan_${userId})
+    const localPlanStr = await AsyncStorage.getItem(`user_plan_${userId}`);
+    if (localPlanStr) {
       try {
-        const localData = JSON.parse(fallbackStr);
-        if (localData && (localData.expenses?.length > 0 || localData.hasCompletedOnboarding)) {
+        const localData = JSON.parse(localPlanStr);
+        if (localData && (localData.userProfile?.fullName || localData.hasCompletedOnboarding)) {
           useFinanceStore.setState({
             incomes: localData.incomes || [],
             expenses: localData.expenses || [],
             savingsGoal: localData.savingsGoal || useFinanceStore.getState().savingsGoal,
             selectedPeriod: localData.selectedPeriod || 'daily',
             monthlyArchives: localData.monthlyArchives || [],
-            userProfile: { id: userId, email: localData.userProfile?.email || '', fullName: localData.userProfile?.fullName || 'Kullanıcı' },
+            userProfile: localData.userProfile || { id: userId, email: '', fullName: 'Kullanıcı' },
             hasCompletedOnboarding: true
           });
           useFinanceStore.getState().refreshPlan();
-          console.log('[CloudRestore] SUCCESS: Restored from latest_local_plan fallback!');
+          console.log('[CloudRestore] SUCCESS: Restored from user-specific local disk!');
           return true;
         }
       } catch (e) {}
     }
 
-    // D) EĞER KULLANICI ZATEN PLAN KURDUYSA VE STORE DOKUNULMADIYSA
-    const currentState = useFinanceStore.getState();
-    if (currentState.hasCompletedOnboarding && (currentState.expenses.length > 0 || currentState.incomes.some(i => i.amount > 0))) {
-      currentState.setUserProfile({
-        id: userId,
-        email: currentState.userProfile?.email || '',
-        fullName: currentState.userProfile?.fullName || 'Kullanıcı'
-      });
-      console.log('[CloudRestore] SUCCESS: Active store state retained for user!');
-      return true;
-    }
-
-    console.log('[CloudRestore] Fresh New User detected! Directing to profile setup.');
+    // C) EĞER SUPABASE'DEN HESAP SİLİNMİŞSE VEYA YEPYENİ BİR HESAPSA -> ESKİ SİLİNMİŞ HESABIN VERİLERİNİ GÖRSELE HORTLATMA!
+    console.log('[CloudRestore] Fresh / Deleted User detected! No cloud or user-specific profile found.');
     return false;
   } catch (e) {
     console.log('[CloudRestore] Exception:', e);

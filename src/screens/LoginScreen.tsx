@@ -78,23 +78,7 @@ export default function LoginScreen() {
       }
     }
 
-    // 3. Koruyucu Kalkan: Eğer kullanıcının cihazında zaten bütçe planı varsa verileri asla silme!
-    const currentState = useFinanceStore.getState();
-    if (currentState.hasCompletedOnboarding && (currentState.expenses.length > 0 || currentState.incomes.some(i => i.amount > 0))) {
-      if (user?.id) {
-        useFinanceStore.setState({
-          userProfile: {
-            id: user.id,
-            email: user.email || currentState.userProfile?.email || '',
-            fullName: user.user_metadata?.full_name || currentState.userProfile?.fullName || 'Kullanıcı'
-          }
-        });
-      }
-      router.replace("/home-dashboard");
-      return;
-    }
-
-    // Yepyeni kullanıcı! İlk defa profil ve bütçe kuracak!
+    // Yepyeni kullanıcı veya Supabase'den silinmiş hesap! Temiz başlangıç yap!
     useFinanceStore.getState().resetAllData();
     router.replace("/profile-setup" as any);
   };
