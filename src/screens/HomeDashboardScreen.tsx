@@ -2825,155 +2825,231 @@ export default function HomeDashboardScreen() {
           notifications={notifications}
         />
 
-        {/* Add New Goal Modal */}
+        {/* Add New Goal Modal (With KeyboardAvoidingView & Smart Presets) */}
         <Modal
           visible={isAddGoalModalVisible}
           transparent
           animationType="slide"
           onRequestClose={() => setIsAddGoalModalVisible(false)}
         >
-          <Pressable 
-            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
-            onPress={() => setIsAddGoalModalVisible(false)}
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === "ios" ? "padding" : "height"} 
+            style={{ flex: 1, justifyContent: "flex-end" }}
           >
             <Pressable 
-              style={{
-                backgroundColor: themeColors.surface,
-                borderTopLeftRadius: 28,
-                borderTopRightRadius: 28,
-                padding: 24,
-                gap: 16,
-                borderWidth: 1,
-                borderColor: themeColors.border
-              }}
-              onPress={(e) => e.stopPropagation()}
+              style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
+              onPress={() => setIsAddGoalModalVisible(false)}
             >
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.text }}>
-                  {language === "tr" ? "Yeni Birikim Hedefi Ekle" : "Add New Savings Goal"}
-                </Text>
-                <Pressable onPress={() => setIsAddGoalModalVisible(false)} style={{ padding: 4 }}>
-                  <Feather name="x" size={20} color={themeColors.textMuted} />
-                </Pressable>
-              </View>
-
-              <View style={{ gap: 12 }}>
-                <View style={{ gap: 4 }}>
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
-                    {language === "tr" ? "Hedef Başlığı (örn. Yurt Dışı Gezi, Tatil)" : "Goal Title (e.g. Vacation)"}
-                  </Text>
-                  <TextInput
-                    value={newGoalTitle}
-                    onChangeText={setNewGoalTitle}
-                    placeholder={language === "tr" ? "Örn. Tatil ☀️" : "e.g. Vacation ☀️"}
-                    placeholderTextColor={themeColors.textMuted}
-                    style={{
-                      backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
-                      borderRadius: 14,
-                      paddingHorizontal: 14,
-                      paddingVertical: 12,
-                      fontSize: 15,
-                      fontWeight: "700",
-                      color: themeColors.text
-                    }}
-                  />
-                </View>
-
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
-                      {language === "tr" ? "Hedef Tutar (₺)" : "Target Amount (₺)"}
-                    </Text>
-                    <TextInput
-                      value={newGoalTargetAmount}
-                      onChangeText={setNewGoalTargetAmount}
-                      keyboardType="numeric"
-                      placeholder="25000"
-                      placeholderTextColor={themeColors.textMuted}
-                      style={{
-                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
-                        borderRadius: 14,
-                        paddingHorizontal: 14,
-                        paddingVertical: 12,
-                        fontSize: 15,
-                        fontWeight: "700",
-                        color: themeColors.text
-                      }}
-                    />
-                  </View>
-                  <View style={{ flex: 1, gap: 4 }}>
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
-                      {language === "tr" ? "Şu An Biriken (₺)" : "Current Saved (₺)"}
-                    </Text>
-                    <TextInput
-                      value={newGoalCurrentAmount}
-                      onChangeText={setNewGoalCurrentAmount}
-                      keyboardType="numeric"
-                      placeholder="0"
-                      placeholderTextColor={themeColors.textMuted}
-                      style={{
-                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
-                        borderRadius: 14,
-                        paddingHorizontal: 14,
-                        paddingVertical: 12,
-                        fontSize: 15,
-                        fontWeight: "700",
-                        color: themeColors.text
-                      }}
-                    />
-                  </View>
-                </View>
-
-                <View style={{ gap: 4 }}>
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
-                    {language === "tr" ? "Hedeflenen Tarih (örn. Mayıs 2025)" : "Target Date (e.g. May 2025)"}
-                  </Text>
-                  <TextInput
-                    value={newGoalTargetDate}
-                    onChangeText={setNewGoalTargetDate}
-                    placeholder={language === "tr" ? "Mayıs 2025" : "May 2025"}
-                    placeholderTextColor={themeColors.textMuted}
-                    style={{
-                      backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
-                      borderRadius: 14,
-                      paddingHorizontal: 14,
-                      paddingVertical: 12,
-                      fontSize: 15,
-                      fontWeight: "700",
-                      color: themeColors.text
-                    }}
-                  />
-                </View>
-              </View>
-
-              <Pressable
-                onPress={() => {
-                  if (!newGoalTitle.trim()) return;
-                  triggerHaptic();
-                  addGoal({
-                    title: newGoalTitle.trim(),
-                    targetAmount: parseAmount(newGoalTargetAmount) || 1000,
-                    currentAmount: parseAmount(newGoalCurrentAmount) || 0,
-                    targetDate: newGoalTargetDate.trim() || undefined,
-                    icon: newGoalIcon,
-                    color: "#4B9B58"
-                  });
-                  setIsAddGoalModalVisible(false);
-                }}
+              <Pressable 
                 style={{
-                  backgroundColor: isDarkMode ? "#00DF89" : "#4B9B58",
-                  paddingVertical: 14,
-                  borderRadius: 16,
-                  alignItems: "center",
-                  marginTop: 6
+                  backgroundColor: themeColors.surface,
+                  borderTopLeftRadius: 28,
+                  borderTopRightRadius: 28,
+                  padding: 24,
+                  gap: 16,
+                  maxHeight: "85%",
+                  borderWidth: 1,
+                  borderColor: themeColors.border
                 }}
+                onPress={(e) => e.stopPropagation()}
               >
-                <Text style={{ fontSize: 15, fontWeight: "900", color: "#FFFFFF" }}>
-                  {language === "tr" ? "Hedefi Kaydet" : "Save Goal"}
-                </Text>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.text }}>
+                    {language === "tr" ? "Yeni Birikim Hedefi Ekle" : "Add New Savings Goal"}
+                  </Text>
+                  <Pressable onPress={() => setIsAddGoalModalVisible(false)} style={{ padding: 4 }}>
+                    <Feather name="x" size={20} color={themeColors.textMuted} />
+                  </Pressable>
+                </View>
+
+                <ScrollView 
+                  keyboardShouldPersistTaps="handled" 
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 14, paddingBottom: 10 }}
+                >
+                  {/* Quick Goal Presets Database */}
+                  <View style={{ gap: 6 }}>
+                    <Text style={{ fontSize: 12, fontWeight: "800", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
+                      ✨ {language === "tr" ? "Hazır Hedef Önerileri (Tıkla ve Doldur)" : "Quick Goal Presets"}
+                    </Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
+                      {[
+                        { title: "Motosiklet 🏍️", amount: "180000", date: "Aralık 2025" },
+                        { title: "Çeyrek / Gram Altın 🪙", amount: "5500", date: "Temmuz 2025" },
+                        { title: "Yurt Dışı Tatili ✈️", amount: "45000", date: "Ağustos 2025" },
+                        { title: "Laptop / MacBook 💻", amount: "65000", date: "Ekim 2025" },
+                        { title: "Otomobil Birikimi 🚗", amount: "450000", date: "Ocak 2026" },
+                        { title: "Ev Peşinatı 🏠", amount: "850000", date: "Haziran 2026" }
+                      ].map((preset, pIdx) => (
+                        <Pressable
+                          key={pIdx}
+                          onPress={() => {
+                            triggerHaptic();
+                            setNewGoalTitle(preset.title);
+                            setNewGoalTargetAmount(preset.amount);
+                            setNewGoalTargetDate(preset.date);
+                            setNewGoalCurrentAmount("0");
+                          }}
+                          style={{
+                            backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: themeColors.border,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 6
+                          }}
+                        >
+                          <Text style={{ fontSize: 13, fontWeight: "800", color: themeColors.text }}>
+                            {preset.title}
+                          </Text>
+                          <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>
+                            ({formatCurrency(Number(preset.amount))})
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  </View>
+
+                  <View style={{ gap: 4 }}>
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                      {language === "tr" ? "Hedef Başlığı (örn. Yamaha Motor, Çeyrek Altın)" : "Goal Title (e.g. Vacation)"}
+                    </Text>
+                    <TextInput
+                      value={newGoalTitle}
+                      onChangeText={setNewGoalTitle}
+                      placeholder={language === "tr" ? "Örn. Yamaha R6 Motor 🏍️" : "e.g. Motor 🏍️"}
+                      placeholderTextColor={themeColors.textMuted}
+                      style={{
+                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                        borderRadius: 14,
+                        paddingHorizontal: 14,
+                        paddingVertical: 12,
+                        fontSize: 15,
+                        fontWeight: "700",
+                        color: themeColors.text
+                      }}
+                    />
+                    {newGoalTitle.trim().length > 0 && (
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
+                        <Text style={{ fontSize: 11, fontWeight: "800", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
+                          🤖 Akıllı Kategori Algılandı: {getSmartGoalIconAndColor(newGoalTitle).label}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={{ flexDirection: "row", gap: 10 }}>
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                        {language === "tr" ? "Hedef Tutar (₺)" : "Target Amount (₺)"}
+                      </Text>
+                      <TextInput
+                        value={newGoalTargetAmount}
+                        onChangeText={setNewGoalTargetAmount}
+                        keyboardType="numeric"
+                        placeholder="25000"
+                        placeholderTextColor={themeColors.textMuted}
+                        style={{
+                          backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                          borderRadius: 14,
+                          paddingHorizontal: 14,
+                          paddingVertical: 12,
+                          fontSize: 15,
+                          fontWeight: "700",
+                          color: themeColors.text
+                        }}
+                      />
+                    </View>
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text style={{ fontSize: 12, fontWeight: "700", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
+                        🔒 {language === "tr" ? "Biriken (₺)" : "Saved (₺)"}
+                      </Text>
+                      <View style={{
+                        backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.08)" : "rgba(75, 155, 88, 0.08)",
+                        borderRadius: 14,
+                        paddingHorizontal: 14,
+                        paddingVertical: 12,
+                        borderWidth: 1,
+                        borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(75, 155, 88, 0.2)"
+                      }}>
+                        <Text style={{ fontSize: 15, fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
+                          {formatCurrency(goalSavedAmount)}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={{ gap: 4 }}>
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                      {language === "tr" ? "Hedeflenen Tarih (örn. Mayıs 2025)" : "Target Date (e.g. May 2025)"}
+                    </Text>
+                    <TextInput
+                      value={newGoalTargetDate}
+                      onChangeText={setNewGoalTargetDate}
+                      placeholder={language === "tr" ? "Mayıs 2025" : "May 2025"}
+                      placeholderTextColor={themeColors.textMuted}
+                      style={{
+                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                        borderRadius: 14,
+                        paddingHorizontal: 14,
+                        paddingVertical: 12,
+                        fontSize: 15,
+                        fontWeight: "700",
+                        color: themeColors.text
+                      }}
+                    />
+                  </View>
+
+                  <Pressable
+                    onPress={() => {
+                      const targetAmt = parseAmount(newGoalTargetAmount);
+                      if (newGoalTitle.trim() && targetAmt > 0) {
+                        triggerHaptic();
+                        const smart = getSmartGoalIconAndColor(newGoalTitle);
+                        addGoal({
+                          title: newGoalTitle.trim(),
+                          targetAmount: targetAmt,
+                          currentAmount: 0,
+                          targetDate: newGoalTargetDate.trim() || undefined,
+                          icon: smart.icon,
+                          color: smart.color
+                        });
+                        setNewGoalTitle("");
+                        setNewGoalTargetAmount("");
+                        setNewGoalCurrentAmount("");
+                        setNewGoalTargetDate("");
+                        setIsAddGoalModalVisible(false);
+                        setToastConfig({
+                          visible: true,
+                          message: language === "tr" ? "Hedef Eklendi 🎯" : "Goal Added 🎯",
+                          subtext: `${newGoalTitle.trim()} ${language === "tr" ? "listenize eklendi." : "added to list."}`,
+                          type: "success"
+                        });
+                      }
+                    }}
+                    style={({ pressed }) => [
+                      {
+                        backgroundColor: isDarkMode ? "#00DF89" : "#4B9B58",
+                        paddingVertical: 14,
+                        borderRadius: 14,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginTop: 6
+                      },
+                      pressed && styles.pressed
+                    ]}
+                  >
+                    <Text style={{ fontSize: 15, fontWeight: "900", color: "#FFFFFF" }}>
+                      {language === "tr" ? "Hedefi Kaydet" : "Save Goal"}
+                    </Text>
+                  </Pressable>
+                </ScrollView>
               </Pressable>
             </Pressable>
-          </Pressable>
+          </KeyboardAvoidingView>
         </Modal>
 
         {/* Edit & Goal Detail Modal */}
@@ -4631,12 +4707,14 @@ function SwipeableGoalCard({
   const cardColor = goal.color || "#4B9B58";
 
   let iconName: keyof typeof Feather.glyphMap = "target";
-  if (goal.icon === "plane") iconName = "send";
+  if (goal.icon === "plane" || goal.icon === "send") iconName = "send";
   else if (goal.icon === "sun") iconName = "sun";
   else if (goal.icon === "home") iconName = "home";
-  else if (goal.icon === "laptop") iconName = "tv";
-  else if (goal.icon === "car") iconName = "truck";
+  else if (goal.icon === "laptop" || goal.icon === "tv") iconName = "tv";
+  else if (goal.icon === "car" || goal.icon === "truck") iconName = "truck";
   else if (goal.icon === "smartphone") iconName = "smartphone";
+  else if (goal.icon === "disc") iconName = "disc";
+  else if (goal.icon === "heart") iconName = "heart";
 
   return (
     <View style={{ position: "relative", marginBottom: 14 }}>
@@ -4921,15 +4999,48 @@ function DonutChart({
   );
 }
 
+function getSmartGoalIconAndColor(title: string): { icon: keyof typeof Feather.glyphMap; color: string; label: string } {
+  const norm = title.toLowerCase().trim();
+  if (norm.includes("motor") || norm.includes("motosiklet") || norm.includes("vespa") || norm.includes("scooter") || norm.includes("yamaha") || norm.includes("honda") || norm.includes("kawasaki")) {
+    return { icon: "truck", color: "#DF7A12", label: "Motor / Motosiklet 🏍️" };
+  }
+  if (norm.includes("altın") || norm.includes("çeyrek") || norm.includes("yarım") || norm.includes("gram") || norm.includes("tam") || norm.includes("ziynet") || norm.includes("ata") || norm.includes("bilezik") || norm.includes("cumhuriyet")) {
+    return { icon: "disc", color: "#F59E0B", label: "Altın Birikimi 🪙" };
+  }
+  if (norm.includes("laptop") || norm.includes("macbook") || norm.includes("bilgisayar") || norm.includes("pc") || norm.includes("ipad")) {
+    return { icon: "tv", color: "#2563EB", label: "Teknoloji / PC 💻" };
+  }
+  if (norm.includes("iphone") || norm.includes("telefon") || norm.includes("samsung") || norm.includes("xiaomi")) {
+    return { icon: "smartphone", color: "#8B5CF6", label: "Telefon 📱" };
+  }
+  if (norm.includes("araba") || norm.includes("otomobil") || norm.includes("araç") || norm.includes("suv") || norm.includes("mercedes") || norm.includes("bmw") || norm.includes("audi")) {
+    return { icon: "truck", color: "#DC2626", label: "Otomobil 🚗" };
+  }
+  if (norm.includes("ev") || norm.includes("daire") || norm.includes("arsa") || norm.includes("konut") || norm.includes("tapu")) {
+    return { icon: "home", color: "#059669", label: "Ev / Konut 🏠" };
+  }
+  if (norm.includes("tatil") || norm.includes("uçak") || norm.includes("gezi") || norm.includes("yurt dışı") || norm.includes("otel") || norm.includes("roma") || norm.includes("paris") || norm.includes("italya")) {
+    return { icon: "send", color: "#0284C7", label: "Yurt Dışı Tatil ✈️" };
+  }
+  if (norm.includes("düğün") || norm.includes("nişan") || norm.includes("evlilik") || norm.includes("kına")) {
+    return { icon: "heart", color: "#EC4899", label: "Düğün / Evlilik 💍" };
+  }
+  return { icon: "target", color: "#4B9B58", label: "Özel Birikim 🎯" };
+}
+
 function getCategoryKey(category?: string): string {
   if (!category) return "other";
   const normalized = category.toLowerCase().trim();
-  if (normalized.includes("market") || normalized.includes("supermarket")) return "market";
-  if (normalized.includes("sağlık") || normalized.includes("health") || normalized.includes("eczane") || normalized.includes("ilaç") || normalized.includes("ilac")) return "health";
-  if (normalized.includes("ulaşım") || normalized.includes("transit") || normalized.includes("taksi") || normalized.includes("araç") || normalized.includes("arac") || normalized.includes("lastik")) return "transport";
-  if (normalized.includes("yemek") || normalized.includes("dining") || normalized.includes("restoran") || normalized.includes("cafe") || normalized.includes("kahve")) return "dining";
-  if (normalized.includes("giyim") || normalized.includes("clothing") || normalized.includes("moda") || normalized.includes("pantolon")) return "clothing";
-  if (normalized.includes("eğlence") || normalized.includes("entertainment") || normalized.includes("sosyal") || normalized.includes("netflix") || normalized.includes("sinema")) return "entertainment";
+  if (normalized.includes("market") || normalized.includes("supermarket") || normalized.includes("gıda") || normalized.includes("bakkal") || normalized.includes("manav")) return "market";
+  if (normalized.includes("sağlık") || normalized.includes("health") || normalized.includes("eczane") || normalized.includes("ilaç") || normalized.includes("ilac") || normalized.includes("doktor") || normalized.includes("hastane")) return "health";
+  if (normalized.includes("ulaşım") || normalized.includes("transit") || normalized.includes("taksi") || normalized.includes("araç") || normalized.includes("arac") || normalized.includes("lastik") || normalized.includes("benzin") || normalized.includes("mazot") || normalized.includes("yakıt") || normalized.includes("otopark")) return "transport";
+  if (normalized.includes("yemek") || normalized.includes("dining") || normalized.includes("restoran") || normalized.includes("cafe") || normalized.includes("kahve") || normalized.includes("döner") || normalized.includes("pizza") || normalized.includes("burger") || normalized.includes("lokanta")) return "dining";
+  if (normalized.includes("giyim") || normalized.includes("clothing") || normalized.includes("moda") || normalized.includes("pantolon") || normalized.includes("ayakkabı") || normalized.includes("tişört") || normalized.includes("elbise")) return "clothing";
+  if (normalized.includes("eğlence") || normalized.includes("entertainment") || normalized.includes("sosyal") || normalized.includes("netflix") || normalized.includes("sinema") || normalized.includes("tiyatro") || normalized.includes("bilet") || normalized.includes("oyun") || normalized.includes("spotify")) return "entertainment";
+  if (normalized.includes("ev") || normalized.includes("kira") || normalized.includes("fatura") || normalized.includes("elektrik") || normalized.includes("su") || normalized.includes("doğalgaz") || normalized.includes("internet") || normalized.includes("aidat")) return "home";
+  if (normalized.includes("teknoloji") || normalized.includes("elektronik") || normalized.includes("bilgisayar") || normalized.includes("telefon") || normalized.includes("kulaklık") || normalized.includes("cihaz")) return "tech";
+  if (normalized.includes("birikim") || normalized.includes("yatırım") || normalized.includes("altın") || normalized.includes("borsa") || normalized.includes("hisse") || normalized.includes("fon") || normalized.includes("döviz")) return "investment";
+  if (normalized.includes("eğitim") || normalized.includes("kurs") || normalized.includes("kitap") || normalized.includes("okul") || normalized.includes("ders")) return "education";
   return "other";
 }
 
@@ -4941,15 +5052,23 @@ function getCategoryIconConfig(category?: string): { name: keyof typeof Feather.
     case "dining":
       return { name: "coffee", bg: "rgba(239, 122, 18, 0.08)", color: "#DF7A12" };
     case "transport":
-      return { name: "truck", bg: "rgba(59, 130, 246, 0.08)", color: "#2563EB" };
+      return { name: "truck", bg: "rgba(37, 99, 235, 0.08)", color: "#2563EB" };
     case "clothing":
-      return { name: "tag", bg: "rgba(139, 92, 246, 0.08)", color: "#7C3AED" };
+      return { name: "tag", bg: "rgba(124, 58, 237, 0.08)", color: "#7C3AED" };
     case "entertainment":
-      return { name: "film", bg: "rgba(236, 72, 153, 0.08)", color: "#DB2777" };
+      return { name: "film", bg: "rgba(219, 39, 119, 0.08)", color: "#DB2777" };
     case "health":
-      return { name: "activity", bg: "rgba(239, 68, 68, 0.08)", color: "#DC2626" };
+      return { name: "activity", bg: "rgba(220, 38, 38, 0.08)", color: "#DC2626" };
+    case "home":
+      return { name: "home", bg: "rgba(5, 150, 105, 0.08)", color: "#059669" };
+    case "tech":
+      return { name: "tv", bg: "rgba(2, 132, 199, 0.08)", color: "#0284C7" };
+    case "investment":
+      return { name: "trending-up", bg: "rgba(245, 158, 11, 0.08)", color: "#F59E0B" };
+    case "education":
+      return { name: "book-open", bg: "rgba(79, 70, 229, 0.08)", color: "#4F46E5" };
     default:
-      return { name: "help-circle", bg: "rgba(107, 114, 128, 0.08)", color: "#5B6570" };
+      return { name: "package", bg: "rgba(107, 114, 128, 0.08)", color: "#6B7280" };
   }
 }
 
