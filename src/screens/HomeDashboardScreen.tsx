@@ -33,7 +33,7 @@ import { useFinanceStore } from "@/store/financeStore";
 import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatAmountInput, formatCurrency, parseAmount } from "@/utils/currency";
-import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus, getSpendableMonthlyBudget, getExpensesTotalForPeriod, toSafeAmount, getDailyLimit } from "@/utils/finance";
+import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus, getSpendableMonthlyBudget, getExpensesTotalForPeriod, toSafeAmount, getDailyLimit, isExpenseInPeriod, getExpensePlanWeekIndex } from "@/utils/finance";
 import { translations } from "@/utils/translations";
 import { syncSiriExpenses } from "@/utils/siriSync";
 import { syncWidgetData } from "@/utils/widgetSync";
@@ -551,8 +551,8 @@ export default function HomeDashboardScreen() {
     const list: Array<{ id: string; title: string; body: string; time: string; type: "warning" | "info" | "success"; icon: keyof typeof Feather.glyphMap }> = [];
     
     // 1. Check if limit exceeded in any period (daily / weekly / monthly)
-    const dailyRemaining = plan.limits.daily - getExpensesForPeriod(expenses, "daily", simulatedDate).reduce((sum, e) => sum + e.amount, 0);
-    const weeklyRemaining = plan.limits.weekly - getExpensesForPeriod(expenses, "weekly", simulatedDate).reduce((sum, e) => sum + e.amount, 0);
+    const dailyRemaining = plan.limits.daily - getExpensesForPeriod(expenses, "daily", simulatedDate, savingsGoal?.planStartDate).reduce((sum, e) => sum + e.amount, 0);
+    const weeklyRemaining = plan.limits.weekly - getExpensesForPeriod(expenses, "weekly", simulatedDate, savingsGoal?.planStartDate).reduce((sum, e) => sum + e.amount, 0);
     
     if (dailyRemaining < 0) {
       list.push({
@@ -649,7 +649,7 @@ export default function HomeDashboardScreen() {
 
     const isNoSpendCompleted = noSpendDaysCount >= 5;
 
-    const weeklyExpenses = getExpensesForPeriod(expenses, "weekly");
+    const weeklyExpenses = getExpensesForPeriod(expenses, "weekly", new Date(), savingsGoal?.planStartDate);
     const weeklyMarketSpent = weeklyExpenses
       .filter(e => getCategoryKey(e.category) === "market")
       .reduce((sum, e) => sum + e.amount, 0);
@@ -712,7 +712,7 @@ export default function HomeDashboardScreen() {
     ];
   }, [expenses, savingsGoal, language, currency]);
 
-  const analysisExpenses = useMemo(() => getExpensesForPeriod(expenses, analysisPeriod, simulatedDate), [expenses, analysisPeriod, simulatedDate]);
+  const analysisExpenses = useMemo(() => getExpensesForPeriod(expenses, analysisPeriod, simulatedDate, savingsGoal?.planStartDate), [expenses, analysisPeriod, simulatedDate, savingsGoal?.planStartDate]);
 
   // Filtered expenses based on chart selection
   const filteredAnalysisExpenses = useMemo(() => {
@@ -812,12 +812,11 @@ export default function HomeDashboardScreen() {
     ];
     
     const periodSpends = Array(4).fill(0);
-    const todayStr = simulatedDate.toDateString();
     
     expenses.forEach((exp) => {
       if (exp.isFixed || !exp.occurredAt) return;
-      const date = new Date(exp.occurredAt);
-      if (date.toDateString() === todayStr) {
+      if (isExpenseInPeriod(exp, "daily", simulatedDate, savingsGoal?.planStartDate)) {
+        const date = new Date(exp.occurredAt);
         const hour = date.getHours();
         if (hour >= 0 && hour < 6) periodSpends[0] += exp.amount;
         else if (hour >= 6 && hour < 12) periodSpends[1] += exp.amount;
@@ -833,28 +832,20 @@ export default function HomeDashboardScreen() {
       amount: periodSpends[index],
       percentage: (periodSpends[index] / maxSpend) * 100
     }));
-  }, [expenses, language, simulatedDate]);
+  }, [expenses, language, simulatedDate, savingsGoal?.planStartDate]);
 
-  // Haftalık bar grafiği — Mevcut takvim haftası (Pazartesi–bugün) kullanılır
+  // Haftalık bar grafiği — Planın bulunduğumuz haftasındaki harcamaları günlere dağıtır
   const analysisWeeklyData = useMemo(() => {
     const dayLabels = language === "tr"
       ? ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
       : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const dailySpend = Array(7).fill(0);
 
-    // Bu haftanın Pazartesi'si
-    const today = new Date(simulatedDate);
-    const dayOfWeek = today.getDay(); // 0=Pazar, 1=Pzt...6=Cmt
-    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - daysFromMonday);
-    weekStart.setHours(0, 0, 0, 0);
-
     expenses.forEach((exp) => {
       if (exp.isFixed || !exp.occurredAt) return;
-      const date = new Date(exp.occurredAt);
-      // Sadece Pazartesi'den bugüne kadar olanlar
-      if (date >= weekStart && date <= today) {
+      // Sadece plan haftasına ait harcamalar
+      if (isExpenseInPeriod(exp, "weekly", simulatedDate, savingsGoal?.planStartDate)) {
+        const date = new Date(exp.occurredAt);
         const dayOfWeekIndex = (date.getDay() + 6) % 7; // Pazartesi=0, Pazar=6
         dailySpend[dayOfWeekIndex] += exp.amount;
       }
@@ -867,29 +858,23 @@ export default function HomeDashboardScreen() {
       amount: dailySpend[index],
       percentage: (dailySpend[index] / maxSpend) * 100
     }));
-  }, [expenses, language, simulatedDate]);
+  }, [expenses, language, simulatedDate, savingsGoal?.planStartDate]);
 
   // Monthly spending by weeks for Analysis tab bar chart
   const analysisMonthlyData = useMemo(() => {
     const weeks = ["1. Hft", "2. Hft", "3. Hft", "4. Hft"];
     const weeklySpend = Array(4).fill(0);
-    const now = simulatedDate;
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    const pStart = savingsGoal?.planStartDate ? new Date(savingsGoal.planStartDate) : simulatedDate;
 
     expenses.forEach((exp) => {
       if (exp.isFixed || !exp.occurredAt) return;
-      const date = new Date(exp.occurredAt);
-      if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
-        const day = date.getDate();
-        if (day <= 7) {
-          weeklySpend[0] += exp.amount;
-        } else if (day <= 14) {
-          weeklySpend[1] += exp.amount;
-        } else if (day <= 21) {
-          weeklySpend[2] += exp.amount;
-        } else {
-          weeklySpend[3] += exp.amount;
+      
+      // Sadece bulunduğumuz plan ayındaki (30 günlük döngü) harcamaları al
+      if (isExpenseInPeriod(exp, "monthly", simulatedDate, savingsGoal?.planStartDate)) {
+        const date = new Date(exp.occurredAt);
+        const weekIndex = getExpensePlanWeekIndex(date, pStart);
+        if (weekIndex >= 1 && weekIndex <= 4) {
+          weeklySpend[weekIndex - 1] += exp.amount;
         }
       }
     });
@@ -901,7 +886,7 @@ export default function HomeDashboardScreen() {
       amount: weeklySpend[index],
       percentage: (weeklySpend[index] / maxSpend) * 100
     }));
-  }, [expenses, simulatedDate]);
+  }, [expenses, simulatedDate, savingsGoal?.planStartDate]);
 
   const topCategoryInfo = useMemo(() => {
     const totals: Record<string, number> = {};
