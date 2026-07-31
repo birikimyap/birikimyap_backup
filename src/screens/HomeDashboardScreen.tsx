@@ -25,6 +25,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Circle, Path } from "react-native-svg";
 
 import { useVoiceExpenseInput } from "@/hooks/useVoiceExpenseInput";
 import { Expense, GoalItem, Period } from "@/models/finance";
@@ -4757,6 +4758,20 @@ function SwipeableGoalCard({
   );
 }
 
+function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number) {
+  const startRad = (startAngle - 90) * (Math.PI / 180);
+  const endRad = (endAngle - 90) * (Math.PI / 180);
+
+  const x1 = x + radius * Math.cos(startRad);
+  const y1 = y + radius * Math.sin(startRad);
+  const x2 = x + radius * Math.cos(endRad);
+  const y2 = y + radius * Math.sin(endRad);
+
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+  return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
+}
+
 function DonutChart({
   slices,
   totalAmountText,
@@ -4774,50 +4789,72 @@ function DonutChart({
   surfaceColor: string;
   size?: number;
 }) {
-  const radius = size / 2;
-  const holeRadius = Math.round(size * 0.33);
+  const center = size / 2;
+  const strokeWidth = 26;
+  const radius = (size - strokeWidth) / 2;
+  const holeRadius = radius - strokeWidth / 2 - 4;
+
+  const validSlices = slices.filter((s) => s.percentage > 0);
+  const totalPercentage = validSlices.reduce((sum, s) => sum + s.percentage, 0);
 
   let currentAngle = 0;
-  const sliceAngles = slices.map((s) => {
-    const angle = (Math.max(s.percentage, 0) / 100) * 360;
-    const start = currentAngle;
-    currentAngle += angle;
-    return { ...s, angle, startAngle: start };
-  });
+  const gapAngle = validSlices.length > 1 ? 3 : 0; // Crisp 3-degree gap divider between color segments
 
   return (
-    <View style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", position: "relative", alignItems: "center", justifyContent: "center" }}>
-      {/* Background base */}
-      <View style={{ position: "absolute", width: size, height: size, borderRadius: radius, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6" }} />
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center", position: "relative" }}>
+      <Svg width={size} height={size}>
+        {/* Background Track Circle */}
+        <Circle
+          cx={center}
+          cy={center}
+          r={radius}
+          stroke={isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6"}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
 
-      {/* Render Slices */}
-      {sliceAngles.map((slice, index) => {
-        if (slice.angle <= 0) return null;
-        if (slice.angle >= 359.9) {
+        {/* Crisp Non-Overlapping Segment Arcs */}
+        {validSlices.map((slice, idx) => {
+          const sliceAngle = (slice.percentage / (totalPercentage || 100)) * 360;
+          const start = currentAngle + gapAngle / 2;
+          const end = currentAngle + sliceAngle - gapAngle / 2;
+          currentAngle += sliceAngle;
+
+          if (end <= start) return null;
+
+          if (validSlices.length === 1 || sliceAngle >= 359.9) {
+            return (
+              <Circle
+                key={idx}
+                cx={center}
+                cy={center}
+                r={radius}
+                stroke={slice.color}
+                strokeWidth={strokeWidth}
+                fill="none"
+              />
+            );
+          }
+
+          const pathD = describeArc(center, center, radius, start, end);
+
           return (
-            <View
-              key={index}
-              style={{
-                position: "absolute",
-                width: size,
-                height: size,
-                borderRadius: radius,
-                backgroundColor: slice.color
-              }}
+            <Path
+              key={idx}
+              d={pathD}
+              stroke={slice.color}
+              strokeWidth={strokeWidth}
+              strokeLinecap="butt"
+              fill="none"
             />
           );
-        }
-
-        return (
-          <Fragment key={index}>
-            {renderPieSlice(slice.startAngle, slice.angle, slice.color, size)}
-          </Fragment>
-        );
-      })}
+        })}
+      </Svg>
 
       {/* Center Hole */}
       <View
         style={{
+          position: "absolute",
           width: holeRadius * 2,
           height: holeRadius * 2,
           borderRadius: holeRadius,
@@ -4830,7 +4867,7 @@ function DonutChart({
           shadowRadius: 8,
           elevation: 3,
           zIndex: 10,
-          paddingHorizontal: 6,
+          paddingHorizontal: 8,
           gap: 2
         }}
       >
@@ -4858,73 +4895,27 @@ function DonutChart({
         >
           {totalAmountText}
         </Text>
-        {periodBadgeText ? (
-          <Text
+        {periodBadgeText && (
+          <View
             style={{
-              fontSize: size > 160 ? 12 : 9,
-              fontWeight: "800",
-              color: isDarkMode ? "#00DF89" : "#4B9B58",
-              textAlign: "center"
+              backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.15)" : "rgba(75, 155, 88, 0.12)",
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 10,
+              marginTop: 2
             }}
           >
-            {periodBadgeText}
-          </Text>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
-function renderPieSlice(startAngle: number, sweepAngle: number, color: string, size: number) {
-  if (sweepAngle > 180) {
-    return (
-      <>
-        {renderHalfPieSlice(startAngle, 180, color, size)}
-        {renderHalfPieSlice(startAngle + 180, sweepAngle - 180, color, size)}
-      </>
-    );
-  }
-  return renderHalfPieSlice(startAngle, sweepAngle, color, size);
-}
-
-function renderHalfPieSlice(startAngle: number, sweepAngle: number, color: string, size: number) {
-  const radius = size / 2;
-  return (
-    <View
-      style={{
-        position: "absolute",
-        width: size,
-        height: size,
-        borderRadius: radius,
-        transform: [{ rotate: `${startAngle}deg` }]
-      }}
-    >
-      <View
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          width: radius,
-          height: size,
-          overflow: "hidden"
-        }}
-      >
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: -radius,
-            width: size,
-            height: size,
-            borderRadius: radius,
-            backgroundColor: color,
-            transform: [
-              { translateX: radius / 2 },
-              { rotate: `${sweepAngle - 180}deg` },
-              { translateX: -radius / 2 }
-            ]
-          }}
-        />
+            <Text
+              style={{
+                fontSize: 10,
+                fontWeight: "800",
+                color: isDarkMode ? "#00DF89" : "#4B9B58"
+              }}
+            >
+              {periodBadgeText}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -5560,23 +5551,54 @@ function ExpenseDetailModal({
             </Text>
           </View>
 
-          {/* Amount Display */}
-          <View style={{ 
-            backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "rgba(13, 50, 40, 0.02)", 
-            borderRadius: 16, 
-            padding: 16, 
-            alignItems: "center",
-            marginBottom: 20,
-            borderWidth: 1,
-            borderColor: themeColors.border
-          }}>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted, textTransform: "uppercase" }}>
-              {language === "tr" ? "Harcama Tutarı" : "Expense Amount"}
-            </Text>
-            <Text style={{ fontSize: 28, fontWeight: "900", color: themeColors.text, marginTop: 4 }}>
-              {formatCurrency(expense.amount)}
-            </Text>
-          </View>
+          {/* Amount Display / Active Edit Input */}
+          {isEditing ? (
+            <View style={{
+              backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.08)" : "rgba(75, 155, 88, 0.08)",
+              borderRadius: 16,
+              padding: 14,
+              alignItems: "center",
+              marginBottom: 20,
+              borderWidth: 1.5,
+              borderColor: isDarkMode ? "#00DF89" : "#4B9B58",
+              width: "100%"
+            }}>
+              <Text style={{ fontSize: 11, fontWeight: "800", color: isDarkMode ? "#00DF89" : "#4B9B58", textTransform: "uppercase", marginBottom: 4 }}>
+                ✏️ {language === "tr" ? "Yeni Harcama Tutarı (₺)" : "New Expense Amount (₺)"}
+              </Text>
+              <TextInput
+                value={editAmount}
+                onChangeText={setEditAmount}
+                keyboardType="numeric"
+                autoFocus
+                style={{
+                  fontSize: 28,
+                  fontWeight: "900",
+                  color: themeColors.text,
+                  textAlign: "center",
+                  width: "100%",
+                  paddingVertical: 4
+                }}
+              />
+            </View>
+          ) : (
+            <View style={{ 
+              backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "rgba(13, 50, 40, 0.02)", 
+              borderRadius: 16, 
+              padding: 16, 
+              alignItems: "center",
+              marginBottom: 20,
+              borderWidth: 1,
+              borderColor: themeColors.border
+            }}>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted, textTransform: "uppercase" }}>
+                {language === "tr" ? "Harcama Tutarı" : "Expense Amount"}
+              </Text>
+              <Text style={{ fontSize: 28, fontWeight: "900", color: themeColors.text, marginTop: 4 }}>
+                {formatCurrency(expense.amount)}
+              </Text>
+            </View>
+          )}
 
           {/* Detail Rows Group */}
           <View style={[styles.formGroup, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginBottom: 24, paddingVertical: 4 }]}>
@@ -5585,9 +5607,27 @@ function ExpenseDetailModal({
               <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
                 {language === "tr" ? "Harcama Adı" : "Expense Name"}
               </Text>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.text, textAlign: "right", flex: 1 }}>
-                {expense.label}
-              </Text>
+              {isEditing ? (
+                <TextInput
+                  value={editLabel}
+                  onChangeText={setEditLabel}
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "700",
+                    color: themeColors.text,
+                    textAlign: "right",
+                    flex: 1,
+                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                    borderRadius: 8,
+                    paddingHorizontal: 10,
+                    paddingVertical: 6
+                  }}
+                />
+              ) : (
+                <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.text, textAlign: "right", flex: 1 }}>
+                  {expense.label}
+                </Text>
+              )}
             </View>
 
             <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
