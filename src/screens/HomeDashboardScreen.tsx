@@ -1029,9 +1029,9 @@ export default function HomeDashboardScreen() {
             setIsGoalAchievedModalVisible(true);
           }}
           style={({ pressed }) => [{
-            marginTop: 8,
+            marginTop: 24, // Added more margin so the bubble doesn't hit the text above
             borderRadius: 24,
-            overflow: "hidden",
+            overflow: "visible", // Changed from hidden so the tooltip isn't cropped
             borderWidth: 1.2,
             borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(212, 160, 89, 0.35)",
             shadowColor: isDarkMode ? "#00DF89" : "#B98E4B",
@@ -1045,7 +1045,7 @@ export default function HomeDashboardScreen() {
             colors={isDarkMode ? ["#162B23", "#0F1F19"] : ["#FCF8F3", "#F3E7D7"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ padding: 18, position: "relative" }}
+            style={{ padding: 18, position: "relative", borderRadius: 22 }} // Added border radius here instead
           >
             <View style={{ width: "68%", paddingRight: 4 }}>
               <View style={{ marginBottom: 12 }}>
