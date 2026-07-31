@@ -221,8 +221,8 @@ export default function HomeDashboardScreen() {
 
   const [editGoalTitle, setEditGoalTitle] = useState("");
   const [editGoalTargetAmount, setEditGoalTargetAmount] = useState("");
-  const [editGoalCurrentAmount, setEditGoalCurrentAmount] = useState("");
   const [editGoalTargetDate, setEditGoalTargetDate] = useState("");
+  const [editGoalExtraSavings, setEditGoalExtraSavings] = useState("");
 
   // Haptics & Dark Mode
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
@@ -1546,7 +1546,7 @@ export default function HomeDashboardScreen() {
           </View>
         </View>
 
-        {/* Goals List (Matching Promo Screenshot Design) */}
+        {/* Goals List (With Swipe-to-Delete and Auto App Savings Integration) */}
         {goals.length === 0 ? (
           <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 12 }}>
             <Feather name="target" size={40} color={themeColors.textMuted} />
@@ -1558,105 +1558,32 @@ export default function HomeDashboardScreen() {
             </Text>
           </View>
         ) : (
-          <View style={{ gap: 14 }}>
-            {goals.map((goal) => {
-              const target = goal.targetAmount || 1;
-              const current = goal.currentAmount || 0;
-              const percent = Math.min(Math.round((current / target) * 100), 100);
-              const cardColor = goal.color || "#4B9B58";
-
-              // Icon mapping
-              let iconName: keyof typeof Feather.glyphMap = "target";
-              if (goal.icon === "plane") iconName = "send";
-              else if (goal.icon === "sun") iconName = "sun";
-              else if (goal.icon === "home") iconName = "home";
-              else if (goal.icon === "laptop") iconName = "tv";
-              else if (goal.icon === "car") iconName = "truck";
-              else if (goal.icon === "smartphone") iconName = "smartphone";
-
-              return (
-                <Pressable
-                  key={goal.id}
-                  onPress={() => {
-                    triggerHaptic();
-                    setSelectedGoalForAddAmount(goal);
-                    setEditGoalTitle(goal.title);
-                    setEditGoalTargetAmount(String(goal.targetAmount || ""));
-                    setEditGoalCurrentAmount(String(goal.currentAmount || ""));
-                    setEditGoalTargetDate(goal.targetDate || "");
-                    setGoalAddAmountVal("");
-                  }}
-                  style={({ pressed }) => [{
-                    backgroundColor: themeColors.surface,
-                    borderColor: themeColors.border,
-                    borderWidth: 1,
-                    borderRadius: 22,
-                    padding: 18,
-                    gap: 14,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: isDarkMode ? 0.2 : 0.04,
-                    shadowRadius: 10,
-                    elevation: 2,
-                    opacity: pressed ? 0.94 : 1.0
-                  }]}
-                >
-                  {/* Top Row: Icon + Title + Target Date + Percent */}
-                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, flex: 1, paddingRight: 8 }}>
-                      <View style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 16,
-                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : `${cardColor}18`,
-                        alignItems: "center",
-                        justifyContent: "center"
-                      }}>
-                        <Feather name={iconName} size={24} color={cardColor} />
-                      </View>
-                      <View style={{ flex: 1, gap: 3 }}>
-                        <Text style={{ fontSize: 16, fontWeight: "800", color: themeColors.text }}>
-                          {goal.title}
-                        </Text>
-                        {goal.targetDate && (
-                          <Text style={{ fontSize: 12, fontWeight: "600", color: themeColors.textMuted }}>
-                            {goal.targetDate}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    <Text style={{ fontSize: 16, fontWeight: "900", color: themeColors.textMuted }}>
-                      %{percent}
-                    </Text>
-                  </View>
-
-                  {/* Amounts Row */}
-                  <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
-                    <Text style={{ fontSize: 17, fontWeight: "900", color: themeColors.text }}>
-                      {formatCurrency(current)}
-                    </Text>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: themeColors.textMuted }}>
-                      / {formatCurrency(target)}
-                    </Text>
-                  </View>
-
-                  {/* Progress Bar */}
-                  <View style={{
-                    height: 9,
-                    borderRadius: 4.5,
-                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
-                    overflow: "hidden"
-                  }}>
-                    <View style={{
-                      height: "100%",
-                      borderRadius: 4.5,
-                      backgroundColor: cardColor,
-                      width: `${percent}%`
-                    }} />
-                  </View>
-                </Pressable>
-              );
-            })}
+          <View style={{ gap: 0 }}>
+            {goals.map((goal) => (
+              <SwipeableGoalCard
+                key={goal.id}
+                goal={goal}
+                accumulatedSavings={goalSavedAmount}
+                onPress={() => {
+                  triggerHaptic();
+                  setSelectedGoalForAddAmount(goal);
+                  setEditGoalTitle(goal.title);
+                  setEditGoalTargetAmount(String(goal.targetAmount || ""));
+                  setEditGoalTargetDate(goal.targetDate || "");
+                  setEditGoalExtraSavings(String(goal.extraSavings || ""));
+                  setGoalAddAmountVal("");
+                }}
+                onDelete={(id) => {
+                  deleteGoal(id);
+                  setToastConfig({
+                    visible: true,
+                    message: language === "tr" ? "Hedef Silindi 🗑️" : "Goal Deleted 🗑️",
+                    subtext: `${goal.title} ${language === "tr" ? "listenizden kaldırıldı." : "removed from list."}`,
+                    type: "warning"
+                  });
+                }}
+              />
+            ))}
           </View>
         )}
       </ScrollView>
@@ -3048,7 +2975,7 @@ export default function HomeDashboardScreen() {
           </Pressable>
         </Modal>
 
-        {/* Edit & Add Amount to Goal Modal */}
+        {/* Edit & Goal Detail Modal */}
         {selectedGoalForAddAmount && (
           <Modal
             visible={Boolean(selectedGoalForAddAmount)}
@@ -3075,7 +3002,7 @@ export default function HomeDashboardScreen() {
               >
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                   <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.text }}>
-                    {language === "tr" ? "Hedefi Düzenle / Birikim Ekle" : "Edit Goal / Add Savings"}
+                    {language === "tr" ? "Hedefi Düzenle" : "Edit Goal"}
                   </Text>
                   <Pressable onPress={() => setSelectedGoalForAddAmount(null)} style={{ padding: 4 }}>
                     <Feather name="x" size={20} color={themeColors.textMuted} />
@@ -3085,7 +3012,7 @@ export default function HomeDashboardScreen() {
                 <View style={{ gap: 12 }}>
                   <View style={{ gap: 4 }}>
                     <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
-                      {language === "tr" ? "Hedef Başlığı" : "Goal Title"}
+                      {language === "tr" ? "Hedef Başlığı (örn. Yamaha R6 Motor)" : "Goal Title (e.g. Vacation)"}
                     </Text>
                     <TextInput
                       value={editGoalTitle}
@@ -3123,29 +3050,27 @@ export default function HomeDashboardScreen() {
                       />
                     </View>
                     <View style={{ flex: 1, gap: 4 }}>
-                      <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
-                        {language === "tr" ? "Şu An Biriken (₺)" : "Current Saved (₺)"}
+                      <Text style={{ fontSize: 12, fontWeight: "700", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
+                        🔒 {language === "tr" ? "Şu An Biriken (₺)" : "Current Saved (₺)"}
                       </Text>
-                      <TextInput
-                        value={editGoalCurrentAmount}
-                        onChangeText={setEditGoalCurrentAmount}
-                        keyboardType="numeric"
-                        style={{
-                          backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
-                          borderRadius: 14,
-                          paddingHorizontal: 14,
-                          paddingVertical: 12,
-                          fontSize: 15,
-                          fontWeight: "700",
-                          color: themeColors.text
-                        }}
-                      />
+                      <View style={{
+                        backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.08)" : "rgba(75, 155, 88, 0.08)",
+                        borderRadius: 14,
+                        paddingHorizontal: 14,
+                        paddingVertical: 12,
+                        borderWidth: 1,
+                        borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(75, 155, 88, 0.2)"
+                      }}>
+                        <Text style={{ fontSize: 15, fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
+                          {formatCurrency(goalSavedAmount + (parseAmount(editGoalExtraSavings) || 0))}
+                        </Text>
+                      </View>
                     </View>
                   </View>
 
                   <View style={{ gap: 4 }}>
                     <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
-                      {language === "tr" ? "Hedeflenen Tarih" : "Target Date"}
+                      {language === "tr" ? "Hedeflenen Tarih (örn. Temmuz 2025)" : "Target Date"}
                     </Text>
                     <TextInput
                       value={editGoalTargetDate}
@@ -3162,53 +3087,29 @@ export default function HomeDashboardScreen() {
                     />
                   </View>
 
-                  {/* Quick Add Savings Section */}
                   <View style={{ gap: 4, marginTop: 4 }}>
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
-                      ➕ {language === "tr" ? "Hızlı Birikim Ekle (₺)" : "Quick Add Savings (₺)"}
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                      💡 {language === "tr" ? "Geçmiş / Ek Birikiminiz Var mı? (₺)" : "Extra Savings (₺)"}
                     </Text>
-                    <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-                      <TextInput
-                        value={goalAddAmountVal}
-                        onChangeText={setGoalAddAmountVal}
-                        keyboardType="numeric"
-                        placeholder="1000"
-                        placeholderTextColor={themeColors.textMuted}
-                        style={{
-                          flex: 1,
-                          backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.08)" : "rgba(75, 155, 88, 0.08)",
-                          borderRadius: 14,
-                          paddingHorizontal: 14,
-                          paddingVertical: 10,
-                          fontSize: 16,
-                          fontWeight: "900",
-                          color: themeColors.text,
-                          borderWidth: 1,
-                          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(75, 155, 88, 0.2)"
-                        }}
-                      />
-                      <Pressable
-                        onPress={() => {
-                          const addVal = parseAmount(goalAddAmountVal);
-                          if (addVal > 0) {
-                            const current = parseAmount(editGoalCurrentAmount);
-                            setEditGoalCurrentAmount(String(current + addVal));
-                            setGoalAddAmountVal("");
-                            triggerHaptic();
-                          }
-                        }}
-                        style={{
-                          backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.15)" : "rgba(75, 155, 88, 0.15)",
-                          paddingHorizontal: 14,
-                          paddingVertical: 12,
-                          borderRadius: 14
-                        }}
-                      >
-                        <Text style={{ fontSize: 13, fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
-                          + Ekle
-                        </Text>
-                      </Pressable>
-                    </View>
+                    <TextInput
+                      value={editGoalExtraSavings}
+                      onChangeText={setEditGoalExtraSavings}
+                      keyboardType="numeric"
+                      placeholder={language === "tr" ? "Örn. 5000 (Sistem dışı biriken tutar)" : "e.g. 5000"}
+                      placeholderTextColor={themeColors.textMuted}
+                      style={{
+                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                        borderRadius: 14,
+                        paddingHorizontal: 14,
+                        paddingVertical: 12,
+                        fontSize: 14,
+                        fontWeight: "700",
+                        color: themeColors.text
+                      }}
+                    />
+                    <Text style={{ fontSize: 11, color: themeColors.textMuted, fontStyle: "italic" }}>
+                      {language === "tr" ? "* Biriken tutar ana sayfadaki canlı birikim kartınızdan otomatik hesaplanır." : "* Current saved is calculated automatically from app savings."}
+                    </Text>
                   </View>
                 </View>
 
@@ -3234,12 +3135,12 @@ export default function HomeDashboardScreen() {
                   <Pressable
                     onPress={() => {
                       const newTarget = parseAmount(editGoalTargetAmount);
-                      const newCurrent = parseAmount(editGoalCurrentAmount);
+                      const extraSav = parseAmount(editGoalExtraSavings);
                       triggerHaptic();
                       updateGoal(selectedGoalForAddAmount.id, {
                         title: editGoalTitle.trim() || selectedGoalForAddAmount.title,
                         targetAmount: newTarget > 0 ? newTarget : selectedGoalForAddAmount.targetAmount,
-                        currentAmount: newCurrent >= 0 ? newCurrent : selectedGoalForAddAmount.currentAmount,
+                        extraSavings: extraSav >= 0 ? extraSav : 0,
                         targetDate: editGoalTargetDate.trim() || selectedGoalForAddAmount.targetDate
                       });
                       setSelectedGoalForAddAmount(null);
@@ -4686,6 +4587,174 @@ const CATEGORY_DONUT_COLORS = [
 interface DonutSlice {
   color: string;
   percentage: number;
+}
+
+function SwipeableGoalCard({
+  goal,
+  accumulatedSavings,
+  onPress,
+  onDelete
+}: {
+  goal: GoalItem;
+  accumulatedSavings: number;
+  onPress: () => void;
+  onDelete: (id: string) => void;
+}) {
+  const pan = useRef(new Animated.ValueXY()).current;
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const themeColors = isDarkMode ? darkColors : lightColors;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 12 && Math.abs(gestureState.dy) < 12;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dx < 0) {
+          pan.setValue({ x: Math.max(gestureState.dx, -90), y: 0 });
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -45) {
+          Animated.spring(pan, { toValue: { x: -80, y: 0 }, useNativeDriver: false }).start();
+        } else {
+          Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+        }
+      }
+    })
+  ).current;
+
+  const currentSaved = (accumulatedSavings || 0) + (goal.extraSavings || 0);
+  const target = goal.targetAmount || 1;
+  const percent = Math.min(Math.round((currentSaved / target) * 100), 100);
+  const cardColor = goal.color || "#4B9B58";
+
+  let iconName: keyof typeof Feather.glyphMap = "target";
+  if (goal.icon === "plane") iconName = "send";
+  else if (goal.icon === "sun") iconName = "sun";
+  else if (goal.icon === "home") iconName = "home";
+  else if (goal.icon === "laptop") iconName = "tv";
+  else if (goal.icon === "car") iconName = "truck";
+  else if (goal.icon === "smartphone") iconName = "smartphone";
+
+  return (
+    <View style={{ position: "relative", marginBottom: 14 }}>
+      {/* Background Swipe Red Delete Action */}
+      <View style={{
+        position: "absolute",
+        right: 0,
+        top: 0,
+        bottom: 0,
+        width: 80,
+        backgroundColor: "#EF4444",
+        borderRadius: 22,
+        justifyContent: "center",
+        alignItems: "center"
+      }}>
+        <Pressable 
+          onPress={() => {
+            Animated.timing(pan, { toValue: { x: 0, y: 0 }, duration: 150, useNativeDriver: false }).start(() => {
+              onDelete(goal.id);
+            });
+          }}
+          style={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center", gap: 2 }}
+        >
+          <Feather name="trash-2" size={20} color="#FFFFFF" />
+          <Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>Sil</Text>
+        </Pressable>
+      </View>
+
+      {/* Swipeable Goal Card */}
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          {
+            transform: [{ translateX: pan.x }],
+            backgroundColor: themeColors.surface,
+            borderColor: themeColors.border,
+            borderWidth: 1,
+            borderRadius: 22,
+            padding: 18,
+            gap: 12,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.04,
+            shadowRadius: 10,
+            elevation: 2
+          }
+        ]}
+      >
+        <Pressable 
+          onPress={() => {
+            Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+            onPress();
+          }}
+          style={{ gap: 12 }}
+        >
+          {/* Top Row: Icon + Title + Target Date + Percent */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 14, flex: 1, paddingRight: 8 }}>
+              <View style={{
+                width: 50,
+                height: 50,
+                borderRadius: 16,
+                backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : `${cardColor}18`,
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+                <Feather name={iconName} size={24} color={cardColor} />
+              </View>
+              <View style={{ flex: 1, gap: 3 }}>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: themeColors.text }}>
+                  {goal.title}
+                </Text>
+                {goal.targetDate && (
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: themeColors.textMuted }}>
+                    {goal.targetDate}
+                  </Text>
+                )}
+              </View>
+            </View>
+            <Text style={{ fontSize: 16, fontWeight: "900", color: cardColor }}>
+              %{percent}
+            </Text>
+          </View>
+
+          {/* Amounts Row */}
+          <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+            <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
+              <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.text }}>
+                {formatCurrency(currentSaved)}
+              </Text>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: themeColors.textMuted }}>
+                / {formatCurrency(target)}
+              </Text>
+            </View>
+            <View style={{ backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.1)" : "rgba(75, 155, 88, 0.1)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+              <Text style={{ fontSize: 10, fontWeight: "800", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
+                🔒 Otomatik Birikim
+              </Text>
+            </View>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={{
+            height: 9,
+            borderRadius: 4.5,
+            backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+            overflow: "hidden"
+          }}>
+            <View style={{
+              height: "100%",
+              borderRadius: 4.5,
+              backgroundColor: cardColor,
+              width: `${percent}%`
+            }} />
+          </View>
+        </Pressable>
+      </Animated.View>
+    </View>
+  );
 }
 
 function DonutChart({

@@ -35,6 +35,7 @@ export type GoalItem = {
   title: string;
   targetAmount: number;
   currentAmount: number;
+  extraSavings?: number;
   targetDate?: string;
   icon?: string;
   color?: string;
