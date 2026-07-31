@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { router } from "expo-router";
 import {
   Alert,
@@ -1841,7 +1841,61 @@ export default function HomeDashboardScreen() {
               </View>
             ) : (
               <View style={{ gap: 20 }}>
-                {analysisCategoryData.map((item) => {
+                {/* Donut Chart & Category Legend Header Visual (Matching Promo Image) */}
+                <View style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  paddingBottom: 18,
+                  borderBottomWidth: 1.2,
+                  borderBottomColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.06)",
+                }}>
+                  {/* Donut Chart Circle */}
+                  <DonutChart
+                    slices={analysisCategoryData.map((item, index) => ({
+                      color: CATEGORY_DONUT_COLORS[index % CATEGORY_DONUT_COLORS.length],
+                      percentage: item.percentage
+                    }))}
+                    totalAmountText={formatCurrency(analysisTotal)}
+                    totalLabelText={language === "tr" ? "Toplam" : "Total"}
+                    isDarkMode={isDarkMode}
+                    surfaceColor={themeColors.surface}
+                  />
+
+                  {/* Category Legend List */}
+                  <View style={{ flex: 1, gap: 7 }}>
+                    {analysisCategoryData.slice(0, 5).map((item, idx) => {
+                      const catColor = CATEGORY_DONUT_COLORS[idx % CATEGORY_DONUT_COLORS.length];
+                      return (
+                        <View key={item.category} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, paddingRight: 4 }}>
+                            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: catColor }} />
+                            <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: "700", color: themeColors.text }}>
+                              {item.category}
+                            </Text>
+                          </View>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                            <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.text }}>
+                              {formatCurrency(item.amount)}
+                            </Text>
+                            <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted, width: 32, textAlign: "right" }}>
+                              %{Math.round(item.percentage)}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                    {analysisCategoryData.length > 5 && (
+                      <Text style={{ fontSize: 10, fontWeight: "700", color: themeColors.textMuted, textAlign: "right", marginTop: 2 }}>
+                        +{analysisCategoryData.length - 5} {language === "tr" ? "kategori daha" : "more categories"}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+
+                {analysisCategoryData.map((item, index) => {
+                  const catColor = CATEGORY_DONUT_COLORS[index % CATEGORY_DONUT_COLORS.length];
                   const categoryKey = getCategoryKey(item.category);
                   const baseMonthlyLimit = categoryLimits[categoryKey] || 0;
                   // Döneme göre limit çarpanı (Aylık -> 1, Haftalık -> 1/4.3, Günlük -> 1/30)
@@ -1855,7 +1909,7 @@ export default function HomeDashboardScreen() {
                     ? Math.min((item.amount / periodLimit) * 100, 100) 
                     : item.percentage;
                   
-                  const barColor = isLimitExceeded ? "#D32F2F" : themeColors.primary;
+                  const barColor = isLimitExceeded ? "#D32F2F" : catColor;
                   const amountColor = isLimitExceeded ? "#D32F2F" : themeColors.text;
 
                   return (
@@ -4025,6 +4079,179 @@ function getProgress(value: number, limit: number) {
   }
 
   return Math.min(Math.max(value / limit, 0), 1);
+}
+
+const CATEGORY_DONUT_COLORS = [
+  "#00DF89", // Emerald Green
+  "#FF7D32", // Vibrant Orange
+  "#3B82F6", // Royal Blue
+  "#8B5CF6", // Electric Purple
+  "#F59E0B", // Amber Gold
+  "#EC4899", // Rose Pink
+  "#14B8A6", // Teal
+  "#6366F1", // Indigo
+];
+
+interface DonutSlice {
+  color: string;
+  percentage: number;
+}
+
+function DonutChart({
+  slices,
+  totalAmountText,
+  totalLabelText,
+  isDarkMode,
+  surfaceColor
+}: {
+  slices: DonutSlice[];
+  totalAmountText: string;
+  totalLabelText: string;
+  isDarkMode: boolean;
+  surfaceColor: string;
+}) {
+  const size = 130;
+  const radius = size / 2;
+  const holeRadius = 42;
+
+  let currentAngle = 0;
+  const sliceAngles = slices.map((s) => {
+    const angle = (Math.max(s.percentage, 0) / 100) * 360;
+    const start = currentAngle;
+    currentAngle += angle;
+    return { ...s, angle, startAngle: start };
+  });
+
+  return (
+    <View style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", position: "relative", alignItems: "center", justifyContent: "center" }}>
+      {/* Background base */}
+      <View style={{ position: "absolute", width: size, height: size, borderRadius: radius, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#E5E7EB" }} />
+
+      {/* Render Slices */}
+      {sliceAngles.map((slice, index) => {
+        if (slice.angle <= 0) return null;
+        if (slice.angle >= 359.9) {
+          return (
+            <View
+              key={index}
+              style={{
+                position: "absolute",
+                width: size,
+                height: size,
+                borderRadius: radius,
+                backgroundColor: slice.color
+              }}
+            />
+          );
+        }
+
+        return (
+          <Fragment key={index}>
+            {renderPieSlice(slice.startAngle, slice.angle, slice.color, size)}
+          </Fragment>
+        );
+      })}
+
+      {/* Center Hole */}
+      <View
+        style={{
+          width: holeRadius * 2,
+          height: holeRadius * 2,
+          borderRadius: holeRadius,
+          backgroundColor: surfaceColor,
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDarkMode ? 0.3 : 0.08,
+          shadowRadius: 4,
+          elevation: 3,
+          zIndex: 10,
+          paddingHorizontal: 4
+        }}
+      >
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.65}
+          style={{
+            fontSize: 13,
+            fontWeight: "900",
+            color: isDarkMode ? "#F1F5F9" : "#0D3228",
+            textAlign: "center"
+          }}
+        >
+          {totalAmountText}
+        </Text>
+        <Text
+          style={{
+            fontSize: 9.5,
+            fontWeight: "700",
+            color: isDarkMode ? "rgba(255,255,255,0.5)" : "#747C78",
+            textAlign: "center",
+            marginTop: 1
+          }}
+        >
+          {totalLabelText}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function renderPieSlice(startAngle: number, sweepAngle: number, color: string, size: number) {
+  if (sweepAngle > 180) {
+    return (
+      <>
+        {renderHalfPieSlice(startAngle, 180, color, size)}
+        {renderHalfPieSlice(startAngle + 180, sweepAngle - 180, color, size)}
+      </>
+    );
+  }
+  return renderHalfPieSlice(startAngle, sweepAngle, color, size);
+}
+
+function renderHalfPieSlice(startAngle: number, sweepAngle: number, color: string, size: number) {
+  const radius = size / 2;
+  return (
+    <View
+      style={{
+        position: "absolute",
+        width: size,
+        height: size,
+        borderRadius: radius,
+        transform: [{ rotate: `${startAngle}deg` }]
+      }}
+    >
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          width: radius,
+          height: size,
+          overflow: "hidden"
+        }}
+      >
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: -radius,
+            width: size,
+            height: size,
+            borderRadius: radius,
+            backgroundColor: color,
+            transform: [
+              { translateX: radius / 2 },
+              { rotate: `${sweepAngle - 180}deg` },
+              { translateX: -radius / 2 }
+            ]
+          }}
+        />
+      </View>
+    </View>
+  );
 }
 
 function getCategoryKey(category?: string): string {
