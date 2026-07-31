@@ -732,9 +732,19 @@ export default function HomeDashboardScreen() {
         else if (hour >= 12 && hour < 18) hourLabel = language === "tr" ? "Öğle" : "Afternoon";
         return hourLabel === selectedChartLabel;
       } else if (analysisPeriod === "weekly") {
-        const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+        const dayLabels = language === "tr"
+          ? ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
+          : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        // Sadece mevcut takvim haftası içindeki (Pazartesi-bugün) harcamalar
+        const todaySim = new Date(simulatedDate);
+        const dow = todaySim.getDay();
+        const daysFromMon = dow === 0 ? 6 : dow - 1;
+        const weekStart = new Date(todaySim);
+        weekStart.setDate(todaySim.getDate() - daysFromMon);
+        weekStart.setHours(0, 0, 0, 0);
+        if (date < weekStart) return false;
         const dayOfWeekIndex = (date.getDay() + 6) % 7;
-        return days[dayOfWeekIndex] === selectedChartLabel;
+        return dayLabels[dayOfWeekIndex] === selectedChartLabel;
       } else {
         const day = date.getDate();
         let weekLabel = "4. Hft";
@@ -790,7 +800,7 @@ export default function HomeDashboardScreen() {
         };
       })
       .sort((a, b) => b.amount - a.amount);
-  }, [periodExpenses, language]);
+  }, [filteredAnalysisExpenses, analysisPeriod, language]);
 
   // Daily hourly spend trend for Analysis tab bar chart (Gece, Sabah, Öğle, Akşam)
   const analysisDailyData = useMemo(() => {
@@ -825,31 +835,39 @@ export default function HomeDashboardScreen() {
     }));
   }, [expenses, language, simulatedDate]);
 
-  // Weekly daily spend trend for Analysis tab bar chart
+  // Haftalık bar grafiği — Mevcut takvim haftası (Pazartesi–bugün) kullanılır
   const analysisWeeklyData = useMemo(() => {
-    const days = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+    const dayLabels = language === "tr"
+      ? ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
+      : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const dailySpend = Array(7).fill(0);
-    const today = simulatedDate;
-    
+
+    // Bu haftanın Pazartesi'si
+    const today = new Date(simulatedDate);
+    const dayOfWeek = today.getDay(); // 0=Pazar, 1=Pzt...6=Cmt
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - daysFromMonday);
+    weekStart.setHours(0, 0, 0, 0);
+
     expenses.forEach((exp) => {
       if (exp.isFixed || !exp.occurredAt) return;
       const date = new Date(exp.occurredAt);
-      const diffTime = Math.abs(today.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays <= 7) {
-        const dayOfWeekIndex = (date.getDay() + 6) % 7; // Monday is 0, Sunday is 6
+      // Sadece Pazartesi'den bugüne kadar olanlar
+      if (date >= weekStart && date <= today) {
+        const dayOfWeekIndex = (date.getDay() + 6) % 7; // Pazartesi=0, Pazar=6
         dailySpend[dayOfWeekIndex] += exp.amount;
       }
     });
 
     const maxSpend = Math.max(...dailySpend, 1);
 
-    return days.map((label, index) => ({
+    return dayLabels.map((label, index) => ({
       label,
       amount: dailySpend[index],
       percentage: (dailySpend[index] / maxSpend) * 100
     }));
-  }, [expenses, simulatedDate]);
+  }, [expenses, language, simulatedDate]);
 
   // Monthly spending by weeks for Analysis tab bar chart
   const analysisMonthlyData = useMemo(() => {
@@ -887,7 +905,8 @@ export default function HomeDashboardScreen() {
 
   const topCategoryInfo = useMemo(() => {
     const totals: Record<string, number> = {};
-    periodExpenses.forEach((exp) => {
+    // Analiz sekmesinin seçili dönemine göre filtrelenmiş harcamalar
+    analysisExpenses.forEach((exp) => {
       if (exp.isFixed) return;
       const cat = exp.category || (language === "tr" ? "Diğer" : "Other");
       totals[cat] = (totals[cat] || 0) + exp.amount;
@@ -898,7 +917,7 @@ export default function HomeDashboardScreen() {
       category: sorted[0][0],
       amount: sorted[0][1]
     };
-  }, [periodExpenses, language]);
+  }, [analysisExpenses, language]);
 
   function handleMascotPress() {
     triggerHaptic();
@@ -1430,26 +1449,31 @@ export default function HomeDashboardScreen() {
     const monthlyRemainingPlan = getRemainingLimitForPeriod("monthly");
 
     // Dynamic Comparative Insight Text
+    // Seçili analiz dönemine göre dinamik metin
+    const periodLabelTR = analysisPeriod === "daily" ? "bugün" : analysisPeriod === "weekly" ? "bu hafta" : "bu ay";
+    const periodLabelEN = analysisPeriod === "daily" ? "today" : analysisPeriod === "weekly" ? "this week" : "this month";
+    const periodLabelTRCap = periodLabelTR.charAt(0).toUpperCase() + periodLabelTR.slice(1);
+
     let analysisInsightText = "";
     if (language === "tr") {
-      if (dailyRemaining < 0 && monthlyRemainingPlan > 0) {
-        analysisInsightText = "Bugün günlük harcama limitini aştın fakat aylık genel bütçen hâlâ güvende! Ay sonuna kadar günlük harcamalarını biraz toparlarsan hedefine kolayca ulaşırsın. 💪";
-      } else if (dailyRemaining < 0 && monthlyRemainingPlan < 0) {
-        analysisInsightText = "Hem günlük limitini aştın hem de aylık bütçen ekside! Tasarruf hedefine ulaşmak için harcamalarını acilen durdurmalı veya kısmalısın. 🚨";
-      } else if (dailyRemaining >= 0 && monthlyRemainingPlan < 0) {
-        analysisInsightText = "Bugün harika gidiyorsun ama aylık toplam bütçen limitlerin üzerinde kalmış. Ay sonuna kadar günlük limitlerini bu şekilde korumaya devam edersen durumu kurtarabilirsin! 🧐";
+      if (analysisPeriodRemaining < 0 && monthlyRemainingPlan > 0) {
+        analysisInsightText = `${periodLabelTRCap} harcama limitini aştın fakat aylık genel bütçen hâlâ güvende! Harcamalarını biraz toparlarsan hedefine kolayca ulaşırsın. 💪`;
+      } else if (analysisPeriodRemaining < 0 && monthlyRemainingPlan < 0) {
+        analysisInsightText = `${periodLabelTRCap} limitini aştın ve aylık bütçen de ekside! Tasarruf hedefine ulaşmak için harcamalarını acilen kısmalısın. 🚨`;
+      } else if (analysisPeriodRemaining >= 0 && monthlyRemainingPlan < 0) {
+        analysisInsightText = `${periodLabelTRCap} harika gidiyorsun ama aylık toplam bütçen limitlerin üzerinde. Limitlerini korumaya devam edersen durumu kurtarabilirsin! 🧐`;
       } else {
-        analysisInsightText = "Harika! Hem günlük limitinin altındasın hem de aylık tasarruf hedefin pürüzsüz ilerliyor. Birikim planına tam uyum sağlıyorsun! 🎯";
+        analysisInsightText = `Harika! ${periodLabelTRCap} limitinin altındasın ve aylık tasarruf hedefin pürüzsüz ilerliyor. Birikim planına tam uyum sağlıyorsun! 🎯`;
       }
     } else {
-      if (dailyRemaining < 0 && monthlyRemainingPlan > 0) {
-        analysisInsightText = "You exceeded the daily limit today, but your monthly budget is still safe! If you balance your daily spending by the end of the month, you'll easily reach your goal. 💪";
-      } else if (dailyRemaining < 0 && monthlyRemainingPlan < 0) {
-        analysisInsightText = "You exceeded both your daily limit and your monthly budget! To reach your target, you must immediately stop or cut down on spending. 🚨";
-      } else if (dailyRemaining >= 0 && monthlyRemainingPlan < 0) {
-        analysisInsightText = "You are doing great today, but your total monthly budget has exceeded the limit. If you maintain your daily limits until the end of the month, you can recover! 🧐";
+      if (analysisPeriodRemaining < 0 && monthlyRemainingPlan > 0) {
+        analysisInsightText = `You exceeded your ${periodLabelEN} limit, but your monthly budget is still safe! Keep balancing your spending to reach your goal. 💪`;
+      } else if (analysisPeriodRemaining < 0 && monthlyRemainingPlan < 0) {
+        analysisInsightText = `You exceeded both your ${periodLabelEN} and monthly limits! You must cut down on spending to meet your savings target. 🚨`;
+      } else if (analysisPeriodRemaining >= 0 && monthlyRemainingPlan < 0) {
+        analysisInsightText = `You are doing great ${periodLabelEN}, but your total monthly budget has exceeded the limit. Keep maintaining your limits to recover! 🧐`;
       } else {
-        analysisInsightText = "Great job! You are within your daily limit today and your monthly savings goal is on track. You are following your plan perfectly! 🎯";
+        analysisInsightText = `Great job! You are within your ${periodLabelEN} limit and your monthly savings goal is on track. You are following your plan perfectly! 🎯`;
       }
     }
 
@@ -1585,7 +1609,8 @@ export default function HomeDashboardScreen() {
             </View>
           </View>
 
-          {/* Predictive Savings Forecast Card */}
+          {/* Predictive Savings Forecast Card — sadece aylık görünümde anlamlı */}
+          {analysisPeriod === "monthly" && (
           <View style={{ 
             marginTop: 8, 
             padding: 12, 
@@ -1636,6 +1661,7 @@ export default function HomeDashboardScreen() {
               </Text>
             </View>
           </View>
+          )}
 
           {/* Dynamic Trend Insight box */}
           <View style={{ 
@@ -1801,7 +1827,9 @@ export default function HomeDashboardScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>{t("analysisCategoryHeader")}</Text>
             <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>
-              {t("analysisCategoryTotal")}: {formatCurrency(analysisTotal)}
+              {selectedChartLabel
+                ? `${selectedChartLabel} — ${formatCurrency(analysisTotal)}`
+                : `${t("analysisCategoryTotal")}: ${formatCurrency(analysisTotal)}`}
             </Text>
           </View>
 
