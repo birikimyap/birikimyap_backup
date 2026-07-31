@@ -995,21 +995,21 @@ export default function HomeDashboardScreen() {
             <Text style={[styles.greeting, { color: themeColors.text }]}>
               {t("welcomeUser", { name: userFirstName || (language === "tr" ? "Kullanıcı" : "User") })}
             </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4, marginBottom: 2 }}>
-              <Feather name="calendar" size={13} color={themeColors.primary} />
-              <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.primary }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2, marginBottom: 1 }}>
+              <Feather name="calendar" size={12} color={themeColors.primary} />
+              <Text style={{ fontSize: 11.5, fontWeight: "800", color: themeColors.primary }}>
                 {formattedSimulatedDate} — {language === "tr" ? `${planDay}. Gün` : `Day ${planDay}`}
               </Text>
             </View>
 
             {selectedPeriodRemaining < 0 ? (
-              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900", fontSize: 12.5 }]}>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: "#D32F2F", fontWeight: "900", fontSize: 12 }]}>
                 {language === "tr" 
                   ? `🚨 Dikkat: Bütçe ${formattedExceeded} Aşıldı!` 
                   : `🚨 Warning: Budget Exceeded by ${formattedExceeded}!`}
               </Text>
             ) : selectedPeriod === "daily" && dynamicDaily < selectedPeriodLimit ? (
-              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: isDarkMode ? "#FDBA74" : "#C8640E", fontWeight: "900", fontSize: 12.5 }]}>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.subtitle, { color: isDarkMode ? "#FDBA74" : "#C8640E", fontWeight: "900", fontSize: 12 }]}>
                 {language === "tr"
                   ? `⚖️ Akıllı Dengeleme: Günlük Limit ${formatCurrency(dynamicDaily)}`
                   : `⚖️ Smart Rebalancing: Daily Limit ${formatCurrency(dynamicDaily)}`}
@@ -1030,7 +1030,7 @@ export default function HomeDashboardScreen() {
               setHasUnreadNotifications(false);
             }}
           >
-            <Feather name="bell" size={25} color={themeColors.text} />
+            <Feather name="bell" size={22} color={themeColors.text} />
             {hasUnreadNotifications && <View style={styles.notificationDot} />}
           </Pressable>
         </View>
@@ -1042,66 +1042,66 @@ export default function HomeDashboardScreen() {
             setIsGoalAchievedModalVisible(true);
           }}
           style={({ pressed }) => [{
-            marginTop: 24, // Added more margin so the bubble doesn't hit the text above
-            borderRadius: 24,
-            overflow: "visible", // Changed from hidden so the tooltip isn't cropped
+            marginTop: 10,
+            borderRadius: 20,
+            overflow: "visible",
             borderWidth: 1.2,
             borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(212, 160, 89, 0.35)",
             shadowColor: isDarkMode ? "#00DF89" : "#B98E4B",
-            shadowOffset: { width: 0, height: 8 },
+            shadowOffset: { width: 0, height: 6 },
             shadowOpacity: isDarkMode ? 0.15 : 0.10,
-            shadowRadius: 20,
-            elevation: 5
+            shadowRadius: 14,
+            elevation: 4
           }, pressed && styles.pressed]}
         >
           <LinearGradient
             colors={isDarkMode ? ["#162B23", "#0F1F19"] : ["#FCF8F3", "#F3E7D7"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ padding: 18, position: "relative", borderRadius: 22 }} // Added border radius here instead
+            style={{ padding: 13, position: "relative", borderRadius: 18 }}
           >
             <View style={{ width: "68%", paddingRight: 4 }}>
-              <View style={{ marginBottom: 12 }}>
+              <View style={{ marginBottom: 6 }}>
                 <View style={[styles.goalBadge, { backgroundColor: isDarkMode ? "rgba(0,223,137,0.18)" : "rgba(13,50,40,0.08)" }]}>
                   <Text style={styles.goalBadgeIcon}>🎯</Text>
                   <Text style={[styles.goalBadgeText, { color: themeColors.primary, fontWeight: "900" }]}>{t("savingsGoalTitle").toUpperCase()}</Text>
                 </View>
               </View>
 
-              <View style={{ flexDirection: "row", marginTop: 4, marginBottom: 14, gap: 10, alignItems: "center" }}>
+              <View style={{ flexDirection: "row", marginTop: 2, marginBottom: 8, gap: 8, alignItems: "center" }}>
                 <View style={{ flexShrink: 1 }}>
-                  <Text style={{ fontSize: 9.5, fontWeight: "800", color: isDarkMode ? "rgba(255,255,255,0.6)" : "#4B6358", marginBottom: 2 }}>
+                  <Text style={{ fontSize: 9, fontWeight: "800", color: isDarkMode ? "rgba(255,255,255,0.6)" : "#4B6358", marginBottom: 1 }}>
                     {language === "tr" ? "TOPLAM HEDEF" : "TOTAL GOAL"}
                   </Text>
                   <Text 
                     numberOfLines={1}
                     adjustsFontSizeToFit
                     minimumFontScale={0.75}
-                    style={{ fontSize: 19, fontWeight: "900", color: isDarkMode ? "#F1F5F9" : "#074A31" }}
+                    style={{ fontSize: 17, fontWeight: "900", color: isDarkMode ? "#F1F5F9" : "#074A31" }}
                   >
                     {formatCurrency(goalTargetAmount)}
                   </Text>
                 </View>
 
-                <View style={{ width: 1.2, height: 28, backgroundColor: themeColors.border, opacity: 0.6 }} />
+                <View style={{ width: 1.2, height: 24, backgroundColor: themeColors.border, opacity: 0.6 }} />
 
                 <View style={{
                   flexShrink: 1,
                   backgroundColor: isDarkMode ? "rgba(0,229,143,0.16)" : "rgba(0,229,143,0.12)",
-                  paddingHorizontal: 8,
-                  paddingVertical: 4,
-                  borderRadius: 12,
+                  paddingHorizontal: 7,
+                  paddingVertical: 3,
+                  borderRadius: 10,
                   borderWidth: 1,
                   borderColor: "rgba(0,229,143,0.3)"
                 }}>
-                  <Text style={{ fontSize: 9.5, fontWeight: "800", color: isDarkMode ? "#00E58F" : "#0D5D46", marginBottom: 1 }}>
+                  <Text style={{ fontSize: 9, fontWeight: "800", color: isDarkMode ? "#00E58F" : "#0D5D46", marginBottom: 1 }}>
                     {language === "tr" ? "BİRİKEN" : "SAVED SO FAR"}
                   </Text>
                   <Text 
                     numberOfLines={1}
                     adjustsFontSizeToFit
                     minimumFontScale={0.70}
-                    style={{ fontSize: 16.5, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}
+                    style={{ fontSize: 15, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}
                   >
                     {formatCurrency(goalSavedAmount)}
                   </Text>
@@ -1109,8 +1109,8 @@ export default function HomeDashboardScreen() {
               </View>
 
               {/* Gradient Progress Bar with Glow Indicator Dot */}
-              <View style={{ height: 10, borderRadius: 5, backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(13,50,40,0.08)", position: "relative", justifyContent: "center" }}>
-                <View style={{ height: "100%", width: `${goalProgress * 100}%`, borderRadius: 5, overflow: "hidden" }}>
+              <View style={{ height: 8, borderRadius: 4, backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(13,50,40,0.08)", position: "relative", justifyContent: "center" }}>
+                <View style={{ height: "100%", width: `${goalProgress * 100}%`, borderRadius: 4, overflow: "hidden" }}>
                   <LinearGradient
                     colors={["#00DF89", "#10B981", "#059669"]}
                     start={{ x: 0, y: 0 }}
@@ -1123,42 +1123,42 @@ export default function HomeDashboardScreen() {
                   <View style={{
                     position: "absolute",
                     left: `${Math.min(goalProgress * 100, 96)}%`,
-                    width: 14,
-                    height: 14,
-                    borderRadius: 7,
+                    width: 12,
+                    height: 12,
+                    borderRadius: 6,
                     backgroundColor: "#00FF9D",
-                    borderWidth: 2.5,
+                    borderWidth: 2,
                     borderColor: isDarkMode ? "#172620" : "#FFFFFF",
                     shadowColor: "#00FF9D",
                     shadowOffset: { width: 0, height: 0 },
                     shadowOpacity: 0.8,
-                    shadowRadius: 6,
-                    elevation: 5,
-                    marginLeft: -7
+                    shadowRadius: 5,
+                    elevation: 4,
+                    marginLeft: -6
                   }} />
                 )}
               </View>
 
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
-                <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 5 }}>
+                <Text style={{ fontSize: 10, fontWeight: "700", color: themeColors.textMuted }}>
                   {language === "tr" ? `Hedefin %${goalProgressPercent}’i tamamlandı` : `${goalProgressPercent}% of goal completed`}
                 </Text>
                 {goalProgressPercent >= 50 && (
-                  <Text style={{ fontSize: 10.5, fontWeight: "800", color: "#00E58F" }}>
+                  <Text style={{ fontSize: 9.5, fontWeight: "800", color: "#00E58F" }}>
                     🔥 {language === "tr" ? "Harika İlerleme!" : "Great Progress!"}
                   </Text>
                 )}
               </View>
             </View>
 
-            <View style={{ position: "absolute", right: 14, top: 29, width: 100, height: 100, zIndex: 5 }}>
+            <View style={{ position: "absolute", right: 10, top: 12, width: 84, height: 84, zIndex: 5 }}>
               {(mascotMessage || selectedPeriodRemaining < 0) && (
-                <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -44 : -12 }]}>
+                <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -38 : -10 }]}>
                   <View style={[
                     styles.mascotSpeechBubble, 
                     { 
                       backgroundColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228",
-                      maxWidth: mascotMessage ? 150 : 120 
+                      maxWidth: mascotMessage ? 140 : 110 
                     }
                   ]}>
                     <Text style={[styles.mascotSpeechBubbleText, { textAlign: mascotMessage ? "center" : "left" }]}>
@@ -1181,26 +1181,26 @@ export default function HomeDashboardScreen() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{
-                    width: 101,
-                    height: 101,
-                    borderRadius: 50.5,
-                    padding: 2.5,
+                    width: 84,
+                    height: 84,
+                    borderRadius: 42,
+                    padding: 2,
                     alignItems: "center",
                     justifyContent: "center",
                     shadowColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#00E58F",
-                    shadowOffset: { width: 0, height: 4 },
+                    shadowOffset: { width: 0, height: 3 },
                     shadowOpacity: isDarkMode ? 0.45 : 0.22,
-                    shadowRadius: 12,
-                    elevation: 5
+                    shadowRadius: 10,
+                    elevation: 4
                   }}
                 >
                   <View style={[styles.heroMascot, { 
                     position: "relative", 
                     right: 0, 
                     top: 0, 
-                    width: 96, 
-                    height: 96, 
-                    borderRadius: 48,
+                    width: 80, 
+                    height: 80, 
+                    borderRadius: 40,
                     backgroundColor: colors.white,
                     alignItems: "center",
                     justifyContent: "center",
@@ -4808,8 +4808,8 @@ const styles = StyleSheet.create({
     flex: 1
   },
   greeting: {
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: 23,
+    lineHeight: 28,
     fontWeight: "900",
     color: colors.primary
   },
@@ -4821,9 +4821,9 @@ const styles = StyleSheet.create({
     color: "#747C78"
   },
   notificationButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: "rgba(13,50,40,0.08)",
     backgroundColor: "rgba(255,254,250,0.86)",
@@ -5038,9 +5038,9 @@ const styles = StyleSheet.create({
     color: colors.white
   },
   summaryCard: {
-    borderRadius: 22,
+    borderRadius: 18,
     paddingHorizontal: 12,
-    paddingVertical: 16,
+    paddingVertical: 10,
     flexDirection: "row",
     alignItems: "center"
   },
@@ -5048,18 +5048,18 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4
+    paddingHorizontal: 2
   },
   divider: {
     width: 1,
-    height: 40,
+    height: 32,
     backgroundColor: "#ECE5DA",
-    marginHorizontal: 4
+    marginHorizontal: 2
   },
   metricIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center"
   },
@@ -5067,8 +5067,8 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent"
   },
   metricTitle: {
-    marginTop: 4,
-    fontSize: 12,
+    marginTop: 2,
+    fontSize: 11,
     fontWeight: "800",
     color: "#747C78",
     textAlign: "center"
