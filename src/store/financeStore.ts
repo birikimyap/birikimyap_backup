@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { Expense, FinancePlan, Income, Period, SavingsGoal } from "@/models/finance";
+import { Expense, FinancePlan, GoalItem, Income, Period, SavingsGoal } from "@/models/finance";
 import {
   calculateFinancePlan,
   getDailyLimit as calculateDailyLimit,
@@ -25,6 +25,7 @@ type FinanceState = {
   incomes: Income[];
   expenses: Expense[];
   savingsGoal: SavingsGoal;
+  goals: GoalItem[];
   selectedPeriod: Period;
   plan: FinancePlan;
   setIncomes: (incomes: Income[]) => void;
@@ -32,6 +33,10 @@ type FinanceState = {
   setFixedExpenses: (expenses: Expense[]) => void;
   addExpense: (expense: Expense) => void;
   deleteExpense: (id: string) => void;
+  addGoal: (goal: Omit<GoalItem, "id" | "createdAt">) => void;
+  updateGoal: (id: string, goal: Partial<GoalItem>) => void;
+  deleteGoal: (id: string) => void;
+  addAmountToGoal: (id: string, amount: number) => void;
   setSavingsGoal: (savingsGoal: SavingsGoal) => void;
   setMonthlySavings: (amount: number) => void;
   setSelectedPeriod: (period: Period) => void;
@@ -113,6 +118,49 @@ const initialGoal: SavingsGoal = {
   dailyTarget: 0,
   planStartDate: new Date().toISOString()
 };
+
+export const initialGoals: GoalItem[] = [
+  {
+    id: "goal_1",
+    title: "Yurt Dışı Gezi ✈️",
+    targetAmount: 25000,
+    currentAmount: 18500,
+    targetDate: "Mayıs 2025",
+    icon: "plane",
+    color: "#4B9B58",
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: "goal_2",
+    title: "Tatil ☀️",
+    targetAmount: 15000,
+    currentAmount: 7200,
+    targetDate: "Ağustos 2025",
+    icon: "sun",
+    color: "#F59E0B",
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: "goal_3",
+    title: "Ev Peşinatı 🏠",
+    targetAmount: 200000,
+    currentAmount: 85000,
+    targetDate: "Aralık 2026",
+    icon: "home",
+    color: "#10B981",
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: "goal_4",
+    title: "Yeni Laptop 💻",
+    targetAmount: 30000,
+    currentAmount: 12300,
+    targetDate: "Kasım 2025",
+    icon: "laptop",
+    color: "#8B5CF6",
+    createdAt: new Date().toISOString()
+  }
+];
 
 const initialPeriod: Period = "daily";
 const initialPlan = calculateFinancePlan(initialIncomes, initialFixedExpenses, initialGoal, initialPeriod);
@@ -209,6 +257,38 @@ export const useFinanceStore = create<FinanceState>()(
             monthlyArchives: [record, ...state.monthlyArchives]
           };
         });
+      },
+      goals: initialGoals,
+      addGoal: (goalData) => {
+        const newGoal: GoalItem = {
+          ...goalData,
+          id: `goal_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          createdAt: new Date().toISOString()
+        };
+        set((state) => ({
+          goals: [newGoal, ...(state.goals || [])]
+        }));
+      },
+      updateGoal: (id, updatedData) => {
+        set((state) => ({
+          goals: (state.goals || []).map((g) => (g.id === id ? { ...g, ...updatedData } : g))
+        }));
+      },
+      deleteGoal: (id) => {
+        set((state) => ({
+          goals: (state.goals || []).filter((g) => g.id !== id)
+        }));
+      },
+      addAmountToGoal: (id, amount) => {
+        set((state) => ({
+          goals: (state.goals || []).map((g) => {
+            if (g.id === id) {
+              const newCurrent = Math.max((g.currentAmount || 0) + amount, 0);
+              return { ...g, currentAmount: newCurrent };
+            }
+            return g;
+          })
+        }));
       },
       language: "tr",
       categoryLimits: {},
@@ -478,6 +558,7 @@ export const useFinanceStore = create<FinanceState>()(
           incomes: cleanIncomes,
           expenses: cleanFixed,
           savingsGoal: cleanGoal,
+          goals: initialGoals,
           selectedPeriod: "daily",
           plan: cleanPlan,
           simulatedDateOffsetDays: 0,

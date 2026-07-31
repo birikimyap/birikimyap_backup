@@ -27,7 +27,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useVoiceExpenseInput } from "@/hooks/useVoiceExpenseInput";
-import { Expense, Period } from "@/models/finance";
+import { Expense, GoalItem, Period } from "@/models/finance";
 import { signOutUser } from "@/utils/supabaseAuth";
 import { useFinanceStore } from "@/store/financeStore";
 import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
@@ -90,6 +90,12 @@ export default function HomeDashboardScreen() {
   const userProfile = useFinanceStore((state) => state.userProfile);
   const setUserProfile = useFinanceStore((state) => state.setUserProfile);
   const userFirstName = userProfile?.fullName ? userProfile.fullName.trim().split(" ")[0] : "";
+
+  const goals = useFinanceStore((state) => state.goals) || [];
+  const addGoal = useFinanceStore((state) => state.addGoal);
+  const updateGoal = useFinanceStore((state) => state.updateGoal);
+  const deleteGoal = useFinanceStore((state) => state.deleteGoal);
+  const addAmountToGoal = useFinanceStore((state) => state.addAmountToGoal);
 
   useEffect(() => {
     fetchExchangeRates();
@@ -202,7 +208,16 @@ export default function HomeDashboardScreen() {
   }
 
   // Tab state
-  const [currentTab, setCurrentTab] = useState<"home" | "analysis" | "profile">("home");
+  const [currentTab, setCurrentTab] = useState<"home" | "goals" | "analysis" | "profile">("home");
+  const [isAddGoalModalVisible, setIsAddGoalModalVisible] = useState(false);
+  const [selectedGoalForAddAmount, setSelectedGoalForAddAmount] = useState<GoalItem | null>(null);
+  const [goalAddAmountVal, setGoalAddAmountVal] = useState("");
+
+  const [newGoalTitle, setNewGoalTitle] = useState("");
+  const [newGoalTargetAmount, setNewGoalTargetAmount] = useState("");
+  const [newGoalCurrentAmount, setNewGoalCurrentAmount] = useState("");
+  const [newGoalTargetDate, setNewGoalTargetDate] = useState("");
+  const [newGoalIcon, setNewGoalIcon] = useState("plane");
 
   // Haptics & Dark Mode
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
@@ -1437,6 +1452,208 @@ export default function HomeDashboardScreen() {
     );
   }
 
+  function renderGoalsTab() {
+    const monthlyRemaining = getRemainingLimitForPeriod("monthly");
+    const spendableMonthly = plan?.spendableMonthlyBudget || 0;
+
+    return (
+      <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 36 }}>
+        {/* Header Row */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <View style={{ flex: 1, paddingRight: 10 }}>
+            <Text style={{ fontSize: 26, fontWeight: "900", color: themeColors.text }}>
+              {language === "tr" ? "Hedeflerim" : "My Goals"}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              setNewGoalTitle("");
+              setNewGoalTargetAmount("");
+              setNewGoalCurrentAmount("");
+              setNewGoalTargetDate("");
+              setNewGoalIcon("plane");
+              setIsAddGoalModalVisible(true);
+            }}
+            style={{
+              backgroundColor: isDarkMode ? "#00DF89" : "#4B9B58",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              paddingHorizontal: 14,
+              paddingVertical: 9,
+              borderRadius: 14,
+              shadowColor: "#00DF89",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.25,
+              shadowRadius: 6,
+              elevation: 3
+            }}
+          >
+            <Feather name="plus" size={16} color="#FFFFFF" />
+            <Text style={{ fontSize: 13, fontWeight: "800", color: "#FFFFFF" }}>
+              {language === "tr" ? "Yeni Hedef" : "New Goal"}
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Smart Forecast Card */}
+        <View style={{
+          backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.08)" : "rgba(75, 155, 88, 0.08)",
+          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(75, 155, 88, 0.18)",
+          borderWidth: 1.2,
+          borderRadius: 20,
+          padding: 16,
+          marginBottom: 16,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12
+        }}>
+          <View style={{
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.15)" : "rgba(75, 155, 88, 0.15)",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>
+            <Feather name="target" size={22} color={isDarkMode ? "#00DF89" : "#4B9B58"} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={{ fontSize: 11, fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58", textTransform: "uppercase", letterSpacing: 0.4 }}>
+              🎯 {language === "tr" ? "AKILLI HEDEF ÖNGÖRÜSÜ" : "SMART GOAL FORECAST"}
+            </Text>
+            <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "600", color: themeColors.text }}>
+              {spendableMonthly > 0 ? (
+                language === "tr" ? (
+                  <>
+                    Aylık <Text style={{ fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>{formatCurrency(spendableMonthly)}</Text> birikim potansiyelinizle hayallerinize adım adım yaklaşıyorsunuz! 🚀
+                  </>
+                ) : (
+                  <>
+                    With your <Text style={{ fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>{formatCurrency(spendableMonthly)}</Text> monthly savings potential, you're getting closer to your dreams! 🚀
+                  </>
+                )
+              ) : (
+                language === "tr" ? "Küçük adımlarla büyük hedeflere ulaşın! Düzenli birikim ekleyerek ilerlemenizi takip edin." : "Achieve big goals with small steps! Track your progress by adding savings."
+              )}
+            </Text>
+          </View>
+        </View>
+
+        {/* Goals List (Matching Promo Screenshot Design) */}
+        {goals.length === 0 ? (
+          <View style={{ alignItems: "center", justifyContent: "center", paddingVertical: 40, gap: 12 }}>
+            <Feather name="target" size={40} color={themeColors.textMuted} />
+            <Text style={{ fontSize: 15, fontWeight: "800", color: themeColors.text }}>
+              {language === "tr" ? "Henüz eklenmiş bir hedefiniz yok" : "No goals added yet"}
+            </Text>
+            <Text style={{ fontSize: 12, color: themeColors.textMuted, textAlign: "center", paddingHorizontal: 20 }}>
+              {language === "tr" ? "Yurt dışı gezisi, yeni bir araba veya tatil gibi hayallerinizi ekleyin." : "Add your dreams like a trip abroad, a new laptop, or vacation."}
+            </Text>
+          </View>
+        ) : (
+          <View style={{ gap: 14 }}>
+            {goals.map((goal) => {
+              const target = goal.targetAmount || 1;
+              const current = goal.currentAmount || 0;
+              const percent = Math.min(Math.round((current / target) * 100), 100);
+              const cardColor = goal.color || "#4B9B58";
+
+              // Icon mapping
+              let iconName: keyof typeof Feather.glyphMap = "target";
+              if (goal.icon === "plane") iconName = "send";
+              else if (goal.icon === "sun") iconName = "sun";
+              else if (goal.icon === "home") iconName = "home";
+              else if (goal.icon === "laptop") iconName = "tv";
+              else if (goal.icon === "car") iconName = "truck";
+              else if (goal.icon === "smartphone") iconName = "smartphone";
+
+              return (
+                <Pressable
+                  key={goal.id}
+                  onPress={() => {
+                    triggerHaptic();
+                    setSelectedGoalForAddAmount(goal);
+                    setGoalAddAmountVal("");
+                  }}
+                  style={({ pressed }) => [{
+                    backgroundColor: themeColors.surface,
+                    borderColor: themeColors.border,
+                    borderWidth: 1,
+                    borderRadius: 22,
+                    padding: 18,
+                    gap: 14,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: isDarkMode ? 0.2 : 0.04,
+                    shadowRadius: 10,
+                    elevation: 2,
+                    opacity: pressed ? 0.94 : 1.0
+                  }]}
+                >
+                  {/* Top Row: Icon + Title + Target Date + Percent */}
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, flex: 1, paddingRight: 8 }}>
+                      <View style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 16,
+                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : `${cardColor}18`,
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}>
+                        <Feather name={iconName} size={24} color={cardColor} />
+                      </View>
+                      <View style={{ flex: 1, gap: 3 }}>
+                        <Text style={{ fontSize: 16, fontWeight: "800", color: themeColors.text }}>
+                          {goal.title}
+                        </Text>
+                        {goal.targetDate && (
+                          <Text style={{ fontSize: 12, fontWeight: "600", color: themeColors.textMuted }}>
+                            {goal.targetDate}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                    <Text style={{ fontSize: 16, fontWeight: "900", color: themeColors.textMuted }}>
+                      %{percent}
+                    </Text>
+                  </View>
+
+                  {/* Amounts Row */}
+                  <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
+                    <Text style={{ fontSize: 17, fontWeight: "900", color: themeColors.text }}>
+                      {formatCurrency(current)}
+                    </Text>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: themeColors.textMuted }}>
+                      / {formatCurrency(target)}
+                    </Text>
+                  </View>
+
+                  {/* Progress Bar */}
+                  <View style={{
+                    height: 9,
+                    borderRadius: 4.5,
+                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                    overflow: "hidden"
+                  }}>
+                    <View style={{
+                      height: "100%",
+                      borderRadius: 4.5,
+                      backgroundColor: cardColor,
+                      width: `${percent}%`
+                    }} />
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
+    );
+  }
+
   function renderAnalysisTab() {
     const activeChartData = 
       analysisPeriod === "daily" ? analysisDailyData :
@@ -2318,6 +2535,7 @@ export default function HomeDashboardScreen() {
       <View style={[styles.screen, { backgroundColor: themeColors.background }]}>
         <View style={styles.content}>
           {currentTab === "home" && renderHomeTab()}
+          {currentTab === "goals" && renderGoalsTab()}
           {currentTab === "analysis" && renderAnalysisTab()}
           {currentTab === "profile" && renderProfileTab()}
         </View>
@@ -2329,6 +2547,34 @@ export default function HomeDashboardScreen() {
             active={currentTab === "home"} 
             onPress={() => { triggerHaptic(); setCurrentTab("home"); }} 
           />
+          <TabItem 
+            icon="target" 
+            label={language === "tr" ? "Hedefler" : "Goals"} 
+            active={currentTab === "goals"} 
+            onPress={() => { triggerHaptic(); setCurrentTab("goals"); }} 
+          />
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              setIsSheetVisible(true);
+            }}
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: isDarkMode ? "#00DF89" : "#4B9B58",
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#00DF89",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.35,
+              shadowRadius: 8,
+              elevation: 5,
+              marginTop: -16
+            }}
+          >
+            <Feather name="plus" size={24} color="#FFFFFF" />
+          </Pressable>
           <TabItem 
             icon="pie-chart" 
             label={language === "tr" ? "Analiz" : "Analysis"} 
@@ -2387,6 +2633,258 @@ export default function HomeDashboardScreen() {
           onClose={() => setIsNotificationsVisible(false)}
           notifications={notifications}
         />
+
+        {/* Add New Goal Modal */}
+        <Modal
+          visible={isAddGoalModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setIsAddGoalModalVisible(false)}
+        >
+          <Pressable 
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
+            onPress={() => setIsAddGoalModalVisible(false)}
+          >
+            <Pressable 
+              style={{
+                backgroundColor: themeColors.surface,
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
+                padding: 24,
+                gap: 16,
+                borderWidth: 1,
+                borderColor: themeColors.border
+              }}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.text }}>
+                  {language === "tr" ? "Yeni Birikim Hedefi Ekle" : "Add New Savings Goal"}
+                </Text>
+                <Pressable onPress={() => setIsAddGoalModalVisible(false)} style={{ padding: 4 }}>
+                  <Feather name="x" size={20} color={themeColors.textMuted} />
+                </Pressable>
+              </View>
+
+              <View style={{ gap: 12 }}>
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                    {language === "tr" ? "Hedef Başlığı (örn. Yurt Dışı Gezi, Tatil)" : "Goal Title (e.g. Vacation)"}
+                  </Text>
+                  <TextInput
+                    value={newGoalTitle}
+                    onChangeText={setNewGoalTitle}
+                    placeholder={language === "tr" ? "Örn. Tatil ☀️" : "e.g. Vacation ☀️"}
+                    placeholderTextColor={themeColors.textMuted}
+                    style={{
+                      backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                      borderRadius: 14,
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      fontSize: 15,
+                      fontWeight: "700",
+                      color: themeColors.text
+                    }}
+                  />
+                </View>
+
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                      {language === "tr" ? "Hedef Tutar (₺)" : "Target Amount (₺)"}
+                    </Text>
+                    <TextInput
+                      value={newGoalTargetAmount}
+                      onChangeText={setNewGoalTargetAmount}
+                      keyboardType="numeric"
+                      placeholder="25000"
+                      placeholderTextColor={themeColors.textMuted}
+                      style={{
+                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                        borderRadius: 14,
+                        paddingHorizontal: 14,
+                        paddingVertical: 12,
+                        fontSize: 15,
+                        fontWeight: "700",
+                        color: themeColors.text
+                      }}
+                    />
+                  </View>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                      {language === "tr" ? "Şu An Biriken (₺)" : "Current Saved (₺)"}
+                    </Text>
+                    <TextInput
+                      value={newGoalCurrentAmount}
+                      onChangeText={setNewGoalCurrentAmount}
+                      keyboardType="numeric"
+                      placeholder="0"
+                      placeholderTextColor={themeColors.textMuted}
+                      style={{
+                        backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                        borderRadius: 14,
+                        paddingHorizontal: 14,
+                        paddingVertical: 12,
+                        fontSize: 15,
+                        fontWeight: "700",
+                        color: themeColors.text
+                      }}
+                    />
+                  </View>
+                </View>
+
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                    {language === "tr" ? "Hedeflenen Tarih (örn. Mayıs 2025)" : "Target Date (e.g. May 2025)"}
+                  </Text>
+                  <TextInput
+                    value={newGoalTargetDate}
+                    onChangeText={setNewGoalTargetDate}
+                    placeholder={language === "tr" ? "Mayıs 2025" : "May 2025"}
+                    placeholderTextColor={themeColors.textMuted}
+                    style={{
+                      backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                      borderRadius: 14,
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      fontSize: 15,
+                      fontWeight: "700",
+                      color: themeColors.text
+                    }}
+                  />
+                </View>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  if (!newGoalTitle.trim()) return;
+                  triggerHaptic();
+                  addGoal({
+                    title: newGoalTitle.trim(),
+                    targetAmount: parseAmount(newGoalTargetAmount) || 1000,
+                    currentAmount: parseAmount(newGoalCurrentAmount) || 0,
+                    targetDate: newGoalTargetDate.trim() || undefined,
+                    icon: newGoalIcon,
+                    color: "#4B9B58"
+                  });
+                  setIsAddGoalModalVisible(false);
+                }}
+                style={{
+                  backgroundColor: isDarkMode ? "#00DF89" : "#4B9B58",
+                  paddingVertical: 14,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  marginTop: 6
+                }}
+              >
+                <Text style={{ fontSize: 15, fontWeight: "900", color: "#FFFFFF" }}>
+                  {language === "tr" ? "Hedefi Kaydet" : "Save Goal"}
+                </Text>
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* Add Amount to Goal Modal */}
+        {selectedGoalForAddAmount && (
+          <Modal
+            visible={Boolean(selectedGoalForAddAmount)}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setSelectedGoalForAddAmount(null)}
+          >
+            <Pressable 
+              style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 }}
+              onPress={() => setSelectedGoalForAddAmount(null)}
+            >
+              <Pressable 
+                style={{
+                  width: "100%",
+                  backgroundColor: themeColors.surface,
+                  borderRadius: 24,
+                  padding: 22,
+                  gap: 16,
+                  borderWidth: 1,
+                  borderColor: themeColors.border
+                }}
+                onPress={(e) => e.stopPropagation()}
+              >
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text style={{ fontSize: 17, fontWeight: "900", color: themeColors.text, flex: 1, paddingRight: 8 }}>
+                    {selectedGoalForAddAmount.title}
+                  </Text>
+                  <Pressable onPress={() => setSelectedGoalForAddAmount(null)} style={{ padding: 4 }}>
+                    <Feather name="x" size={20} color={themeColors.textMuted} />
+                  </Pressable>
+                </View>
+
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                    {language === "tr" ? "Birikim Ekle (₺)" : "Add Savings (₺)"}
+                  </Text>
+                  <TextInput
+                    value={goalAddAmountVal}
+                    onChangeText={setGoalAddAmountVal}
+                    keyboardType="numeric"
+                    placeholder="1000"
+                    autoFocus
+                    placeholderTextColor={themeColors.textMuted}
+                    style={{
+                      backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+                      borderRadius: 14,
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      fontSize: 18,
+                      fontWeight: "900",
+                      color: themeColors.text
+                    }}
+                  />
+                </View>
+
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <Pressable
+                    onPress={() => {
+                      triggerHaptic();
+                      deleteGoal(selectedGoalForAddAmount.id);
+                      setSelectedGoalForAddAmount(null);
+                    }}
+                    style={{
+                      paddingVertical: 13,
+                      paddingHorizontal: 16,
+                      borderRadius: 14,
+                      backgroundColor: "rgba(239, 68, 68, 0.1)",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <Feather name="trash-2" size={18} color="#EF4444" />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      const amount = parseAmount(goalAddAmountVal);
+                      if (amount <= 0) return;
+                      triggerHaptic();
+                      addAmountToGoal(selectedGoalForAddAmount.id, amount);
+                      setSelectedGoalForAddAmount(null);
+                    }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: isDarkMode ? "#00DF89" : "#4B9B58",
+                      paddingVertical: 14,
+                      borderRadius: 14,
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <Text style={{ fontSize: 15, fontWeight: "900", color: "#FFFFFF" }}>
+                      {language === "tr" ? "Birikime Ekle" : "Add to Goal"}
+                    </Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            </Pressable>
+          </Modal>
+        )}
 
         {/* Profile Name Edit Modal */}
         <Modal

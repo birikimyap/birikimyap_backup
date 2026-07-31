@@ -30,6 +30,17 @@ export type SavingsGoal = {
   planStartDate: string;
 };
 
+export type GoalItem = {
+  id: string;
+  title: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate?: string;
+  icon?: string;
+  color?: string;
+  createdAt: string;
+};
+
 export type SpendingLimits = {
   daily: number;
   weekly: number;

@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.birikimyapsiri.app",
-      "buildNumber": "83",
+      "buildNumber": "84",
       "usesAppleSignIn": true
     },
     "android": {
