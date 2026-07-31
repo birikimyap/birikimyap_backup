@@ -34,6 +34,7 @@ import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
 import { formatAmountInput, formatCurrency, parseAmount } from "@/utils/currency";
 import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevisedSavingsStatus, getSpendableMonthlyBudget, getExpensesTotalForPeriod, toSafeAmount, getDailyLimit, isExpenseInPeriod, getExpensePlanWeekIndex } from "@/utils/finance";
+import { moderateScale, verticalScale } from "@/utils/responsive";
 import { translations } from "@/utils/translations";
 import { syncSiriExpenses } from "@/utils/siriSync";
 import { syncWidgetData } from "@/utils/widgetSync";
@@ -1818,7 +1819,7 @@ export default function HomeDashboardScreen() {
             </Text>
           </View>
 
-          <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, padding: 16, flex: 1, minHeight: 220 }]}>
+          <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, padding: 16, flex: 1, minHeight: verticalScale(220) }]}>
             {analysisCategoryData.length === 0 ? (
               <View style={styles.emptyExpenses}>
                 <Feather name="bar-chart-2" size={28} color={themeColors.textMuted} />
@@ -3113,7 +3114,7 @@ function IncomeEditModal({
             </Pressable>
             
             <Pressable style={({ pressed }) => [{ flex: 1, borderRadius: 22, overflow: "hidden" }, pressed && styles.pressed]} onPress={onSave}>
-              <LinearGradient colors={["#00DF89", "#0D3228"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, minHeight: 52, alignItems: "center", justifyContent: "center" }}>
+              <LinearGradient colors={["#00DF89", "#0D3228"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, minHeight: verticalScale(52), alignItems: "center", justifyContent: "center" }}>
                 <Text style={styles.saveButtonText}>{language === "tr" ? "Kaydet ve Hesapla" : "Save & Recalculate"}</Text>
               </LinearGradient>
             </Pressable>
@@ -3276,7 +3277,7 @@ function FixedExpenseEditModal({
             </Pressable>
             
             <Pressable style={({ pressed }) => [{ flex: 1, borderRadius: 22, overflow: "hidden" }, pressed && styles.pressed]} onPress={onSave}>
-              <LinearGradient colors={["#DF7A12", "#C8640E"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, minHeight: 52, alignItems: "center", justifyContent: "center" }}>
+              <LinearGradient colors={["#DF7A12", "#C8640E"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, minHeight: verticalScale(52), alignItems: "center", justifyContent: "center" }}>
                 <Text style={styles.saveButtonText}>{language === "tr" ? "Kaydet ve Hesapla" : "Save & Recalculate"}</Text>
               </LinearGradient>
             </Pressable>
@@ -4119,7 +4120,7 @@ function NotificationsModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.sheetKeyboardView}>
         <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: 380, maxHeight: "80%" }]}>
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: verticalScale(380), maxHeight: "80%" }]}>
           <View style={styles.sheetHandle} />
           
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: 12 }}>
@@ -4347,7 +4348,7 @@ function CategoryLimitsModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
         <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: 460, maxHeight: "90%" }]}>
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: verticalScale(460), maxHeight: "90%" }]}>
           <View style={styles.sheetHandle} />
           
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: 12 }}>
@@ -4521,7 +4522,7 @@ function FaqModal({ visible, onClose }: { visible: boolean; onClose: () => void 
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetKeyboardView}>
         <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: 450 }]}>
+        <View style={[styles.sheet, { backgroundColor: themeColors.surface, borderColor: themeColors.border, minHeight: verticalScale(450) }]}>
           <View style={styles.sheetHandle} />
           <Text style={[styles.sheetTitle, { color: themeColors.primary }]}>{t("faqTitle")}</Text>
           <Text style={[styles.sheetSubtitle, { color: themeColors.textMuted }]}>{t("faqSubtitle")}</Text>
@@ -5291,7 +5292,7 @@ const styles = StyleSheet.create({
   },
   emptyExpenses: {
     flex: 1,
-    minHeight: 210,
+    minHeight: verticalScale(210),
     alignItems: "center",
     justifyContent: "center",
     gap: 9,
@@ -5604,7 +5605,7 @@ const styles = StyleSheet.create({
   },
   directVoiceTranscriptBox: {
     marginTop: 40,
-    minHeight: 130,
+    minHeight: verticalScale(130),
     width: "100%",
     backgroundColor: "rgba(255, 255, 255, 0.03)",
     borderRadius: 28,

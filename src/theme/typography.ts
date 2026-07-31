@@ -1,32 +1,34 @@
+import { moderateScale } from "../utils/responsive";
+
 export const typography = {
   display: {
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: moderateScale(34),
+    lineHeight: moderateScale(40),
     fontWeight: "800" as const
   },
   title: {
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: moderateScale(24),
+    lineHeight: moderateScale(30),
     fontWeight: "800" as const
   },
   subtitle: {
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: moderateScale(18),
+    lineHeight: moderateScale(24),
     fontWeight: "700" as const
   },
   body: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: moderateScale(16),
+    lineHeight: moderateScale(22),
     fontWeight: "500" as const
   },
   caption: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: moderateScale(13),
+    lineHeight: moderateScale(18),
     fontWeight: "600" as const
   },
   tiny: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: moderateScale(11),
+    lineHeight: moderateScale(14),
     fontWeight: "700" as const
   }
 } as const;
