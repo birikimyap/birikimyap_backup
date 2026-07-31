@@ -623,6 +623,9 @@ export default function HomeDashboardScreen() {
 
   // Gamified Savings Challenges progress generator
   const challenges = useMemo(() => {
+    const planStart = new Date(savingsGoal?.planStartDate || new Date());
+    planStart.setHours(0, 0, 0, 0);
+
     const last7Days = Array(7).fill(0).map((_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -631,7 +634,12 @@ export default function HomeDashboardScreen() {
     });
 
     const dailySpendMap = new Map<number, number>();
-    last7Days.forEach(t => dailySpendMap.set(t, 0));
+    // Only track days that are on or after the planStartDate
+    last7Days.forEach(t => {
+      if (t >= planStart.getTime()) {
+        dailySpendMap.set(t, 0);
+      }
+    });
 
     expenses.forEach((e) => {
       if (e.isFixed || !e.occurredAt) return;
@@ -655,15 +663,16 @@ export default function HomeDashboardScreen() {
       .filter(e => getCategoryKey(e.category) === "market")
       .reduce((sum, e) => sum + e.amount, 0);
     const marketProgress = Math.min(weeklyMarketSpent / 1500, 1.0);
-    const isMarketFailed = weeklyMarketSpent > 1500;
-    const isMarketCompleted = !isMarketFailed && weeklyMarketSpent > 0;
+    const isMarketExceeded = weeklyMarketSpent > 1500;
+    // Market target is 'stay under', so it's never completed until week ends (which resets it), thus false.
+    const isMarketCompleted = false; 
 
     const weeklyDiningSpent = weeklyExpenses
       .filter(e => getCategoryKey(e.category) === "dining")
       .reduce((sum, e) => sum + e.amount, 0);
     const diningProgress = Math.min(weeklyDiningSpent / 300, 1.0);
-    const isDiningFailed = weeklyDiningSpent > 300;
-    const isDiningCompleted = !isDiningFailed && weeklyDiningSpent > 0;
+    const isDiningExceeded = weeklyDiningSpent > 300;
+    const isDiningCompleted = false;
 
     const goalTarget = Math.max(savingsGoal.targetAmount || 0, 0);
     const goalSaved = Math.max(savingsGoal.currentAmount || 0, 0);
@@ -678,26 +687,29 @@ export default function HomeDashboardScreen() {
         progressText: `${noSpendDaysCount} / 5 ${language === "tr" ? "gün" : "days"}`,
         isCompleted: isNoSpendCompleted,
         isFailed: false,
+        isExceeded: false,
         icon: "shield"
       },
       {
         id: "market-saver",
         title: language === "tr" ? "Market Tasarrufu" : "Grocery Saver",
         desc: language === "tr" ? "Bu haftalık market harcamanızı ₺1.500 altında tutun." : "Keep weekly grocery spending under ₺1,500.",
-        progress: isMarketFailed ? 1.0 : marketProgress,
+        progress: marketProgress,
         progressText: `${formatCurrency(weeklyMarketSpent)} / ${formatCurrency(1500)}`,
         isCompleted: isMarketCompleted,
-        isFailed: isMarketFailed,
+        isFailed: false,
+        isExceeded: isMarketExceeded,
         icon: "shopping-bag"
       },
       {
         id: "dining-friend",
         title: language === "tr" ? "Kahve Dostu" : "Coffee Friend",
         desc: language === "tr" ? "Bu haftalık kafe/restoran harcamanızı ₺300 altında tutun." : "Keep weekly cafe/dining spending under ₺300.",
-        progress: isDiningFailed ? 1.0 : diningProgress,
+        progress: diningProgress,
         progressText: `${formatCurrency(weeklyDiningSpent)} / ${formatCurrency(300)}`,
         isCompleted: isDiningCompleted,
-        isFailed: isDiningFailed,
+        isFailed: false,
+        isExceeded: isDiningExceeded,
         icon: "coffee"
       },
       {
@@ -708,6 +720,7 @@ export default function HomeDashboardScreen() {
         progressText: `${goalTarget > 0 ? Math.round((goalSaved / goalTarget) * 100) : 0}% / 25%`,
         isCompleted: isGoalQuarterCompleted,
         isFailed: false,
+        isExceeded: false,
         icon: "award"
       }
     ];
@@ -2076,13 +2089,14 @@ export default function HomeDashboardScreen() {
             🏆 {language === "tr" ? "Meydan Okumalar" : "Savings Challenges"}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 10 }}>
-            {challenges.map((challenge) => {
-              const borderCol = challenge.isFailed
+            {challenges.map((challenge: any) => {
+              const isDanger = challenge.isFailed || challenge.isExceeded;
+              const borderCol = isDanger
                 ? "rgba(211, 47, 47, 0.4)"
                 : (challenge.isCompleted ? "#00DF89" : themeColors.border);
               
-              const progressVal = challenge.isFailed ? 1.0 : challenge.progress;
-              const barFillColor = challenge.isFailed 
+              const progressVal = isDanger ? 1.0 : challenge.progress;
+              const barFillColor = isDanger 
                 ? "#D32F2F" 
                 : (challenge.isCompleted ? "#00DF89" : themeColors.primary);
 
@@ -2103,7 +2117,7 @@ export default function HomeDashboardScreen() {
                       width: 32,
                       height: 32,
                       borderRadius: 16,
-                      backgroundColor: challenge.isFailed 
+                      backgroundColor: isDanger 
                         ? "rgba(211, 47, 47, 0.08)"
                         : (challenge.isCompleted ? "rgba(0, 223, 137, 0.1)" : "rgba(0,0,0,0.05)"),
                       alignItems: "center",
@@ -2112,7 +2126,7 @@ export default function HomeDashboardScreen() {
                       <Feather 
                         name={challenge.icon as any} 
                         size={16} 
-                        color={challenge.isFailed 
+                        color={isDanger 
                           ? "#D32F2F"
                           : (challenge.isCompleted ? "#00DF89" : themeColors.text)} 
                       />
