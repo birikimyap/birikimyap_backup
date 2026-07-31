@@ -499,3 +499,35 @@ export const useFinanceStore = create<FinanceState>()(
     }
   )
 );
+
+// Auto-Sync Listener for Hybrid Storage (Cloud Dual-Backup + Disk)
+let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+useFinanceStore.subscribe((state, prevState) => {
+  // Do not sync if onboarding is not completed or userProfile is null
+  if (!state.hasCompletedOnboarding || !state.userProfile?.id) {
+    return;
+  }
+
+  // Check if financial data actually changed
+  const dataChanged =
+    state.incomes !== prevState.incomes ||
+    state.expenses !== prevState.expenses ||
+    state.savingsGoal !== prevState.savingsGoal ||
+    state.monthlyArchives !== prevState.monthlyArchives ||
+    state.categoryLimits !== prevState.categoryLimits ||
+    state.selectedPeriod !== prevState.selectedPeriod;
+
+  if (dataChanged) {
+    if (autoSyncTimer) clearTimeout(autoSyncTimer);
+    autoSyncTimer = setTimeout(async () => {
+      try {
+        const { saveUserPlanToCloud } = await import("@/utils/supabaseAuth");
+        const res = await saveUserPlanToCloud();
+        console.log("[AutoSync] Dynamic store state auto-synced to Cloud:", res);
+      } catch (err) {
+        console.log("[AutoSync] Error during background save:", err);
+      }
+    }, 400);
+  }
+});

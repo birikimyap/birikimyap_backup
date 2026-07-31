@@ -90,6 +90,9 @@ export async function getCheckSession() {
  */
 export async function signOutUser() {
   try {
+    // 1. Önce buluta ve cihaza son halini kaydet ki hiç veri kaybolmasın!
+    await saveUserPlanToCloud();
+
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
