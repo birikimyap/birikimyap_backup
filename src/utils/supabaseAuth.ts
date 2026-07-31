@@ -175,8 +175,9 @@ export async function saveUserPlanToCloud() {
 
     const payloadString = JSON.stringify(payload);
 
-    // 1. Cihaza Senkronize Kaydet
+    // 1. Cihaza Senkronize Kaydet (Hem ID mühürlü hem genel yedek)
     await AsyncStorage.setItem(`user_plan_${userId}`, payloadString);
+    await AsyncStorage.setItem('latest_local_plan', payloadString);
 
     // 2. Supabase Bulut Veritabanına YAZ (Cloud Primary)
     const { error } = await client.from('profiles').upsert({
@@ -281,26 +282,38 @@ export async function loadUserPlanFromCloud(userId: string): Promise<boolean> {
       }
     }
 
-    // B) CİHAZ DISKINDEN KULLANICIYI HATIRLA
-    const localPlanStr = await AsyncStorage.getItem(`user_plan_${userId}`);
-    if (localPlanStr) {
+    // C) CİHAZDAKİ DİĞER LOKAL YEDEKLERE VEYA GENEL PLAN KAYDINA BAK
+    const fallbackStr = await AsyncStorage.getItem('latest_local_plan');
+    if (fallbackStr) {
       try {
-        const localData = JSON.parse(localPlanStr);
-        if (localData && (localData.userProfile?.fullName || localData.hasCompletedOnboarding)) {
+        const localData = JSON.parse(fallbackStr);
+        if (localData && (localData.expenses?.length > 0 || localData.hasCompletedOnboarding)) {
           useFinanceStore.setState({
             incomes: localData.incomes || [],
             expenses: localData.expenses || [],
             savingsGoal: localData.savingsGoal || useFinanceStore.getState().savingsGoal,
             selectedPeriod: localData.selectedPeriod || 'daily',
             monthlyArchives: localData.monthlyArchives || [],
-            userProfile: localData.userProfile || { id: userId, email: '', fullName: 'Kullanıcı' },
+            userProfile: { id: userId, email: localData.userProfile?.email || '', fullName: localData.userProfile?.fullName || 'Kullanıcı' },
             hasCompletedOnboarding: true
           });
           useFinanceStore.getState().refreshPlan();
-          console.log('[CloudRestore] SUCCESS: Existing User restored from Local Disk!');
+          console.log('[CloudRestore] SUCCESS: Restored from latest_local_plan fallback!');
           return true;
         }
       } catch (e) {}
+    }
+
+    // D) EĞER KULLANICI ZATEN PLAN KURDUYSA VE STORE DOKUNULMADIYSA
+    const currentState = useFinanceStore.getState();
+    if (currentState.hasCompletedOnboarding && (currentState.expenses.length > 0 || currentState.incomes.some(i => i.amount > 0))) {
+      currentState.setUserProfile({
+        id: userId,
+        email: currentState.userProfile?.email || '',
+        fullName: currentState.userProfile?.fullName || 'Kullanıcı'
+      });
+      console.log('[CloudRestore] SUCCESS: Active store state retained for user!');
+      return true;
     }
 
     console.log('[CloudRestore] Fresh New User detected! Directing to profile setup.');
