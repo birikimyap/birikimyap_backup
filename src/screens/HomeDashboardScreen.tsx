@@ -148,6 +148,7 @@ export default function HomeDashboardScreen() {
 
   // Analysis period & modal states
   const [analysisPeriod, setAnalysisPeriod] = useState<"daily" | "weekly" | "monthly">("weekly");
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
   const [isGoalAchievedModalVisible, setIsGoalAchievedModalVisible] = useState(false);
   const [isLegalModalVisible, setIsLegalModalVisible] = useState(false);
@@ -1447,8 +1448,12 @@ export default function HomeDashboardScreen() {
     const dailyRemaining = getRemainingLimitForPeriod("daily");
     const monthlyRemainingPlan = getRemainingLimitForPeriod("monthly");
 
-    // Dynamic Comparative Insight Text
-    // Seçili analiz dönemine göre dinamik metin
+    const periodBadgeText = analysisPeriod === "daily" 
+      ? (language === "tr" ? "Bugün" : "Today") 
+      : analysisPeriod === "weekly" 
+      ? (language === "tr" ? "Bu Hafta" : "This Week") 
+      : (language === "tr" ? "Bu Ay" : "This Month");
+
     const periodLabelTR = analysisPeriod === "daily" ? "bugün" : analysisPeriod === "weekly" ? "bu hafta" : "bu ay";
     const periodLabelEN = analysisPeriod === "daily" ? "today" : analysisPeriod === "weekly" ? "this week" : "this month";
     const periodLabelTRCap = periodLabelTR.charAt(0).toUpperCase() + periodLabelTR.slice(1);
@@ -1477,26 +1482,27 @@ export default function HomeDashboardScreen() {
     }
 
     return (
-      <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView style={styles.tabContentContainer} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 28 }}>
         <View style={styles.header}>
           <View style={styles.greetingWrap}>
-            <Text style={[styles.greeting, { color: themeColors.text }]}>{t("analysisTitle")}</Text>
+            <Text style={[styles.greeting, { color: themeColors.text, fontSize: 26, fontWeight: "900" }]}>{t("analysisTitle")}</Text>
             <Text style={[styles.subtitle, { color: themeColors.textMuted }]}>{t("analysisSubtitle")}</Text>
           </View>
         </View>
 
         {/* Period Selector Segment Row */}
-        <View style={[styles.segmentContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.04)" : "rgba(13,50,40,0.03)" }]}>
+        <View style={[styles.segmentContainer, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6", borderRadius: 20, padding: 4, marginTop: 4 }]}>
           <Pressable 
             style={[
               styles.segmentButton, 
               analysisPeriod === "daily" ? {
-                backgroundColor: "#00DF89",
+                backgroundColor: isDarkMode ? "#00DF89" : "#4B9B58",
+                borderRadius: 16,
                 shadowColor: "#00DF89",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.35,
-                shadowRadius: 8,
-                elevation: 4
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.25,
+                shadowRadius: 6,
+                elevation: 3
               } : { backgroundColor: "transparent" }
             ]}
             onPress={() => {
@@ -1504,18 +1510,19 @@ export default function HomeDashboardScreen() {
               setAnalysisPeriod("daily");
             }}
           >
-            <Text style={[styles.segmentText, { color: analysisPeriod === "daily" ? "#040907" : themeColors.textMuted, fontWeight: analysisPeriod === "daily" ? "900" : "600" }]}>{t("analysisPeriodDaily")}</Text>
+            <Text style={[styles.segmentText, { color: analysisPeriod === "daily" ? "#FFFFFF" : themeColors.textMuted, fontWeight: analysisPeriod === "daily" ? "800" : "600" }]}>{t("analysisPeriodDaily")}</Text>
           </Pressable>
           <Pressable 
             style={[
               styles.segmentButton, 
               analysisPeriod === "weekly" ? {
-                backgroundColor: "#00DF89",
+                backgroundColor: isDarkMode ? "#00DF89" : "#4B9B58",
+                borderRadius: 16,
                 shadowColor: "#00DF89",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.35,
-                shadowRadius: 8,
-                elevation: 4
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.25,
+                shadowRadius: 6,
+                elevation: 3
               } : { backgroundColor: "transparent" }
             ]}
             onPress={() => {
@@ -1523,18 +1530,19 @@ export default function HomeDashboardScreen() {
               setAnalysisPeriod("weekly");
             }}
           >
-            <Text style={[styles.segmentText, { color: analysisPeriod === "weekly" ? "#040907" : themeColors.textMuted, fontWeight: analysisPeriod === "weekly" ? "900" : "600" }]}>{t("analysisPeriodWeekly")}</Text>
+            <Text style={[styles.segmentText, { color: analysisPeriod === "weekly" ? "#FFFFFF" : themeColors.textMuted, fontWeight: analysisPeriod === "weekly" ? "800" : "600" }]}>{t("analysisPeriodWeekly")}</Text>
           </Pressable>
           <Pressable 
             style={[
               styles.segmentButton, 
               analysisPeriod === "monthly" ? {
-                backgroundColor: "#00DF89",
+                backgroundColor: isDarkMode ? "#00DF89" : "#4B9B58",
+                borderRadius: 16,
                 shadowColor: "#00DF89",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.35,
-                shadowRadius: 8,
-                elevation: 4
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.25,
+                shadowRadius: 6,
+                elevation: 3
               } : { backgroundColor: "transparent" }
             ]}
             onPress={() => {
@@ -1542,297 +1550,44 @@ export default function HomeDashboardScreen() {
               setAnalysisPeriod("monthly");
             }}
           >
-            <Text style={[styles.segmentText, { color: analysisPeriod === "monthly" ? "#040907" : themeColors.textMuted, fontWeight: analysisPeriod === "monthly" ? "900" : "600" }]}>{t("analysisPeriodMonthly")}</Text>
+            <Text style={[styles.segmentText, { color: analysisPeriod === "monthly" ? "#FFFFFF" : themeColors.textMuted, fontWeight: analysisPeriod === "monthly" ? "800" : "600" }]}>{t("analysisPeriodMonthly")}</Text>
           </Pressable>
         </View>
 
-        {/* Spending Status Panel */}
+        {/* Main Analysis Hero Card (Matching Screenshot Design) */}
         <View style={[
-          styles.analysisCard, 
+          styles.expenseCard, 
           { 
-            backgroundColor: analysisPeriodRemaining < 0 
-              ? (isDarkMode ? "rgba(211, 47, 47, 0.08)" : "#FDEDED") 
-              : (isDarkMode ? "rgba(7, 74, 49, 0.08)" : "#EAF5F0"),
-            borderColor: analysisPeriodRemaining < 0 
-              ? (isDarkMode ? "rgba(211, 47, 47, 0.3)" : "#F8D7DA") 
-              : (isDarkMode ? "rgba(7, 74, 49, 0.3)" : "#D1E8DD"),
-            borderWidth: 1.2,
-            borderRadius: 20,
-            padding: 16,
-            marginTop: 14,
-            flexDirection: "column",
-            gap: 12
+            backgroundColor: themeColors.surface, 
+            borderColor: themeColors.border, 
+            borderRadius: 24, 
+            padding: 20, 
+            marginTop: 16,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.05,
+            shadowRadius: 12,
+            elevation: 3
           }
         ]}>
-          <View style={{ flexDirection: "row", gap: 12, alignItems: "center", width: "100%" }}>
-            <View style={{
-              width: 42,
-              height: 42,
-              borderRadius: 21,
-              backgroundColor: analysisPeriodRemaining < 0 ? "rgba(211, 47, 47, 0.12)" : "rgba(0, 223, 137, 0.12)",
-              alignItems: "center",
-              justifyContent: "center"
-            }}>
-              <Feather 
-                name={analysisPeriodRemaining < 0 ? "alert-triangle" : "check-circle"} 
-                size={22} 
-                color={analysisPeriodRemaining < 0 ? "#D32F2F" : "#00DF89"} 
-              />
-            </View>
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={{ 
-                fontSize: 14, 
-                fontWeight: "900", 
-                color: analysisPeriodRemaining < 0 ? "#D32F2F" : "#00DF89" 
-              }}>
-                {analysisPeriodRemaining < 0 
-                  ? (language === "tr" ? "Harcama Durumu: Bütçe Aşıldı! ⚠️" : "Spending Status: Over Budget! ⚠️")
-                  : (language === "tr" ? "Harcama Durumu: Her Şey Yolunda! 🎉" : "Spending Status: On Track! 🎉")
-                }
-              </Text>
-              <Text style={{ 
-                fontSize: 12, 
-                lineHeight: 17, 
-                fontWeight: "600", 
-                color: themeColors.textMuted 
-              }}>
-                {analysisPeriodRemaining < 0 
-                  ? (language === "tr" 
-                      ? `${analysisPeriod === "daily" ? "Bugün" : analysisPeriod === "weekly" ? "Bu hafta" : "Bu ay"} harcama limitinizi ${formatCurrency(Math.abs(analysisPeriodRemaining))} aştınız. Tasarruf hedefiniz tehlikede, harcamaları yavaşlatın.` 
-                      : `You exceeded your limit by ${formatCurrency(Math.abs(analysisPeriodRemaining))} ${analysisPeriod === "daily" ? "today" : analysisPeriod === "weekly" ? "this week" : "this month"}. Your savings goal is in danger, slow down spending.`)
-                  : (language === "tr"
-                      ? `Tebrikler! Planlanan limitin içindesiniz. ${formatCurrency(analysisPeriodRemaining)} harcama limitiniz daha var. Böyle devam edin!`
-                      : `Congratulations! You are within the limit. You have ${formatCurrency(analysisPeriodRemaining)} remaining limit. Keep it up!`)
-                }
-              </Text>
-            </View>
-          </View>
-
-          {/* Predictive Savings Forecast Card — sadece aylık görünümde anlamlı */}
-          {analysisPeriod === "monthly" && (
-          <View style={{ 
-            marginTop: 8, 
-            padding: 12, 
-            borderRadius: 14, 
-            backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.06)" : "rgba(13, 50, 40, 0.04)", 
-            borderWidth: 1.2, 
-            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(13, 50, 40, 0.08)",
-            flexDirection: "row",
-            gap: 10,
-            alignItems: "center"
-          }}>
-            <View style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.15)" : "rgba(13, 50, 40, 0.08)",
-              alignItems: "center",
-              justifyContent: "center"
-            }}>
-              <Feather name="trending-up" size={16} color={isDarkMode ? "#00E58F" : themeColors.primary} />
-            </View>
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={{ fontSize: 11, fontWeight: "800", color: revisedSavingsInfo.isOverused ? "#D32F2F" : (isDarkMode ? "#00E58F" : themeColors.primary), textTransform: "uppercase", letterSpacing: 0.4 }}>
-                🚀 {language === "tr" ? "AY SONU BİRİKİM TAHMİNİ" : "MONTH-END SAVINGS FORECAST"}
-              </Text>
-              <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "600", color: themeColors.text }}>
-                {revisedSavingsInfo.isOverused ? (
-                  language === "tr" ? (
-                    <>
-                      Harcama bütçeniz <Text style={{ fontWeight: "900", color: "#D32F2F" }}>{formatCurrency(revisedSavingsInfo.overuseAmount)}</Text> aşıldığı için gerçekleşen birikiminiz <Text style={{ fontWeight: "900", color: "#DF7A12" }}>{formatCurrency(revisedSavingsInfo.revisedSavings)}</Text> seviyesine geriledi ⚠️
-                    </>
-                  ) : (
-                    <>
-                      Overspent by <Text style={{ fontWeight: "900", color: "#D32F2F" }}>{formatCurrency(revisedSavingsInfo.overuseAmount)}</Text>, actual month-end savings reduced to <Text style={{ fontWeight: "900", color: "#DF7A12" }}>{formatCurrency(revisedSavingsInfo.revisedSavings)}</Text> ⚠️
-                    </>
-                  )
-                ) : (
-                  language === "tr" ? (
-                    <>
-                      Mevcut harcama temponuzla ay sonu hedeflenen <Text style={{ fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}>{formatCurrency(revisedSavingsInfo.targetSavings)}</Text> birikim hedefinize ulaşıyorsunuz! ✅
-                    </>
-                  ) : (
-                    <>
-                      With your current spending pace, you are hitting your <Text style={{ fontWeight: "900", color: isDarkMode ? "#00E58F" : "#009E60" }}>{formatCurrency(revisedSavingsInfo.targetSavings)}</Text> savings goal! ✅
-                    </>
-                  )
-                )}
-              </Text>
-            </View>
-          </View>
-          )}
-
-          {/* Dynamic Trend Insight box */}
-          <View style={{ 
-            marginTop: 4, 
-            padding: 12, 
-            borderRadius: 14, 
-            backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.02)" : "rgba(0, 0, 0, 0.02)", 
-            borderWidth: 1, 
-            borderColor: isDarkMode ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.03)",
-            flexDirection: "row",
-            gap: 8,
-            alignItems: "flex-start"
-          }}>
-            <Feather name="info" size={16} color={themeColors.primary} style={{ marginTop: 1.5 }} />
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={{ fontSize: 10, fontWeight: "900", color: themeColors.primary, textTransform: "uppercase" }}>
-                {language === "tr" ? "💡 AKILLI FİNANSAL ÖNGÖRÜ" : "💡 SMART FINANCIAL INSIGHT"}
-              </Text>
-              <Text style={{ fontSize: 11, lineHeight: 15, fontWeight: "700", color: themeColors.text }}>
-                {analysisInsightText}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Dynamic Trend Bar Chart */}
-        <View style={[styles.analysisCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginTop: 14 }]}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <Text style={[styles.analysisCardTitle, { color: themeColors.text, marginBottom: 0 }]}>
-              {analysisPeriod === "daily" ? t("analysisChartDailyTitle") : 
-               analysisPeriod === "weekly" ? t("analysisChartWeeklyTitle") : 
-               t("analysisChartMonthlyTitle")}
-            </Text>
-            {selectedChartLabel && (
-              <Pressable 
-                onPress={() => {
-                  triggerHaptic();
-                  setSelectedChartLabel(null);
-                }}
-                style={{
-                  paddingHorizontal: 10,
-                  paddingVertical: 5,
-                  borderRadius: 8,
-                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)"
-                }}
-              >
-                <Text style={{ fontSize: 11, fontWeight: "800", color: themeColors.primary }}>
-                  {language === "tr" ? "Seçimi Temizle" : "Clear Filter"}
-                </Text>
-              </Pressable>
-            )}
-          </View>
-          <View style={styles.chartRow}>
-            {activeChartData.map((day, idx) => {
-              const isSelected = selectedChartLabel === day.label;
-              const isAnySelected = selectedChartLabel !== null;
-              const barOpacity = isAnySelected ? (isSelected ? 1.0 : 0.35) : 1.0;
-              const barColor = isSelected ? "#00DF89" : themeColors.primary;
-
-              return (
-                <Pressable 
-                  key={idx} 
-                  style={[styles.chartCol, { opacity: barOpacity }]}
-                  onPress={() => {
-                    triggerHaptic();
-                    setSelectedChartLabel(selectedChartLabel === day.label ? null : day.label);
-                  }}
-                >
-                  <View style={[styles.chartBarTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
-                    <View 
-                      style={[
-                        styles.chartBarFill, 
-                        { 
-                          height: `${day.percentage}%`,
-                          backgroundColor: day.amount > 0 ? barColor : "transparent"
-                        }
-                      ]} 
-                    />
-                  </View>
-                  <Text style={[styles.chartBarLabel, { color: isSelected ? barColor : themeColors.textMuted, fontWeight: isSelected ? "900" : "700" }]}>
-                    {day.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* AI Insight Card */}
-        {analysisCategoryData.length > 0 && (
-          <LinearGradient
-            colors={isDarkMode ? ["rgba(24, 74, 52, 0.16)", "rgba(12, 42, 28, 0.05)"] : ["#EAF5F0", "#F5FAF7"]}
-            style={[
-              styles.insightCard, 
-              { 
-                borderColor: isDarkMode ? "rgba(24, 74, 52, 0.32)" : "#D1E8DD",
-                borderWidth: 1.2,
-                paddingLeft: 22,
-                paddingRight: 16,
-                paddingVertical: 16,
-                borderRadius: 20,
-                shadowColor: themeColors.primary,
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: isDarkMode ? 0.05 : 0.025,
-                shadowRadius: 12,
-                elevation: 2,
-                overflow: "hidden"
-              }
-            ]}
-          >
-            {/* Left Vertical Glowing Accent Bar */}
-            <LinearGradient
-              colors={["#00DF89", themeColors.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: 5
-              }}
+          {/* Top Center: Large Donut Chart */}
+          <View style={{ alignItems: "center", justifyContent: "center", marginVertical: 10 }}>
+            <DonutChart
+              size={210}
+              slices={analysisCategoryData.map((item, index) => ({
+                color: CATEGORY_DONUT_COLORS[index % CATEGORY_DONUT_COLORS.length],
+                percentage: item.percentage
+              }))}
+              totalAmountText={formatCurrency(analysisTotal)}
+              totalLabelText={language === "tr" ? "Toplam Harcama" : "Total Spending"}
+              periodBadgeText={periodBadgeText}
+              isDarkMode={isDarkMode}
+              surfaceColor={themeColors.surface}
             />
-
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <View style={styles.insightHeader}>
-                <View style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 13,
-                  backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.1)" : "rgba(13, 50, 40, 0.06)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 2
-                }}>
-                  <Feather name="zap" size={13} color={isDarkMode ? "#00DF89" : themeColors.primary} />
-                </View>
-                <Text style={[styles.insightTitle, { color: themeColors.primary, fontSize: 14, fontWeight: "900" }]}>
-                  {t("analysisAiTipTitle")}
-                </Text>
-              </View>
-              <View style={{
-                backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.12)" : "rgba(13,50,40,0.06)",
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: isDarkMode ? "rgba(0, 223, 137, 0.15)" : "transparent"
-              }}>
-                <Text style={{ fontSize: 9, fontWeight: "900", color: isDarkMode ? "#00DF89" : themeColors.primary, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  ✨ {language === "tr" ? "YAPAY ZEKA" : "AI INSIGHT"}
-                </Text>
-              </View>
-            </View>
-            <Text style={[styles.insightBody, { color: themeColors.text, marginTop: 8, lineHeight: 19, fontSize: 13, fontWeight: "600" }]}>
-              {t("analysisAiTipBody", { category: highestCategory })}
-            </Text>
-          </LinearGradient>
-        )}
-
-        {/* Categories breakdown */}
-        <View style={styles.recentSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>{t("analysisCategoryHeader")}</Text>
-            <Text style={[styles.sectionTotal, { color: themeColors.textMuted }]}>
-              {selectedChartLabel
-                ? `${selectedChartLabel} — ${formatCurrency(analysisTotal)}`
-                : `${t("analysisCategoryTotal")}: ${formatCurrency(analysisTotal)}`}
-            </Text>
           </View>
 
-          <View style={[styles.expenseCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, padding: 16, flex: 1, minHeight: verticalScale(220) }]}>
+          {/* Bottom Category Breakdown List */}
+          <View style={{ marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.05)" }}>
             {analysisCategoryData.length === 0 ? (
               <View style={styles.emptyExpenses}>
                 <Feather name="bar-chart-2" size={28} color={themeColors.textMuted} />
@@ -1840,129 +1595,90 @@ export default function HomeDashboardScreen() {
                 <Text style={[styles.emptyExpensesSubtext, { color: themeColors.textMuted }]}>{t("analysisNoDataSub")}</Text>
               </View>
             ) : (
-              <View style={{ gap: 20 }}>
-                {/* Donut Chart & Category Legend Header Visual (Matching Promo Image) */}
-                <View style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  paddingBottom: 18,
-                  borderBottomWidth: 1.2,
-                  borderBottomColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.06)",
-                }}>
-                  {/* Donut Chart Circle */}
-                  <DonutChart
-                    slices={analysisCategoryData.map((item, index) => ({
-                      color: CATEGORY_DONUT_COLORS[index % CATEGORY_DONUT_COLORS.length],
-                      percentage: item.percentage
-                    }))}
-                    totalAmountText={formatCurrency(analysisTotal)}
-                    totalLabelText={language === "tr" ? "Toplam" : "Total"}
-                    isDarkMode={isDarkMode}
-                    surfaceColor={themeColors.surface}
-                  />
-
-                  {/* Category Legend List */}
-                  <View style={{ flex: 1, gap: 7 }}>
-                    {analysisCategoryData.slice(0, 5).map((item, idx) => {
-                      const catColor = CATEGORY_DONUT_COLORS[idx % CATEGORY_DONUT_COLORS.length];
-                      return (
-                        <View key={item.category} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, paddingRight: 4 }}>
-                            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: catColor }} />
-                            <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: "700", color: themeColors.text }}>
-                              {item.category}
-                            </Text>
-                          </View>
-                          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                            <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.text }}>
-                              {formatCurrency(item.amount)}
-                            </Text>
-                            <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted, width: 32, textAlign: "right" }}>
-                              %{Math.round(item.percentage)}
-                            </Text>
-                          </View>
-                        </View>
-                      );
-                    })}
-                    {analysisCategoryData.length > 5 && (
-                      <Text style={{ fontSize: 10, fontWeight: "700", color: themeColors.textMuted, textAlign: "right", marginTop: 2 }}>
-                        +{analysisCategoryData.length - 5} {language === "tr" ? "kategori daha" : "more categories"}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-
+              <View style={{ gap: 0 }}>
                 {analysisCategoryData.map((item, index) => {
                   const catColor = CATEGORY_DONUT_COLORS[index % CATEGORY_DONUT_COLORS.length];
                   const categoryKey = getCategoryKey(item.category);
                   const baseMonthlyLimit = categoryLimits[categoryKey] || 0;
-                  // Döneme göre limit çarpanı (Aylık -> 1, Haftalık -> 1/4.3, Günlük -> 1/30)
                   const periodLimit = baseMonthlyLimit > 0
                     ? (analysisPeriod === "daily" ? Math.round(baseMonthlyLimit / 30) : analysisPeriod === "weekly" ? Math.round(baseMonthlyLimit / 4.3) : baseMonthlyLimit)
                     : 0;
                   const hasLimit = periodLimit > 0;
                   const isLimitExceeded = hasLimit && item.amount > periodLimit;
-                  
-                  const progressPercent = hasLimit 
-                    ? Math.min((item.amount / periodLimit) * 100, 100) 
-                    : item.percentage;
-                  
-                  const barColor = isLimitExceeded ? "#D32F2F" : catColor;
-                  const amountColor = isLimitExceeded ? "#D32F2F" : themeColors.text;
+                  const isExpanded = expandedCategory === item.category;
 
                   return (
-                    <View key={item.category} style={{ gap: 6 }}>
-                      <View style={styles.categoryRow}>
-                        <View style={styles.categoryInfo}>
-                          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                            <Text style={[styles.categoryName, { color: themeColors.text, fontWeight: "800", fontSize: 14 }]}>{item.category}</Text>
-                            {isLimitExceeded && (
-                              <View style={{ backgroundColor: "rgba(211, 47, 47, 0.1)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                <Text style={{ fontSize: 9, fontWeight: "900", color: "#D32F2F" }}>⚠️ {language === "tr" ? "AŞILDI" : "EXCEEDED"}</Text>
-                              </View>
-                            )}
-                          </View>
-                          <Text style={[styles.categoryAmount, { color: amountColor, fontWeight: "800", fontSize: 13 }]}>
-                            {hasLimit 
-                              ? `${formatCurrency(item.amount)} / ${formatCurrency(periodLimit)}`
-                              : `${formatCurrency(item.amount)} (${Math.round(item.percentage)}%)`
-                            }
+                    <View 
+                      key={item.category} 
+                      style={{ 
+                        borderBottomWidth: index < analysisCategoryData.length - 1 ? 1 : 0, 
+                        borderBottomColor: isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(13,50,40,0.04)" 
+                      }}
+                    >
+                      <Pressable 
+                        onPress={() => {
+                          triggerHaptic();
+                          setExpandedCategory(isExpanded ? null : item.category);
+                        }}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          paddingVertical: 13
+                        }}
+                      >
+                        {/* Left: Color dot + Category Name */}
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1, paddingRight: 8 }}>
+                          <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: catColor }} />
+                          <Text style={{ fontSize: 15, fontWeight: "700", color: themeColors.text }}>
+                            {item.category}
                           </Text>
+                          {isLimitExceeded && (
+                            <View style={{ backgroundColor: "rgba(211, 47, 47, 0.1)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                              <Text style={{ fontSize: 9, fontWeight: "900", color: "#D32F2F" }}>⚠️ {language === "tr" ? "AŞILDI" : "EXCEEDED"}</Text>
+                            </View>
+                          )}
                         </View>
-                        <View style={[styles.progressTrack, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(13,50,40,0.04)" }]}>
-                          <View 
-                            style={[
-                              styles.progressFill, 
-                              { 
-                                width: `${progressPercent}%`,
-                                backgroundColor: barColor
-                              }
-                            ]} 
-                          />
-                        </View>
-                      </View>
 
-                    {/* Subcategories Breakdown */}
-                    {item.subcategories && item.subcategories.length > 0 && (
-                      <View style={{ paddingLeft: 12, gap: 5, marginTop: 2 }}>
-                        {item.subcategories.map((sub) => (
-                          <View key={sub.name} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                            <Text style={{ fontSize: 12, color: themeColors.textMuted, fontWeight: "600" }}>
-                              • {sub.name}
+                        {/* Right: Amount + Chevron */}
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                          <Text style={{ fontSize: 15, fontWeight: "900", color: isLimitExceeded ? "#D32F2F" : themeColors.text }}>
+                            {formatCurrency(item.amount)}
+                          </Text>
+                          <Feather name={isExpanded ? "chevron-down" : "chevron-right"} size={16} color={themeColors.textMuted} />
+                        </View>
+                      </Pressable>
+
+                      {/* Expandable Details */}
+                      {isExpanded && (
+                        <View style={{ paddingBottom: 12, paddingLeft: 22, gap: 6, marginTop: -2 }}>
+                          {hasLimit && (
+                            <Text style={{ fontSize: 11, fontWeight: "700", color: isLimitExceeded ? "#D32F2F" : themeColors.textMuted }}>
+                              {language === "tr" 
+                                ? `Limit: ${formatCurrency(periodLimit)} — Kullanım: %${Math.round((item.amount / periodLimit) * 100)}`
+                                : `Limit: ${formatCurrency(periodLimit)} — Used: %${Math.round((item.amount / periodLimit) * 100)}`}
                             </Text>
-                            <Text style={{ fontSize: 12, color: themeColors.text, fontWeight: "600" }}>
-                              {formatCurrency(sub.amount)} ({Math.round(sub.percentage)}%)
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
+                          )}
+                          {item.subcategories && item.subcategories.length > 0 && (
+                            <View style={{ gap: 4, marginTop: 2 }}>
+                              {item.subcategories.map((sub) => (
+                                <View key={sub.name} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                                  <Text style={{ fontSize: 12, color: themeColors.textMuted, fontWeight: "600" }}>
+                                    • {sub.name}
+                                  </Text>
+                                  <Text style={{ fontSize: 12, color: themeColors.text, fontWeight: "700" }}>
+                                    {formatCurrency(sub.amount)} ({Math.round(sub.percentage)}%)
+                                  </Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
             )}
           </View>
         </View>
@@ -4100,19 +3816,22 @@ interface DonutSlice {
 function DonutChart({
   slices,
   totalAmountText,
-  totalLabelText,
+  totalLabelText = "Toplam Harcama",
+  periodBadgeText = "Bu Ay",
   isDarkMode,
-  surfaceColor
+  surfaceColor,
+  size = 210
 }: {
   slices: DonutSlice[];
   totalAmountText: string;
-  totalLabelText: string;
+  totalLabelText?: string;
+  periodBadgeText?: string;
   isDarkMode: boolean;
   surfaceColor: string;
+  size?: number;
 }) {
-  const size = 130;
   const radius = size / 2;
-  const holeRadius = 42;
+  const holeRadius = Math.round(size * 0.33);
 
   let currentAngle = 0;
   const sliceAngles = slices.map((s) => {
@@ -4125,7 +3844,7 @@ function DonutChart({
   return (
     <View style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", position: "relative", alignItems: "center", justifyContent: "center" }}>
       {/* Background base */}
-      <View style={{ position: "absolute", width: size, height: size, borderRadius: radius, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#E5E7EB" }} />
+      <View style={{ position: "absolute", width: size, height: size, borderRadius: radius, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6" }} />
 
       {/* Render Slices */}
       {sliceAngles.map((slice, index) => {
@@ -4163,37 +3882,50 @@ function DonutChart({
           justifyContent: "center",
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: isDarkMode ? 0.3 : 0.08,
-          shadowRadius: 4,
+          shadowOpacity: isDarkMode ? 0.3 : 0.05,
+          shadowRadius: 8,
           elevation: 3,
           zIndex: 10,
-          paddingHorizontal: 4
+          paddingHorizontal: 6,
+          gap: 2
         }}
       >
         <Text
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.65}
           style={{
-            fontSize: 13,
-            fontWeight: "900",
-            color: isDarkMode ? "#F1F5F9" : "#0D3228",
+            fontSize: size > 160 ? 12 : 9.5,
+            fontWeight: "600",
+            color: isDarkMode ? "rgba(255,255,255,0.55)" : "#6B7280",
             textAlign: "center"
-          }}
-        >
-          {totalAmountText}
-        </Text>
-        <Text
-          style={{
-            fontSize: 9.5,
-            fontWeight: "700",
-            color: isDarkMode ? "rgba(255,255,255,0.5)" : "#747C78",
-            textAlign: "center",
-            marginTop: 1
           }}
         >
           {totalLabelText}
         </Text>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+          style={{
+            fontSize: size > 160 ? 21 : 13,
+            fontWeight: "900",
+            color: isDarkMode ? "#F9FAFB" : "#111827",
+            textAlign: "center",
+            marginVertical: 1
+          }}
+        >
+          {totalAmountText}
+        </Text>
+        {periodBadgeText ? (
+          <Text
+            style={{
+              fontSize: size > 160 ? 12 : 9,
+              fontWeight: "800",
+              color: isDarkMode ? "#00DF89" : "#4B9B58",
+              textAlign: "center"
+            }}
+          >
+            {periodBadgeText}
+          </Text>
+        ) : null}
       </View>
     </View>
   );
