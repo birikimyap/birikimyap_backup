@@ -93,13 +93,13 @@ export default function FixedExpenseScreen() {
       return val;
     }
     if (language === "tr") {
-      if (id === "rent") return field === "title" ? "Kira" : "Ev veya iş yeri kirası";
-      if (id === "bills") return field === "title" ? "Faturalar" : "Elektrik, su, doğalgaz vb.";
-      if (id === "transport") return field === "title" ? "Ulaşım" : "Toplu taşıma, akaryakıt vb.";
+      if (id === "rent") return field === "title" ? "Kira" : "Ev veya iş yeri kirası (örnek)";
+      if (id === "bills") return field === "title" ? "Faturalar" : "Elektrik, su, doğalgaz vb. (örnek)";
+      if (id === "transport") return field === "title" ? "Ulaşım" : "Toplu taşıma, akaryakıt vb. (örnek)";
     } else {
-      if (id === "rent") return field === "title" ? "Rent" : "Home or work rent";
-      if (id === "bills") return field === "title" ? "Bills" : "Electricity, water, natural gas etc.";
-      if (id === "transport") return field === "title" ? "Transportation" : "Public transport, fuel etc.";
+      if (id === "rent") return field === "title" ? "Rent" : "Home or work rent (sample)";
+      if (id === "bills") return field === "title" ? "Bills" : "Electricity, water, natural gas etc. (sample)";
+      if (id === "transport") return field === "title" ? "Transportation" : "Public transport, fuel etc. (sample)";
     }
     return val;
   };
@@ -292,6 +292,23 @@ export default function FixedExpenseScreen() {
     }))
   ];
 
+  const removeExpenseRow = (id: string, isDefault: boolean) => {
+    hasUserEditedRows.current = true;
+    if (isDefault) {
+      setDefaultRows((current) => {
+        const nextDefault = current.filter((r) => r.id !== id);
+        syncExpenseRowsToStore(nextDefault, customRows);
+        return nextDefault;
+      });
+    } else {
+      setCustomRows((current) => {
+        const nextCustom = current.filter((r) => r.id !== id);
+        syncExpenseRowsToStore(defaultRows, nextCustom);
+        return nextCustom;
+      });
+    }
+  };
+
   const renderRow = ({ item, index }: { item: ExpenseListItem; index: number }) => {
     const row = (
       <ExpenseAmountRow
@@ -303,16 +320,12 @@ export default function FixedExpenseScreen() {
       />
     );
 
-    if (item.isDefault) {
-      return row;
-    }
-
     return (
       <Swipeable
         friction={2}
         overshootLeft={false}
         renderLeftActions={() => (
-          <Pressable onPress={() => removeCustomExpense(item.id)} style={({ pressed }) => [styles.deleteAction, pressed && styles.deleteActionPressed]}>
+          <Pressable onPress={() => removeExpenseRow(item.id, item.isDefault)} style={({ pressed }) => [styles.deleteAction, pressed && styles.deleteActionPressed]}>
             <Feather name="trash-2" size={20} color={colors.white} />
             <Text style={styles.deleteActionText}>{t("delete")}</Text>
           </Pressable>

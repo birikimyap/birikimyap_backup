@@ -91,13 +91,13 @@ export default function IncomeSetupScreen() {
       return val;
     }
     if (language === "tr") {
-      if (id === "salary") return field === "title" ? "Maaş" : "Düzenli gelir";
-      if (id === "freelance") return field === "title" ? "Freelance" : "Serbest çalışma";
-      if (id === "extra") return field === "title" ? "Ek gelir" : "Yatırım, kira vb.";
+      if (id === "salary") return field === "title" ? "Maaş" : "Düzenli gelir (örnek)";
+      if (id === "freelance") return field === "title" ? "Freelance" : "Serbest çalışma (örnek)";
+      if (id === "extra") return field === "title" ? "Ek gelir" : "Yatırım, kira vb. (örnek)";
     } else {
-      if (id === "salary") return field === "title" ? "Salary" : "Regular income";
-      if (id === "freelance") return field === "title" ? "Freelance" : "Freelance work";
-      if (id === "extra") return field === "title" ? "Extra income" : "Investments, rent etc.";
+      if (id === "salary") return field === "title" ? "Salary" : "Regular income (sample)";
+      if (id === "freelance") return field === "title" ? "Freelance" : "Freelance work (sample)";
+      if (id === "extra") return field === "title" ? "Extra income" : "Investments, rent etc. (sample)";
     }
     return val;
   };
@@ -287,6 +287,23 @@ export default function IncomeSetupScreen() {
     }))
   ];
 
+  const removeIncomeRow = (id: string, isDefault: boolean) => {
+    hasUserEditedRows.current = true;
+    if (isDefault) {
+      setDefaultRows((current) => {
+        const nextDefault = current.filter((r) => r.id !== id);
+        syncIncomeRowsToStore(nextDefault, customRows);
+        return nextDefault;
+      });
+    } else {
+      setCustomRows((current) => {
+        const nextCustom = current.filter((r) => r.id !== id);
+        syncIncomeRowsToStore(defaultRows, nextCustom);
+        return nextCustom;
+      });
+    }
+  };
+
   const renderRow = ({ item, index }: { item: IncomeListItem; index: number }) => {
     const row = (
       <IncomeRow
@@ -298,16 +315,12 @@ export default function IncomeSetupScreen() {
       />
     );
 
-    if (item.isDefault) {
-      return row;
-    }
-
     return (
       <Swipeable
         friction={2}
         overshootLeft={false}
         renderLeftActions={() => (
-          <Pressable onPress={() => removeCustomIncome(item.id)} style={({ pressed }) => [styles.deleteAction, pressed && styles.deleteActionPressed]}>
+          <Pressable onPress={() => removeIncomeRow(item.id, item.isDefault)} style={({ pressed }) => [styles.deleteAction, pressed && styles.deleteActionPressed]}>
             <Feather name="trash-2" size={20} color={colors.white} />
             <Text style={styles.deleteActionText}>{t("delete")}</Text>
           </Pressable>

@@ -231,9 +231,7 @@ export default function HomeDashboardScreen() {
   const themeColors = isDarkMode ? darkColors : lightColors;
 
   const triggerHaptic = () => {
-    if (isHapticsEnabled) {
-      Vibration.vibrate(10);
-    }
+    // Disabled as requested
   };
 
   // Custom states for Siri Voice Overlay and Toast
@@ -1173,14 +1171,14 @@ export default function HomeDashboardScreen() {
               </View>
             </View>
 
-            <View style={{ position: "absolute", right: 10, top: 12, width: 84, height: 84, zIndex: 5 }}>
+            <View style={{ position: "absolute", right: 10, top: 12, width: 84, height: 84, zIndex: 9999, overflow: "visible" }}>
               {(mascotMessage || selectedPeriodRemaining < 0) && (
-                <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -38 : -10 }]}>
+                <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -44 : -16, zIndex: 9999 }]}>
                   <View style={[
                     styles.mascotSpeechBubble, 
                     { 
                       backgroundColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228",
-                      maxWidth: mascotMessage ? 140 : 110 
+                      maxWidth: 220 
                     }
                   ]}>
                     <Text style={[styles.mascotSpeechBubbleText, { textAlign: mascotMessage ? "center" : "left" }]}>
@@ -2399,23 +2397,7 @@ export default function HomeDashboardScreen() {
 
           <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
 
-          <View style={styles.settingRow}>
-            <View style={styles.settingIconWrap}>
-              <Feather name="activity" size={20} color={themeColors.text} />
-              <Text style={[styles.settingLabel, { color: themeColors.text, fontWeight: "800" }]}>{t("profileSettingHaptics")}</Text>
-            </View>
-            <Switch
-              value={isHapticsEnabled}
-              onValueChange={(val) => {
-                Vibration.vibrate(10);
-                setIsHapticsEnabled(val);
-              }}
-              trackColor={{ false: "#D1CFC7", true: "#00E58F" }}
-              thumbColor={colors.white}
-            />
-          </View>
 
-          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
 
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
@@ -2762,7 +2744,7 @@ export default function HomeDashboardScreen() {
           />
           <TabItem 
             icon="target" 
-            label={language === "tr" ? "Hedefler" : "Goals"} 
+            label={language === "tr" ? "Hedeflerim" : "My Goals"} 
             active={currentTab === "goals"} 
             onPress={() => { triggerHaptic(); setCurrentTab("goals"); }} 
           />
@@ -6073,27 +6055,30 @@ const styles = StyleSheet.create({
   },
   mascotSpeechBubbleWrapper: {
     position: "absolute",
-    left: -20,
-    right: -20,
-    top: -26,
+    left: -70,
+    right: -70,
+    top: -44,
     alignItems: "center",
-    zIndex: 20
+    zIndex: 9999,
+    elevation: 10
   },
   mascotSpeechBubble: {
-    backgroundColor: "#D32F2F",
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 10,
+    backgroundColor: "#0D3228",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,
-    shadowRadius: 6,
-    elevation: 4
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+    zIndex: 9999
   },
   mascotSpeechBubbleText: {
     color: "#FFFFFF",
-    fontSize: 9,
-    fontWeight: "900"
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15
   },
   speechBubbleArrow: {
     position: "absolute",

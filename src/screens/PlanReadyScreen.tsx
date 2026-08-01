@@ -41,109 +41,110 @@ export default function PlanReadyScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.screen}>
-        <View style={styles.content}>
-          <View style={{ flex: 1, justifyContent: "space-evenly" }}>
-            <View style={{ position: "relative" }}>
-              <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-                <Feather name="chevron-left" size={28} color={colors.primary} />
-              </Pressable>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 24, justifyContent: "space-between" }}
+      >
+        <View style={{ gap: 14 }}>
+          <View style={{ position: "relative" }}>
+            <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+              <Feather name="chevron-left" size={28} color={colors.primary} />
+            </Pressable>
 
-              <View style={styles.hero}>
-                <View style={styles.mascotContainer}>
-                  <View style={styles.confettiLayer} pointerEvents="none">
-                    {confettiPieces.map((piece) => (
-                      <View key={piece.id} style={[styles.confetti, piece.style]} />
-                    ))}
-                  </View>
-                  <Image source={mascot} style={styles.mascot} resizeMode="contain" />
+            <View style={styles.hero}>
+              <View style={styles.mascotContainer}>
+                <View style={styles.confettiLayer} pointerEvents="none">
+                  {confettiPieces.map((piece) => (
+                    <View key={piece.id} style={[styles.confetti, piece.style]} />
+                  ))}
                 </View>
-                <Text style={styles.title}>{language === "tr" ? "Planın hazır! 🎉" : "Your plan is ready! 🎉"}</Text>
-                <Text style={styles.subtitle}>
-                  {language === "tr"
-                    ? "Gelir, gider ve birikim hedefine göre sana özel harcama limitlerini oluşturduk."
-                    : "We've created custom spending limits for you based on your income, expenses, and savings goals."}
-                </Text>
+                <Image source={mascot} style={styles.mascot} resizeMode="contain" />
               </View>
-            </View>
-
-            <View style={styles.mainCard}>
-              <Text style={styles.mainCardLabel}>
-                {language === "tr" ? "Bu ay harcayabileceğin toplam tutar" : "Total amount you can spend this month"}
+              <Text style={styles.title}>{language === "tr" ? "Planın hazır! 🎉" : "Your plan is ready! 🎉"}</Text>
+              <Text style={styles.subtitle}>
+                {language === "tr"
+                  ? "Gelir, gider ve birikim hedefine göre sana özel harcama limitlerini oluşturduk."
+                  : "We've created custom spending limits for you based on your income, expenses, and savings goals."}
               </Text>
-              <Text style={styles.mainAmount}>{formatCurrency(spendableMonthlyBudget)}</Text>
-            </View>
-
-            <View style={styles.limitGrid}>
-              <LimitCard 
-                title={language === "tr" ? "Günlük limit" : "Daily limit"} 
-                value={dailyLimit} 
-                caption={language === "tr" ? "Her gün harcama limitin" : "Your spending limit every day"} 
-                icon="calendar" 
-                tone="green" 
-              />
-              <LimitCard 
-                title={language === "tr" ? "Haftalık limit" : "Weekly limit"} 
-                value={weeklyLimit} 
-                caption={language === "tr" ? "Her hafta harcama limitin" : "Your spending limit every week"} 
-                icon="calendar" 
-                tone="orange" 
-              />
-              <LimitCard 
-                title={language === "tr" ? "Aylık limit" : "Monthly limit"} 
-                value={monthlyLimit} 
-                caption={language === "tr" ? "Bu ayki toplam limitin" : "Your total limit this month"} 
-                icon="calendar" 
-                tone="purple" 
-              />
-            </View>
-
-            <View style={styles.savingsCard}>
-              <View style={styles.targetIcon}>
-                <Feather name="target" size={28} color="#D06D1E" />
-              </View>
-              <View style={styles.savingsCopy}>
-                <Text style={styles.savingsTitle}>{t("savingsGoalTitle")}</Text>
-                <Text style={styles.savingsAmount}>{formatCurrency(selectedSavings)}</Text>
-                <Text style={styles.savingsCaption}>
-                  {language === "tr"
-                    ? `${goalType} için ay sonuna kadar seni takip edeceğiz.`
-                    : `We will track your progress for ${goalType} until the end of the month.`}
-                </Text>
-              </View>
             </View>
           </View>
 
-          <View style={styles.footer}>
-            <Pressable 
-              onPress={async () => {
-                useFinanceStore.getState().setHasCompletedOnboarding(true);
-                await saveUserPlanToCloud();
-                router.replace("/");
-              }} 
-              style={({ pressed }) => [styles.ctaWrapper, pressed && styles.ctaPressed]}
-            >
-              <LinearGradient
-                colors={["#00E58F", "#00BF76", "#048052"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.ctaGradient}
-              >
-                <Feather name="star" size={24} color="#031D14" />
-                <Text style={styles.ctaText}>{language === "tr" ? "Finans panelime git" : "Go to my dashboard"}</Text>
-                <Feather name="arrow-right" size={24} color="#031D14" />
-              </LinearGradient>
-            </Pressable>
+          <View style={styles.mainCard}>
+            <Text style={styles.mainCardLabel}>
+              {language === "tr" ? "Bu ay harcayabileceğin toplam tutar" : "Total amount you can spend this month"}
+            </Text>
+            <Text style={styles.mainAmount}>{formatCurrency(spendableMonthlyBudget)}</Text>
+          </View>
 
-            <View style={styles.securityRow}>
-              <Feather name="lock" size={15} color="#9AA19D" />
-              <Text style={styles.securityText}>
-                {language === "tr" ? "Verilerin güvenle saklanır." : "Your data is stored securely."}
+          <View style={styles.limitGrid}>
+            <LimitCard 
+              title={language === "tr" ? "Günlük limit" : "Daily limit"} 
+              value={dailyLimit} 
+              caption={language === "tr" ? "Her gün harcama limitin" : "Your spending limit every day"} 
+              icon="calendar" 
+              tone="green" 
+            />
+            <LimitCard 
+              title={language === "tr" ? "Haftalık limit" : "Weekly limit"} 
+              value={weeklyLimit} 
+              caption={language === "tr" ? "Her hafta harcama limitin" : "Your spending limit every week"} 
+              icon="calendar" 
+              tone="orange" 
+            />
+            <LimitCard 
+              title={language === "tr" ? "Aylık limit" : "Monthly limit"} 
+              value={monthlyLimit} 
+              caption={language === "tr" ? "Bu ayki toplam limitin" : "Your total limit this month"} 
+              icon="calendar" 
+              tone="purple" 
+            />
+          </View>
+
+          <View style={styles.savingsCard}>
+            <View style={styles.targetIcon}>
+              <Feather name="target" size={28} color="#D06D1E" />
+            </View>
+            <View style={styles.savingsCopy}>
+              <Text style={styles.savingsTitle}>{t("savingsGoalTitle")}</Text>
+              <Text style={styles.savingsAmount}>{formatCurrency(selectedSavings)}</Text>
+              <Text style={styles.savingsCaption}>
+                {language === "tr"
+                  ? `${goalType} için ay sonuna kadar seni takip edeceğiz.`
+                  : `We will track your progress for ${goalType} until the end of the month.`}
               </Text>
             </View>
           </View>
         </View>
-      </View>
+
+        <View style={styles.footer}>
+          <Pressable 
+            onPress={async () => {
+              useFinanceStore.getState().setHasCompletedOnboarding(true);
+              await saveUserPlanToCloud();
+              router.replace("/");
+            }} 
+            style={({ pressed }) => [styles.ctaWrapper, pressed && styles.ctaPressed]}
+          >
+            <LinearGradient
+              colors={["#00E58F", "#00BF76", "#048052"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.ctaGradient}
+            >
+              <Feather name="star" size={24} color="#031D14" />
+              <Text style={styles.ctaText}>{language === "tr" ? "Finans panelime git" : "Go to my dashboard"}</Text>
+              <Feather name="arrow-right" size={24} color="#031D14" />
+            </LinearGradient>
+          </Pressable>
+
+          <View style={styles.securityRow}>
+            <Feather name="lock" size={15} color="#9AA19D" />
+            <Text style={styles.securityText}>
+              {language === "tr" ? "Verilerin güvenle saklanır." : "Your data is stored securely."}
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
 
       <LegalModal
         visible={legalModalDoc !== null}
