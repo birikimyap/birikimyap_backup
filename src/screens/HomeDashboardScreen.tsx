@@ -701,11 +701,11 @@ export default function HomeDashboardScreen() {
     return [
       {
         id: "no-spend-5d",
-        title: language === "tr" ? "5 Gün Sıfır Harcama" : "5-Day No-Spend",
-        desc: language === "tr" ? "Son 7 günün en az 5 gününü harcamasız kapatın." : "Have at least 5 days without expenses in the last 7 days.",
-        progress: noSpendDaysCount / 5,
-        progressText: `${noSpendDaysCount} / 5 ${language === "tr" ? "gün" : "days"}`,
-        isCompleted: isNoSpendCompleted,
+        title: language === "tr" ? "2 Gün Sıfır Harcama" : "2-Day No-Spend",
+        desc: language === "tr" ? "Son 7 günün en az 2 gününü ekstra harcamasız kapatın." : "Have at least 2 days without extra expenses in the last 7 days.",
+        progress: Math.min(noSpendDaysCount / 2, 1.0),
+        progressText: `${Math.min(noSpendDaysCount, 2)} / 2 ${language === "tr" ? "gün" : "days"}`,
+        isCompleted: noSpendDaysCount >= 2,
         isFailed: false,
         isExceeded: false,
         icon: "shield"
@@ -713,23 +713,23 @@ export default function HomeDashboardScreen() {
       {
         id: "market-saver",
         title: language === "tr" ? "Market Tasarrufu" : "Grocery Saver",
-        desc: language === "tr" ? "Bu haftalık market harcamanızı ₺1.500 altında tutun." : "Keep weekly grocery spending under ₺1,500.",
-        progress: marketProgress,
-        progressText: `${formatCurrency(weeklyMarketSpent)} / ${formatCurrency(1500)}`,
-        isCompleted: isMarketCompleted,
+        desc: language === "tr" ? "Bu haftalık market harcamanızı ₺3.000 altında tutun." : "Keep weekly grocery spending under ₺3,000.",
+        progress: Math.min(weeklyMarketSpent / 3000, 1.0),
+        progressText: `${formatCurrency(weeklyMarketSpent)} / ${formatCurrency(3000)}`,
+        isCompleted: weeklyMarketSpent <= 3000,
         isFailed: false,
-        isExceeded: isMarketExceeded,
+        isExceeded: weeklyMarketSpent > 3000,
         icon: "shopping-bag"
       },
       {
         id: "dining-friend",
-        title: language === "tr" ? "Kahve Dostu" : "Coffee Friend",
-        desc: language === "tr" ? "Bu haftalık kafe/restoran harcamanızı ₺300 altında tutun." : "Keep weekly cafe/dining spending under ₺300.",
-        progress: diningProgress,
-        progressText: `${formatCurrency(weeklyDiningSpent)} / ${formatCurrency(300)}`,
-        isCompleted: isDiningCompleted,
+        title: language === "tr" ? "Dışarıda Yemek & Kahve" : "Dining & Coffee",
+        desc: language === "tr" ? "Bu haftalık kafe/restoran harcamanızı ₺1.200 altında tutun." : "Keep weekly cafe/dining spending under ₺1,200.",
+        progress: Math.min(weeklyDiningSpent / 1200, 1.0),
+        progressText: `${formatCurrency(weeklyDiningSpent)} / ${formatCurrency(1200)}`,
+        isCompleted: weeklyDiningSpent <= 1200,
         isFailed: false,
-        isExceeded: isDiningExceeded,
+        isExceeded: weeklyDiningSpent > 1200,
         icon: "coffee"
       },
       {
@@ -1078,7 +1078,7 @@ export default function HomeDashboardScreen() {
             colors={isDarkMode ? ["#162B23", "#0F1F19"] : ["#FCF8F3", "#F3E7D7"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ padding: 13, position: "relative", borderRadius: 18 }}
+            style={{ padding: 13, position: "relative", borderRadius: 18, overflow: "visible" }}
           >
             <View style={{ width: "68%", paddingRight: 4 }}>
               <View style={{ marginBottom: 6 }}>
@@ -1171,9 +1171,9 @@ export default function HomeDashboardScreen() {
               </View>
             </View>
 
-            <View style={{ position: "absolute", right: 10, top: 12, width: 84, height: 84, zIndex: 9999, overflow: "visible" }}>
+            <View style={{ position: "absolute", right: 6, top: 6, width: 88, height: 88, zIndex: 9999, overflow: "visible" }}>
               {(mascotMessage || selectedPeriodRemaining < 0) && (
-                <View style={[styles.mascotSpeechBubbleWrapper, { top: mascotMessage ? -44 : -16, zIndex: 9999 }]}>
+                <View style={[styles.mascotSpeechBubbleWrapper, { top: -32, right: 0, zIndex: 9999 }]}>
                   <View style={[
                     styles.mascotSpeechBubble, 
                     { 
@@ -2452,7 +2452,7 @@ export default function HomeDashboardScreen() {
           </View>
 
           {/* Canlı Piyasa Kurları Rozeti & Genişletilmiş Bilgi Kartı */}
-          <View style={{ backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.08)" : "#F0FDF4", borderRadius: 14, paddingVertical: 14, paddingHorizontal: 16, marginHorizontal: 16, marginVertical: 10, borderWidth: 1, borderColor: "rgba(0, 229, 143, 0.35)" }}>
+          <View style={{ backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.08)" : "#F0FDF4", borderRadius: 14, paddingVertical: 14, paddingHorizontal: 16, marginHorizontal: 0, marginVertical: 10, borderWidth: 1, borderColor: "rgba(0, 229, 143, 0.35)" }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Feather name="activity" size={17} color="#00E58F" />
@@ -7290,11 +7290,11 @@ function GoalAchievedModal({
     title = language === "tr" ? "Yolun Yarısı Kat Edildi!" : "Halfway There!";
     badgeText = language === "tr" ? "%50 GELİŞİM ROZETİ" : "50% GROWTH BADGE";
     desc = language === "tr" ? "Hedefinin tam yarısına ulaştın, temposunu koru!" : "You hit half of your target, keep this great pace!";
-  } else if (percent < 25) {
+  } else {
     icon = "🚀💪";
-    title = language === "tr" ? "30 Günlük Dönem Tamamlandı!" : "30-Day Period Completed!";
-    badgeText = language === "tr" ? "HARİKA ÇABA" : "GREAT EFFORT";
-    desc = language === "tr" ? `30 günlük bütçe periyodu bitti. ${formatCurrency(goalSavedAmount)} birikimin cebinde güvende!` : `Your 30-day budget period ends. Your ${formatCurrency(goalSavedAmount)} savings are safe!`;
+    title = language === "tr" ? "Birikim Yolculuğu Başladı!" : "Savings Journey Started!";
+    badgeText = language === "tr" ? "İLERLEME TAKİBİ" : "PROGRESS TRACKING";
+    desc = language === "tr" ? `Henüz dönemin başındasın! Şu ana kadar ${formatCurrency(goalSavedAmount)} biriktirdin. Günlük limitlerine uyarak hedefine emin adımlarla ilerleyebilirsin.` : `You are at the start of your period! You saved ${formatCurrency(goalSavedAmount)} so far. Stay within your limits to reach your goal.`;
   }
 
   return (
