@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birikim Yap | Akıllı Harcama & Sesli Bütçe Yönetimi Uygulaması</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Birikim Yap | Akıllı Harcama & Sesli Bütçe Yönetimi">
+    <meta name="description" content="Birikim Yap ile harcamalarınızı sesle saniyeler içinde kaydedin. Dinamik günlük limit algoritması ve Hey Siri otomasyonu ile finansal hedeflerinize emin adımlarla ulaşın.">
+    <meta name="keywords" content="birikim yap, bütçe yönetimi, sesli harcama ekleme, siri harcama kestirmesi, kişisel finans uygulaması, günlük limit hesaplama, akıllı dengeleme">
+    <meta name="author" content="Gürkan Aygün">
+    
+    <!-- Open Graph / WhatsApp / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://birikimyap.app/">
+    <meta property="og:title" content="Birikim Yap | Akıllı Harcama & Sesli Bütçe Yönetimi">
+    <meta property="og:description" content="Hey Siri! Birikim Yap diyerek harcamalarınızı anında kaydedin. Dinamik günlük bütçe algoritması ile paranızı bilinçli yönetin.">
+    <meta property="og:image" content="assets/mascot.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/app-icon.png">
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top Exchange Rates Moving Ticker Bar -->
+    <div class="ticker-bar">
+        <div class="ticker-content">
+            <div class="ticker-item">📅 Piyasa Tarihi: <span class="ticker-date">5 Ağustos 2026</span></div>
+            <div class="ticker-item">🇺🇸 1 USD = <span class="ticker-usd">47.56 ₺</span></div>
+            <div class="ticker-item">🇪🇺 1 EUR = <span class="ticker-eur">54.83 ₺</span></div>
+            <div class="ticker-item">🪙 Gram Altın = <span class="ticker-gold">5.120 ₺</span></div>
+            <div class="ticker-item">⚡ Akıllı Bütçe = <span class="ticker-time">🟢 Canlı Piyasa Devrede (18:53)</span></div>
+            <div class="ticker-item">🎙️ Hey Siri = <span>"Ne, ne kadar?" Sesli Kayıt Aktif</span></div>
+            <div class="ticker-item">📅 Piyasa Tarihi: <span class="ticker-date">5 Ağustos 2026</span></div>
+            <div class="ticker-item">🇺🇸 1 USD = <span class="ticker-usd">47.56 ₺</span></div>
+            <div class="ticker-item">🇪🇺 1 EUR = <span class="ticker-eur">54.83 ₺</span></div>
+            <div class="ticker-item">🪙 Gram Altın = <span class="ticker-gold">5.120 ₺</span></div>
+        </div>
+    </div>
+
+    <!-- Background Ambient Orbs -->
+    <div class="bg-glow-orb-1"></div>
+    <div class="bg-glow-orb-2"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo-group" id="navLogo">
+                <img src="assets/app-icon.png" alt="Birikim Yap Uygulaması Logo" class="logo-icon">
+                <div class="logo-text">Birikim<span>Yap</span></div>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="#features" class="nav-link">Özellikler</a></li>
+                <li><a href="#security" class="nav-link">Güvenlik</a></li>
+                <li><a href="#testimonials" class="nav-link">Yorumlar</a></li>
+                <li><a href="#calculator" class="nav-link">Canlı Hesaplayıcı</a></li>
+                <li><a href="#faq" class="nav-link">SSS</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Tema Değiştir">☀️</button>
+                <a href="https://testflight.apple.com" target="_blank" rel="noopener" class="btn-primary" id="navDownloadBtn">
+                    <span>📱 TestFlight'ta Dene</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <div class="badge-tag">
+                    <span><img src="assets/app-icon.png" style="width:16px; height:16px; border-radius:4px; vertical-align:middle; margin-right:4px;"> Akıllı Kişisel Finans Asistanı</span>
+                </div>
+                
+                <h1 class="hero-title">
+                    Bütçenizi Dinamik Yönetin, <span>Hayallerinize Birikim Yapın!</span>
+                </h1>
+                
+                <p class="hero-sub">
+                    Sesinizle anında harcama ekleyin. Akıllı dengeleme algoritması geçmiş harcamalarınıza göre kalan günlerinizi otomatik hesaplasın, bütçeniz asla kontrolünüzden çıkmasın.
+                </p>
+
+                <!-- Social Proof Rating -->
+                <div class="social-proof-bar">
+                    <div class="rating-stars">★★★★★</div>
+                    <div class="rating-text">4.9 Puan | 10.000+ Kaydedilen Harcama</div>
+                </div>
+
+                <!-- Official Download Badges -->
+                <div class="hero-cta-group">
+                    <a href="https://testflight.apple.com" target="_blank" rel="noopener" class="app-badge-btn" id="heroTestflightBadge">
+                        <span style="font-size: 24px;">🚀</span>
+                        <div>
+                            <div class="app-badge-sub">İOS TESTFLIGHT İLE</div>
+                            <div class="app-badge-title">Ücretsiz Yükle</div>
+                        </div>
+                    </a>
+
+                    <a href="#siri" class="btn-secondary" id="heroSiriBtn">
+                        <span>🎙️ Siri Otomasyonu</span>
+                    </a>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <h4>%100</h4>
+                        <p>Dinamik Akıllı Limit</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4>&lt; 3 Sn</h4>
+                        <p>Hey Siri Harcama Ekleme</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4>Çift</h4>
+                        <p>Cihaz + Bulut Çift Yedek</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1:1 Pixel-Perfect Live Mobile App Replica Simulator -->
+            <div class="phone-wrapper">
+                <div class="phone-mockup">
+                    <div class="phone-notch"></div>
+                    <div class="m-screen light-mode" id="mobileAppScreen">
+                        
+                        <!-- 1:1 Header -->
+                        <div class="m-header">
+                            <div>
+                                <div class="m-greeting">Hoş geldin Alper 👋</div>
+                                <div class="m-date-line">📅 6 Ağustos Perşembe — 4. Gün</div>
+                                <div class="m-alert-line">🚨 Dikkat: Bütçe ₺1.500 Aşıldı!</div>
+                            </div>
+                            <div class="m-bell-btn">🔔</div>
+                        </div>
+
+                        <!-- 1:1 Goal Card with Mascot & Red Alert Speech Bubble -->
+                        <div class="m-goal-container">
+                            <div class="m-speech-bubble-red">
+                                ₺1.500 Aşıldı! ⚠️
+                            </div>
+
+                            <div class="m-goal-card-light">
+                                <div style="flex: 1; padding-right: 10px;">
+                                    <div class="m-goal-badge-light">
+                                        <span>🎯 BİRİKİM HEDEFİN</span>
+                                    </div>
+                                    <div class="m-goal-values-row">
+                                        <div>
+                                            <div class="m-val-lbl">TOPLAM HEDEF</div>
+                                            <div class="m-val-num">₺30.000</div>
+                                        </div>
+                                        <div class="m-saved-pill">
+                                            <div class="m-val-lbl" style="color:#00A362;">BİRİKEN</div>
+                                            <div class="m-val-num" style="color:#00A362;">₺4.000</div>
+                                        </div>
+                                    </div>
+                                    <div style="height: 6px; background: #E2E8F0; border-radius: 4px; margin-top: 8px; overflow: hidden; position: relative;">
+                                        <div style="width: 13%; height: 100%; background: #00E58F; border-radius: 4px;"></div>
+                                    </div>
+                                    <div style="font-size: 10px; color: #64748B; font-weight: 700; margin-top: 4px;">
+                                        Hedefin %13'i tamamlandı
+                                    </div>
+                                </div>
+
+                                <div class="m-mascot-circle-frame">
+                                    <img src="assets/mascot.png" alt="Birikim Yap Piggy Mascot">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1:1 Summary Metric Card -->
+                        <div class="m-summary-card-dark">
+                            <div class="m-sum-col">
+                                <div style="font-size: 16px;">💳</div>
+                                <div class="m-sum-lbl">Limit</div>
+                                <div class="m-sum-val" style="color: #00E58F;">₺0</div>
+                            </div>
+                            <div class="m-sum-divider"></div>
+                            <div class="m-sum-col">
+                                <div style="font-size: 16px;">🥧</div>
+                                <div class="m-sum-lbl">Harcanan</div>
+                                <div class="m-sum-val" style="color: #F59E0B;">₺2.500</div>
+                            </div>
+                            <div class="m-sum-divider"></div>
+                            <div class="m-sum-col">
+                                <div style="font-size: 16px;">⚠️</div>
+                                <div class="m-sum-lbl">Kalan</div>
+                                <div class="m-sum-val" style="color: #EF4444;">-₺1.541</div>
+                            </div>
+                        </div>
+
+                        <!-- Main Action Add Expense Button -->
+                        <div class="m-btn-add-expense" id="simAddExpenseBtn">
+                            <span style="font-size: 20px;">➕</span>
+                            <span>Harcama Ekle</span>
+                        </div>
+
+                        <!-- Dynamic Screen Content Area -->
+                        <div id="simDynamicContent" style="flex: 1;">
+                            <div class="m-section-header">
+                                <div class="m-section-title">Son harcamalar</div>
+                                <div class="m-total-pill">Toplam: ₺2.500</div>
+                            </div>
+
+                            <div class="m-period-filters">
+                                <div class="m-filter-btn active">📅 Bugün</div>
+                                <div class="m-filter-btn">📅 Bu hafta</div>
+                                <div class="m-filter-btn">📅 Bu ay</div>
+                            </div>
+
+                            <div class="m-expense-card-list">
+                                <div class="m-expense-row-item">
+                                    <div class="m-exp-left">
+                                        <div class="m-exp-icon">📦</div>
+                                        <div>
+                                            <div style="display: flex; align-items: center;">
+                                                <span class="m-exp-title">Genel Harcama</span>
+                                                <span class="m-exp-week-tag">1. Hafta</span>
+                                            </div>
+                                            <div class="m-exp-sub">Diğer</div>
+                                        </div>
+                                    </div>
+                                    <div class="m-exp-right">
+                                        <div class="m-exp-amount">₺1.000</div>
+                                        <div class="m-exp-date">06 Ağu</div>
+                                    </div>
+                                </div>
+
+                                <div class="m-expense-row-item">
+                                    <div class="m-exp-left">
+                                        <div class="m-exp-icon">📦</div>
+                                        <div>
+                                            <div style="display: flex; align-items: center;">
+                                                <span class="m-exp-title">Genel Harcama</span>
+                                                <span class="m-exp-week-tag">1. Hafta</span>
+                                            </div>
+                                            <div class="m-exp-sub">Diğer</div>
+                                        </div>
+                                    </div>
+                                    <div class="m-exp-right">
+                                        <div class="m-exp-amount">₺500</div>
+                                        <div class="m-exp-date">06 Ağu</div>
+                                    </div>
+                                </div>
+
+                                <div class="m-expense-row-item">
+                                    <div class="m-exp-left">
+                                        <div class="m-exp-icon">📦</div>
+                                        <div>
+                                            <div style="display: flex; align-items: center;">
+                                                <span class="m-exp-title">Genel Harcama</span>
+                                                <span class="m-exp-week-tag">1. Hafta</span>
+                                            </div>
+                                            <div class="m-exp-sub">Diğer</div>
+                                        </div>
+                                    </div>
+                                    <div class="m-exp-right">
+                                        <div class="m-exp-amount">₺1.000</div>
+                                        <div class="m-exp-date">06 Ağu</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1:1 Floating Bottom Nav Bar -->
+                        <div class="m-bottom-nav">
+                            <div class="m-nav-item active" id="simTabHome">
+                                <span>🏠</span>
+                                <span>Ana sayfa</span>
+                                <div class="m-nav-dot"></div>
+                            </div>
+                            <div class="m-nav-item" id="simTabGoals">
+                                <span>🎯</span>
+                                <span>Hedeflerim</span>
+                            </div>
+                            <div class="m-nav-item" id="simTabAnalysis">
+                                <span>🥧</span>
+                                <span>Analiz</span>
+                            </div>
+                            <div class="m-nav-item" id="simTabProfile">
+                                <span>👤</span>
+                                <span>Profil</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Key Features Section -->
+    <section class="section" id="features">
+        <div class="container">
+            <h2 class="section-title">Neden Birikim Yap?</h2>
+            <p class="section-sub">Kişisel finansınızı zorlanmadan, akıllı algoritmalar ve sesli komutlarla kontrol altına almanız için tasarlandı.</p>
+
+            <div class="grid-3">
+                <div class="feature-card">
+                    <div class="feature-icon-box">⚖️</div>
+                    <h3>Akıllı Dengeleme Algoritması</h3>
+                    <p>Geçmiş günlerdeki fazla harcamalarınızı kalan gün sayınıza otomatik bölerek günlük bütçenizi yeniden dengeler. Ay sonu sürprizleriyle karşılaşmazsınız.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">🎙️</div>
+                    <h3>Tam Otomatik Siri Kestirmesi</h3>
+                    <p>Uygulamayı açmanıza gerek yok! "Hey Siri, Birikim Yap" dediğinizde yanıt verir ve harcama detayınızı anında hesabınıza işler.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">🎯</div>
+                    <h3>Gerçekçi Hedef Yönetimi</h3>
+                    <p>Hayalleriniz için hedef tutarı belirleyin. Sistem, aylık birikim potansiyelinize göre hedefinize ne zaman ulaşacağınızı canlı olarak simüle etsin.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">📊</div>
+                    <h3>4 Zaman Dilimli Analiz</h3>
+                    <p>Bugün harcamalarınızı Gece, Sabah, Öğle ve Akşam olarak kırılımlı görün. Günlük, haftalık ve aylık bütçe grafiklerinizi anlık takip edin.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">🔒</div>
+                    <h3>Çift Depolama & Güvenlik</h3>
+                    <p>Tüm finansal verileriniz hem cihazınızın yerel hafızasında hem de Supabase şifreli bulut altyapısında güvenle senkronize saklanır.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon-box">💱</div>
+                    <h3>Canlı Piyasa Kurları</h3>
+                    <p>Dolar ve Euro kurlarını anlık olarak takip edin. Finansal kararlarınızı güncel piyasa verileri ışığında alın.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security & Privacy Highlights Section -->
+    <section class="section" id="security" style="background: var(--bg-surface); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+        <div class="container">
+            <h2 class="section-title">Gizlilik & Üst Düzey Güvenlik</h2>
+            <p class="section-sub">Finansal verileriniz sizin özelinizdir. Birikim Yap verilerinizi asla üçüncü taraflara satmaz veya işlemez.</p>
+
+            <div class="grid-4">
+                <div class="feature-card" style="text-align: center;">
+                    <div class="feature-icon-box" style="margin: 0 auto 16px;">🔑</div>
+                    <h3>Biometrik Korumalar</h3>
+                    <p>Cihazınızın FaceID ve TouchID donanım seviyesi koruması ile yetkisiz erişimleri engelleyin.</p>
+                </div>
+
+                <div class="feature-card" style="text-align: center;">
+                    <div class="feature-icon-box" style="margin: 0 auto 16px;">🛡️</div>
+                    <h3>%100 Reklamsız</h3>
+                    <p>Uygulama içinde can sıkıcı reklamlar, izleyiciler (trackers) veya veri satışı kesinlikle yoktur.</p>
+                </div>
+
+                <div class="feature-card" style="text-align: center;">
+                    <div class="feature-icon-box" style="margin: 0 auto 16px;">⚡</div>
+                    <h3>Supabase RLS</h3>
+                    <p>Bulut senkronizasyonunda Row Level Security (RLS) ile verilerinize sadece siz erişebilirsiniz.</p>
+                </div>
+
+                <div class="feature-card" style="text-align: center;">
+                    <div class="feature-icon-box" style="margin: 0 auto 16px;">💾</div>
+                    <h3>Çift Yedekleme</h3>
+                    <p>İnternetiniz olmasa bile yerel disk hafızasında kesintisiz çalışır, internet geldiğinde bulutla eşleşir.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials / User Reviews Section -->
+    <section class="section" id="testimonials">
+        <div class="container">
+            <h2 class="section-title">Kullanıcılarımız Ne Diyor?</h2>
+            <p class="section-sub">Birikim Yap ile bütçesini kontrol altına alan mutlu kullanıcıların gerçek deneyimleri.</p>
+
+            <div class="grid-3">
+                <div class="testimonial-card">
+                    <div class="rating-stars" style="margin-bottom: 12px;">★★★★★</div>
+                    <p class="testimonial-quote">
+                        "Hey Siri kestirmesi efsane çalışıyor! Yolda kahve alırken veya benzin doldururken 'Hey Siri, Birikim Yap' diyorum, anında kaydediyor."
+                    </p>
+                    <div class="testimonial-user">
+                        <div class="user-avatar-circle">AK</div>
+                        <div>
+                            <div class="user-info-name">Ahmet K.</div>
+                            <div class="user-info-role">Yazılım Mühendisi</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="rating-stars" style="margin-bottom: 12px;">★★★★★</div>
+                    <p class="testimonial-quote">
+                        "Akıllı dengeleme özelliği sayesinde bir gün fazla harcasam bile ertesi gün ne kadar harcamam gerektiğini görmek kafamı çok rahatlattı."
+                    </p>
+                    <div class="testimonial-user">
+                        <div class="user-avatar-circle">ZT</div>
+                        <div>
+                            <div class="user-info-name">Zeynep T.</div>
+                            <div class="user-info-role">Mimar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="rating-stars" style="margin-bottom: 12px;">★★★★★</div>
+                    <p class="testimonial-quote">
+                        "Motor birikimi yapıyordum. Hedef kartındaki canlı yüzde ilerlemesi ve 3D maskotumuzun motivasyonu harika. 3 ayda hedefime ulaştım!"
+                    </p>
+                    <div class="testimonial-user">
+                        <div class="user-avatar-circle">GA</div>
+                        <div>
+                            <div class="user-info-name">Gürkan A.</div>
+                            <div class="user-info-role">Tasarımcı</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Siri Spotlight -->
+    <section class="section" id="siri" style="background: var(--bg-surface); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+        <div class="container hero-grid">
+            <div>
+                <div class="badge-tag">🎙️ SESLİ KESTİRME OTOMASYONU</div>
+                <h2 style="font-size: 42px; font-weight: 900; margin-bottom: 20px;">Siri İle Saniyeler İçinde Harcama Ekleyin!</h2>
+                <p style="font-size: 18px; color: var(--text-muted); margin-bottom: 24px;">
+                    Cihazınızda tek kelimeyle konuşmanız yeterli. Hey Siri desteği ile Apple Watch veya iPhone üzerinden anında harcama kaydı gerçekleştirebilirsiniz.
+                </p>
+                
+                <button class="btn-primary" id="siriDemoBtn" style="margin-bottom: 20px;">
+                    ▶️ Siri Otomasyon Demosunu Çalıştır
+                </button>
+
+                <div id="siriDemoStatus" style="display:none; background: var(--bg-body); border: 1px solid var(--primary); padding: 20px; border-radius: 18px; font-size: 15.5px; line-height: 1.7;"></div>
+            </div>
+
+            <div style="text-align: center;">
+                <div class="siri-app-icon-card">
+                    <img src="assets/app-icon.png" alt="Birikim Yap 3D App Icon">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dynamic Calculator Section -->
+    <section class="section" id="calculator">
+        <div class="container">
+            <h2 class="section-title">Canlı Limit Hesaplayıcı</h2>
+            <p class="section-sub">Aylık gelirinizi, sabit giderlerinizi ve birikim hedefinizi girin; günlük harcayabileceğiniz akıllı limiti anında görün.</p>
+
+            <div class="calculator-box">
+                <div class="calc-grid">
+                    <div>
+                        <div class="input-field">
+                            <label for="calcIncome">💵 Aylık Toplam Geliriniz (₺)</label>
+                            <input type="number" id="calcIncome" value="45000" step="500">
+                        </div>
+
+                        <div class="input-field">
+                            <label for="calcFixed">🏠 Sabit Giderleriniz (Kira, Fatura vs.) (₺)</label>
+                            <input type="number" id="calcFixed" value="18000" step="500">
+                        </div>
+
+                        <div class="input-field">
+                            <label for="calcSavings">🎯 Kenara Koymak İstediğiniz Aylık Birikim (₺)</label>
+                            <input type="number" id="calcSavings" value="7500" step="500">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; justify-content:center;">
+                        <div class="calc-result-card">
+                            <div class="calc-result-title">⚡ GÜNLÜK HARCANABİLİR AKILLI LİMİT</div>
+                            <div class="calc-result-num" id="resultDailyLimit">650 ₺</div>
+                            <div style="font-size: 13.5px; color: var(--text-muted); font-weight: 700; margin-top: 4px;">
+                                Aylık Serbest Bütçeniz: <strong id="resultSpendableMonthly" style="color:var(--primary);">19.500 ₺</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="section" id="faq">
+        <div class="container">
+            <h2 class="section-title">Sıkça Sorulan Sorular</h2>
+            <p class="section-sub">Birikim Yap uygulaması hakkında aklınıza takılabilecek tüm soruların yanıtları.</p>
+
+            <div class="faq-list">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Verilerim güvende mi? Başka şirketlerle paylaşılır mı?</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Kesinlikle hayır! Birikim Yap verilerinizi 3. taraf reklam şirketleriyle asla paylaşmaz. Tüm verileriniz cihazınızda şifreli yerel depolama ve Supabase RLS koruması ile saklanır.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>"Hey Siri, Birikim Yap" kestirmesini nasıl aktif ederim?</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Uygulamayı yükleyip bir kez açmanız yeterlidir. iOS AppShortcuts altyapısı sayesinde Siri kestirmesi telefonunuza ve Apple Watch cihazınıza otomatik olarak yüklenir.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Bir gün bütçemi aşarsam ne olur?</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        O günkü kalan limitiniz eksiye düşer ve limit metriği 0 ₺ olarak görünür. Ertesi gün akıllı algoritma devreye girerek kalan aylık bütçenizi kalan gün sayısına böler ve güncellenmiş yeni günlük limitinizi sunar.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <a href="#" class="logo-group">
+                        <img src="assets/app-icon.png" alt="Birikim Yap Logo" class="logo-icon">
+                        <div class="logo-text">Birikim<span>Yap</span></div>
+                    </a>
+                    <p class="footer-copy">
+                        Akıllı finans matematiği ve sesli harcama otomasyonu ile hedeflerinize emin adımlarla ulaşmanızı sağlayan iOS uygulaması.
+                    </p>
+                </div>
+
+                <div>
+                    <div class="footer-heading">Hızlı Bağlantılar</div>
+                    <ul class="footer-links">
+                        <li><a href="#features">Özellikler</a></li>
+                        <li><a href="#security">Güvenlik</a></li>
+                        <li><a href="#testimonials">Yorumlar</a></li>
+                        <li><a href="#calculator">Canlı Hesaplayıcı</a></li>
+                        <li><a href="https://testflight.apple.com" target="_blank" rel="noopener">TestFlight</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <div class="footer-heading">Yasal & İletişim</div>
+                    <ul class="footer-links">
+                        <li><a id="btnTermsModal">Kullanım Koşulları</a></li>
+                        <li><a id="btnPrivacyModal">Gizlilik Politikası</a></li>
+                        <li><a id="btnKvkkModal">KVKK Aydınlatma</a></li>
+                        <li><a href="mailto:destek@birikimyap.app">TR Destek: destek@birikimyap.app</a></li>
+                        <li><a href="mailto:support@birikimyap.app">Global Support: support@birikimyap.app</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                &copy; 2026 Birikim Yap (birikimyap.app). Tüm hakları saklıdır. Gürkan Aygün tarafından geliştirilmiştir.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Working Legal Modals -->
+    <div class="modal-overlay" id="legalModalOverlay">
+        <div class="modal-content">
+            <button class="modal-close-btn" id="modalCloseBtn">✕</button>
+            <h3 id="modalTitle" style="font-size: 24px; font-weight: 900; margin-bottom: 16px; color: var(--primary);">Yasal Bilgilendirme</h3>
+            <div id="modalBody" style="font-size: 14.5px; color: var(--text-muted); line-height: 1.7;">
+                <!-- Populated via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Sticky Bottom CTA Banner -->
+    <div class="sticky-cta-bar" id="stickyCtaBar">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="assets/app-icon.png" alt="App Icon" style="width: 38px; height: 38px; border-radius: 10px;">
+            <div>
+                <div style="font-size: 14px; font-weight: 900; color: #FFF;">Birikim Yap iOS</div>
+                <div style="font-size: 11px; color: #00E58F; font-weight: 700;">Dinamik Akıllı Bütçe & Sesli Harcama</div>
+            </div>
+        </div>
+        <a href="https://testflight.apple.com" target="_blank" rel="noopener" class="btn-primary" style="padding: 10px 20px; font-size: 13.5px;">
+            <span>🚀 Ücretsiz Yükle</span>
+        </a>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

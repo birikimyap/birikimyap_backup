@@ -17,3 +17,6 @@ expo-start.err.log
 expo-live.log
 expo-live.err.log
 .DS_Store
+*.xcarchive
+ExportBuild*
+birikimyap_website.zip

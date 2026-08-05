@@ -387,7 +387,7 @@ function FeatureDetailModal({ feature, onClose }: { feature: FeatureItem; onClos
                       <Text style={{ color: "#040907", fontWeight: "900", fontSize: 13 }}>🎙️ Siri: “Ne, ne kadar?”</Text>
                     </View>
                     <View style={{ backgroundColor: "#FFFFFF", paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12 }}>
-                      <Text style={{ color: "#074737", fontWeight: "900", fontSize: 12 }}>💬 Siz: “Market 350” ➔ Otomatik Kayıt! 🐷</Text>
+                      <Text style={{ color: "#074737", fontWeight: "900", fontSize: 12 }}>💬 Siz: “Market 350” ➔ Otomatik Kayıt! ✨</Text>
                     </View>
                   </View>
                 )}

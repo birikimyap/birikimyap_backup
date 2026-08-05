@@ -105,6 +105,52 @@ export async function signOutUser() {
 }
 
 /**
+ * Hesabı Tamamen Sil — Supabase'deki profil verisini siler, yerel depolamayı temizler ve oturumu kapatır.
+ */
+export async function deleteUserAccount(): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Supabase yapılandırılmamış.' };
+    }
+
+    // 1. Aktif kullanıcıyı al
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: 'Aktif oturum bulunamadı.' };
+    }
+
+    // 2. Supabase profiles tablosundan kullanıcı verisini sil
+    await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', user.id);
+
+    // 3. Cihaz üzerindeki tüm yerel depolamayı temizle
+    const allKeys = await AsyncStorage.getAllKeys();
+    const userKeys = allKeys.filter(k => 
+      k.includes('birikim') || 
+      k.includes('user_plan') || 
+      k.includes('finance') || 
+      k.includes('latest_local')
+    );
+    if (userKeys.length > 0) {
+      await AsyncStorage.multiRemove(userKeys);
+    }
+
+    // 4. Store'u sıfırla
+    useFinanceStore.getState().resetAllData();
+
+    // 5. Oturumu kapat
+    await supabase.auth.signOut();
+
+    return { success: true };
+  } catch (e: any) {
+    console.error('[deleteUserAccount] Hata:', e);
+    return { success: false, error: e?.message || 'Bilinmeyen hata' };
+  }
+}
+
+/**
  * E-posta & Şifre ile Yeni Kullanıcı Kaydı (Sign Up)
  */
 export async function signUpWithEmail(email: string, password: string) {

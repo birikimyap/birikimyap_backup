@@ -29,7 +29,7 @@ import Svg, { Circle, Path } from "react-native-svg";
 
 import { useVoiceExpenseInput } from "@/hooks/useVoiceExpenseInput";
 import { Expense, GoalItem, Period } from "@/models/finance";
-import { signOutUser } from "@/utils/supabaseAuth";
+import { signOutUser, deleteUserAccount } from "@/utils/supabaseAuth";
 import { useFinanceStore } from "@/store/financeStore";
 import { ParsedVoiceExpense, parseTurkishExpense } from "@/utils/voiceExpense";
 import { colors, radius, lightColors, darkColors } from "@/theme";
@@ -38,6 +38,7 @@ import { getExpensesForPeriod, getSimulatedDate, getDynamicDailyLimit, getRevise
 import { moderateScale, verticalScale } from "@/utils/responsive";
 import { translations } from "@/utils/translations";
 import { syncSiriExpenses } from "@/utils/siriSync";
+import { requestNotificationPermissions } from "@/services/notificationService";
 import { syncWidgetData } from "@/utils/widgetSync";
 
 const mascotTR = require("../../pgn/mascot-cutout.png");
@@ -248,8 +249,9 @@ export default function HomeDashboardScreen() {
 
   // Listen for incoming deep links for Siri / Kestirmeler (Shortcuts) integration and sync Siri AppGroup expenses
   useEffect(() => {
-    // Initial Siri sync on mount
+    // Initial Siri sync and Smart Notification setup on mount
     syncSiriExpenses();
+    requestNotificationPermissions();
 
     // AppState listener to sync Siri expenses when app comes to foreground
     const appStateSub = AppState.addEventListener("change", (nextAppState) => {
@@ -947,20 +949,20 @@ export default function HomeDashboardScreen() {
     const userFirstName = userProfileState?.fullName?.trim().split(" ")[0] || (userProfileState?.email ? userProfileState.email.split("@")[0] : (language === "tr" ? "Kullanıcı" : "User"));
 
     const streakQuotes = language === "tr" ? [
-      `Tebrikler ${userFirstName}! Tam ${streak} gündür sıfır harcama yaptın, harika gidiyorsun! 🏆🐖`,
+      `Tebrikler ${userFirstName}! Tam ${streak} gündür sıfır harcama yaptın, harika gidiyorsun! 🏆✨`,
       `Müthiş! ${streak} günlük sıfır harcama serin var, tasarruf şampiyonusun! 🔥✨`
     ] : [
-      `Congratulations ${userFirstName}! You haven't spent anything for ${streak} days, you are doing great! 🏆🐖`,
+      `Congratulations ${userFirstName}! You haven't spent anything for ${streak} days, you are doing great! 🏆✨`,
       `Awesome! You have a ${streak}-day zero spending streak, you are a savings champion! 🔥✨`
     ];
 
     const deficitQuotes = language === "tr" ? [
-      "Bütçeyi biraz aştık ama sakin ol, yarın tasarruf günümüz olsun! 🐖",
+      "Bütçeyi biraz aştık ama sakin ol, yarın tasarruf günümüz olsun! 🎯",
       "Harcamaları kısıp bütçeyi dengeleyebiliriz, sana güveniyorum! 💪",
       "Hedefimiz tehlikede olsa da pes etmek yok, birlikte başaracağız! 🎯",
       `Bu dönem ${highestCat} harcamaları bütçemizi zorladı sanki? 🧐`
     ] : [
-      "We went over budget, but tomorrow is a new savings day! 🐖",
+      "We went over budget, but tomorrow is a new savings day! 🎯",
       "We can balance the budget by cutting back a little. I believe in you! 💪",
       "Don't give up on our goal, we can do this together! 🎯",
       `It seems ${highestCat} spending pushed our budget this period! 🧐`
@@ -969,12 +971,12 @@ export default function HomeDashboardScreen() {
     const healthyQuotes = language === "tr" ? [
       `Harika gidiyoruz ${userFirstName}! Böyle devam edersek hedef cepte! 🎯`,
       "Bugün kahveyi evde demleyip tasarrufa katkı sağlamaya ne dersin? ☕",
-      "Bütçemiz güvende, maskotun senden çok memnun! 🐖✨",
+      "Bütçemiz güvende, maskotun senden çok memnun! ✨",
       "Küçük birikimler büyük hedeflere ulaştırır, harika gidiyorsun! 💸"
     ] : [
       `We are doing great ${userFirstName}! Keep it up and we will hit our target! 🎯`,
       "How about making coffee at home today to save a bit? ☕",
-      "Our budget is safe, your piggy bank is very happy! 🐖✨",
+      "Our budget is safe, your piggy bank is very happy! ✨",
       "Small savings lead to big targets. Keep up the good work! 💸"
     ];
 
@@ -1056,30 +1058,54 @@ export default function HomeDashboardScreen() {
         </View>
 
         {/* Savings Goal Management (Mascot Card) */}
-        <Pressable 
-          onPress={() => {
-            triggerHaptic();
-            setIsGoalAchievedModalVisible(true);
-          }}
-          style={({ pressed }) => [{
-            marginTop: 10,
-            borderRadius: 20,
-            overflow: "visible",
-            borderWidth: 1.2,
-            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(212, 160, 89, 0.35)",
-            shadowColor: isDarkMode ? "#00DF89" : "#B98E4B",
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: isDarkMode ? 0.15 : 0.10,
-            shadowRadius: 14,
-            elevation: 4
-          }, pressed && styles.pressed]}
-        >
-          <LinearGradient
-            colors={isDarkMode ? ["#162B23", "#0F1F19"] : ["#FCF8F3", "#F3E7D7"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ padding: 13, position: "relative", borderRadius: 18, overflow: "visible" }}
+        <View style={{ marginTop: 10, overflow: "visible", zIndex: 100 }}>
+          {/* Speech bubble rendered OUTSIDE the card so iOS doesn't clip it */}
+          {(mascotMessage || selectedPeriodRemaining < 0) && (
+            <View style={{ position: "absolute", top: -28, right: 0, left: 0, zIndex: 9999, elevation: 20, alignItems: "flex-end", paddingRight: 30 }}>
+              <View style={[
+                styles.mascotSpeechBubble, 
+                { 
+                  backgroundColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228",
+                  maxWidth: 220 
+                }
+              ]}>
+                <Text style={[styles.mascotSpeechBubbleText, { textAlign: mascotMessage ? "center" : "left" }]}>
+                  {mascotMessage || (language === "tr" ? `${formattedExceeded} Aşıldı! ⚠️` : `${formattedExceeded} Over! ⚠️`)}
+                </Text>
+                <View style={[
+                  styles.speechBubbleArrow, 
+                  { 
+                    borderTopColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228",
+                    alignSelf: "flex-end",
+                    marginRight: 24
+                  }
+                ]} />
+              </View>
+            </View>
+          )}
+          <Pressable 
+            onPress={() => {
+              triggerHaptic();
+              setIsGoalAchievedModalVisible(true);
+            }}
+            style={({ pressed }) => [{
+              borderRadius: 20,
+              overflow: "hidden",
+              borderWidth: 1.2,
+              borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(212, 160, 89, 0.35)",
+              shadowColor: isDarkMode ? "#00DF89" : "#B98E4B",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: isDarkMode ? 0.15 : 0.10,
+              shadowRadius: 14,
+              elevation: 4
+            }, pressed && styles.pressed]}
           >
+            <LinearGradient
+              colors={isDarkMode ? ["#162B23", "#0F1F19"] : ["#FCF8F3", "#F3E7D7"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ padding: 13, position: "relative", borderRadius: 18 }}
+            >
             <View style={{ width: "68%", paddingRight: 4 }}>
               <View style={{ marginBottom: 6 }}>
                 <View style={[styles.goalBadge, { backgroundColor: isDarkMode ? "rgba(0,223,137,0.18)" : "rgba(13,50,40,0.08)" }]}>
@@ -1171,26 +1197,7 @@ export default function HomeDashboardScreen() {
               </View>
             </View>
 
-            <View style={{ position: "absolute", right: 6, top: 6, width: 88, height: 88, zIndex: 9999, overflow: "visible" }}>
-              {(mascotMessage || selectedPeriodRemaining < 0) && (
-                <View style={[styles.mascotSpeechBubbleWrapper, { top: -32, right: 0, zIndex: 9999 }]}>
-                  <View style={[
-                    styles.mascotSpeechBubble, 
-                    { 
-                      backgroundColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228",
-                      maxWidth: 220 
-                    }
-                  ]}>
-                    <Text style={[styles.mascotSpeechBubbleText, { textAlign: mascotMessage ? "center" : "left" }]}>
-                      {mascotMessage || (language === "tr" ? `${formattedExceeded} Aşıldı! ⚠️` : `${formattedExceeded} Over! ⚠️`)}
-                    </Text>
-                    <View style={[
-                      styles.speechBubbleArrow, 
-                      { borderTopColor: selectedPeriodRemaining < 0 ? "#D32F2F" : "#0D3228" }
-                    ]} />
-                  </View>
-                </View>
-              )}
+            <View style={{ position: "absolute", right: 10, top: 10, width: 84, height: 84 }}>
               <Pressable onPress={handleMascotPress} style={({ pressed }) => pressed && styles.pressed}>
                 <LinearGradient
                   colors={
@@ -1231,8 +1238,9 @@ export default function HomeDashboardScreen() {
                 </LinearGradient>
               </Pressable>
             </View>
-          </LinearGradient>
-        </Pressable>
+            </LinearGradient>
+          </Pressable>
+        </View>
 
         {/* Soft & Ultra-Balanced Emerald Summary Card */}
         <View style={{
@@ -1256,7 +1264,7 @@ export default function HomeDashboardScreen() {
             <SummaryMetric
               icon="credit-card"
               title={copy.limit}
-              amount={selectedPeriod === "daily" ? dynamicDaily : selectedPeriodLimit}
+              amount={selectedPeriod === "daily" ? (getExpensesTotalForPeriod(expenses, "daily", simulatedDate) >= dynamicDaily ? 0 : dynamicDaily) : (recentTotal >= selectedPeriodLimit ? 0 : selectedPeriodLimit)}
               tone="green"
             />
             <View style={[styles.divider, { backgroundColor: "rgba(255, 255, 255, 0.14)" }]} />
@@ -2361,6 +2369,67 @@ export default function HomeDashboardScreen() {
           </ScrollView>
         </View>
 
+        {/* Canlı Piyasa Kurları Rozeti & Standalone Tam Genişlik Kartı */}
+        <View style={{
+          backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.09)" : "#F0FDF4",
+          borderRadius: 22,
+          paddingVertical: 16,
+          paddingHorizontal: 18,
+          marginBottom: 16,
+          borderWidth: 1.5,
+          borderColor: "rgba(0, 229, 143, 0.35)",
+          shadowColor: "#00E58F",
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: isDarkMode ? 0.2 : 0.08,
+          shadowRadius: 14,
+          elevation: 4
+        }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Feather name="activity" size={18} color="#00E58F" />
+              <Text style={{ fontSize: 15, fontWeight: "900", color: themeColors.text }}>
+                {language === "tr" ? "Canlı Piyasa Kurları" : "Live Exchange Rates"}
+              </Text>
+            </View>
+            <View style={{ backgroundColor: "rgba(0, 229, 143, 0.18)", paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 }}>
+              <Text style={{ fontSize: 11, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#065F46" }}>
+                🟢 {new Date().toLocaleDateString(language === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "short", year: "numeric" })}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 14, paddingHorizontal: 4 }}>
+            <View style={{ gap: 3 }}>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>🇺🇸 Dolar / TL</Text>
+              <Text style={{ fontSize: 16, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#065F46" }}>
+                {(1 / (exchangeRates.USD || 0.021)).toFixed(2)} ₺
+              </Text>
+            </View>
+
+            <View style={{ height: 32, width: 1.2, backgroundColor: "rgba(0, 229, 143, 0.3)" }} />
+
+            <View style={{ gap: 3 }}>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>🇪🇺 Euro / TL</Text>
+              <Text style={{ fontSize: 16, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#065F46" }}>
+                {(1 / (exchangeRates.EUR || 0.018)).toFixed(2)} ₺
+              </Text>
+            </View>
+
+            <View style={{ height: 32, width: 1.2, backgroundColor: "rgba(0, 229, 143, 0.3)" }} />
+
+            <View style={{ gap: 3 }}>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>🪙 Gram Altın</Text>
+              <Text style={{ fontSize: 16, fontWeight: "900", color: "#F59E0B" }}>
+                5.120 ₺
+              </Text>
+            </View>
+          </View>
+
+          <Text style={{ fontSize: 10, fontWeight: "700", color: themeColors.textMuted, marginTop: 10, textAlign: "right" }}>
+            ⚡ {language === "tr" ? `Otomatik Saat Başı (${lastRatesUpdated})` : `Auto Hourly (${lastRatesUpdated})`}
+          </Text>
+        </View>
+
         {/* Settings Toggle Card */}
         <View style={[
           styles.profileCard, 
@@ -2396,8 +2465,6 @@ export default function HomeDashboardScreen() {
           </View>
 
           <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
-
-
 
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
@@ -2448,25 +2515,6 @@ export default function HomeDashboardScreen() {
               >
                 <Text style={{ fontSize: 12, fontWeight: "900", color: currency === "EUR" ? "#031D14" : themeColors.text }}>€ (EUR)</Text>
               </Pressable>
-            </View>
-          </View>
-
-          {/* Canlı Piyasa Kurları Rozeti & Genişletilmiş Bilgi Kartı */}
-          <View style={{ backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.08)" : "#F0FDF4", borderRadius: 14, paddingVertical: 14, paddingHorizontal: 16, marginHorizontal: 0, marginVertical: 10, borderWidth: 1, borderColor: "rgba(0, 229, 143, 0.35)" }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Feather name="activity" size={17} color="#00E58F" />
-                <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text }}>
-                  {language === "tr" ? "Canlı Piyasa Kurları" : "Live Exchange Rates"}
-                </Text>
-              </View>
-              <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>
-                {language === "tr" ? `Saat Başı (${lastRatesUpdated})` : `Hourly (${lastRatesUpdated})`}
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12, paddingHorizontal: 4 }}>
-              <Text style={{ fontSize: 13.5, fontWeight: "800", color: themeColors.text }}>🇺🇸 1 USD = {(1 / (exchangeRates.USD || 0.025)).toFixed(2)} ₺</Text>
-              <Text style={{ fontSize: 13.5, fontWeight: "800", color: themeColors.text }}>🇪🇺 1 EUR = {(1 / (exchangeRates.EUR || 0.023)).toFixed(2)} ₺</Text>
             </View>
           </View>
 
@@ -2716,6 +2764,49 @@ export default function HomeDashboardScreen() {
               <Feather name="log-out" size={20} color="#EF4444" />
               <Text style={[styles.settingLabel, { color: "#EF4444", fontWeight: "800" }]}>
                 {language === "tr" ? "Hesaptan Çıkış Yap" : "Log Out"}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={20} color="#EF4444" />
+          </Pressable>
+        </View>
+
+        {/* Delete Account Card */}
+        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: "rgba(239, 68, 68, 0.3)", borderWidth: 1, flexDirection: "column", paddingVertical: 8, marginTop: 14, marginBottom: 40 }]}>
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              Alert.alert(
+                language === "tr" ? "Hesabımı Sil" : "Delete Account",
+                language === "tr" 
+                  ? "Hesabınız ve tüm verileriniz kalıcı olarak silinecektir. Bu işlem geri alınamaz. Emin misiniz?" 
+                  : "Your account and all data will be permanently deleted. This action cannot be undone. Are you sure?",
+                [
+                  { text: language === "tr" ? "İptal" : "Cancel", style: "cancel" },
+                  {
+                    text: language === "tr" ? "Evet, Hesabımı Sil" : "Yes, Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                      triggerHaptic();
+                      const result = await deleteUserAccount();
+                      if (result.success) {
+                        router.replace("/");
+                      } else {
+                        Alert.alert(
+                          language === "tr" ? "Hata" : "Error",
+                          result.error || (language === "tr" ? "Hesap silinemedi." : "Could not delete account.")
+                        );
+                      }
+                    }
+                  }
+                ]
+              );
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="user-x" size={20} color="#EF4444" />
+              <Text style={[styles.settingLabel, { color: "#EF4444", fontWeight: "800" }]}>
+                {language === "tr" ? "Hesabımı Sil" : "Delete My Account"}
               </Text>
             </View>
             <Feather name="chevron-right" size={20} color="#EF4444" />
@@ -3042,6 +3133,10 @@ export default function HomeDashboardScreen() {
             animationType="slide"
             onRequestClose={() => setSelectedGoalForAddAmount(null)}
           >
+            <KeyboardAvoidingView 
+              behavior={Platform.OS === "ios" ? "padding" : "height"} 
+              style={{ flex: 1, justifyContent: "flex-end" }}
+            >
             <Pressable 
               style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
               onPress={() => setSelectedGoalForAddAmount(null)}
@@ -3049,6 +3144,7 @@ export default function HomeDashboardScreen() {
               <Pressable 
                 style={{
                   width: "100%",
+                  maxHeight: "85%",
                   backgroundColor: themeColors.surface,
                   borderTopLeftRadius: 28,
                   borderTopRightRadius: 28,
@@ -3059,6 +3155,7 @@ export default function HomeDashboardScreen() {
                 }}
                 onPress={(e) => e.stopPropagation()}
               >
+              <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                   <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.text }}>
                     {language === "tr" ? "Hedefi Düzenle" : "Edit Goal"}
@@ -3218,8 +3315,10 @@ export default function HomeDashboardScreen() {
                     </Text>
                   </Pressable>
                 </View>
+              </ScrollView>
               </Pressable>
             </Pressable>
+            </KeyboardAvoidingView>
           </Modal>
         )}
 
@@ -3941,50 +4040,7 @@ function SwipeableExpenseRow({
   onPress: () => void;
   onDelete: () => void;
 }) {
-  const panX = useRef(new Animated.Value(0)).current;
   const iconConfig = getCategoryIconConfig(item.expense.category);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onStartShouldSetPanResponderCapture: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 6 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-      },
-      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 6 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dx > 0) {
-          panX.setValue(Math.min(gestureState.dx, 100));
-        } else if (gestureState.dx < 0) {
-          panX.setValue(Math.max(gestureState.dx, -5));
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx > 40) {
-          Animated.spring(panX, {
-            toValue: 80,
-            useNativeDriver: true,
-            bounciness: 4
-          }).start();
-        } else {
-          Animated.spring(panX, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 4
-          }).start();
-        }
-      },
-      onPanResponderTerminate: () => {
-        Animated.spring(panX, {
-          toValue: 0,
-          useNativeDriver: true
-        }).start();
-      }
-    })
-  ).current;
-
   const planStartDate = useFinanceStore((state) => state.savingsGoal.planStartDate);
   const expDate = new Date(item.expense.occurredAt || new Date());
   const startDate = planStartDate ? new Date(planStartDate) : expDate;
@@ -4012,58 +4068,23 @@ function SwipeableExpenseRow({
     weekName = "4. Hafta";
   }
 
-  const resetPosition = () => {
-    Animated.spring(panX, {
-      toValue: 0,
-      useNativeDriver: true
-    }).start();
-  };
-
   return (
-    <View style={{ position: "relative", overflow: "hidden" }}>
-      {/* Background Delete Action Button (Positioned on Left) */}
-      <View
-        style={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: 0,
-          width: 80,
-          backgroundColor: "#DF3B3B",
-          justifyContent: "center",
-          alignItems: "center"
-        }}
-      >
-        <Pressable
-          onPress={() => {
-            resetPosition();
-            onDelete();
-          }}
-          style={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center" }}
-        >
-          <Feather name="trash-2" size={20} color="#FFFFFF" />
-          <Text style={{ color: "#FFFFFF", fontSize: 11, fontWeight: "800", marginTop: 2 }}>Sil</Text>
-        </Pressable>
-      </View>
-
-      {/* Foreground Interactive Content */}
-      <Animated.View
-        style={{ transform: [{ translateX: panX }], backgroundColor: themeColors.surface }}
-        {...panResponder.panHandlers}
-      >
-        <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
+    <View style={{ backgroundColor: themeColors.surface }}>
+      <Pressable onPress={onPress} style={({ pressed }) => pressed && styles.pressed}>
           <View style={[styles.expenseRow, { borderLeftWidth: 3, borderLeftColor: weekColor, paddingLeft: 10 }]}>
             <View style={[styles.expenseIcon, { backgroundColor: iconConfig.bg, alignItems: "center", justifyContent: "center" }]}>
               <Feather name={iconConfig.name} size={15} color={iconConfig.color} />
             </View>
             <View style={styles.expenseCopy}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text style={[styles.expenseTitle, { color: themeColors.text, fontWeight: "800", fontSize: 14.5 }]}>{item.expense.label}</Text>
-                <View style={{ backgroundColor: `${weekColor}22`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginLeft: 6 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "nowrap" }}>
+                <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.expenseTitle, { color: themeColors.text, fontWeight: "800", fontSize: 14, flexShrink: 1 }]}>
+                  {item.expense.label}
+                </Text>
+                <View style={{ backgroundColor: `${weekColor}22`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginLeft: 6, flexShrink: 0 }}>
                   <Text style={{ color: weekColor, fontSize: 9.5, fontWeight: "900" }}>{weekName}</Text>
                 </View>
               </View>
-              <Text style={[styles.expenseCategory, { color: themeColors.textMuted, fontWeight: "600", fontSize: 11, marginTop: 2 }]}>
+              <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.expenseCategory, { color: themeColors.textMuted, fontWeight: "600", fontSize: 11, marginTop: 2 }]}>
                 {item.expense.category}{item.expense.subtitle && item.expense.subtitle !== item.expense.category ? ` • ${item.expense.subtitle}` : ""}
               </Text>
             </View>
@@ -4074,7 +4095,6 @@ function SwipeableExpenseRow({
           </View>
           {!isLast && <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />}
         </Pressable>
-      </Animated.View>
     </View>
   );
 }
@@ -4659,29 +4679,9 @@ function SwipeableGoalCard({
   onPress: () => void;
   onDelete: (id: string) => void;
 }) {
-  const pan = useRef(new Animated.ValueXY()).current;
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const language = useFinanceStore((state) => state.language);
   const themeColors = isDarkMode ? darkColors : lightColors;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 12 && Math.abs(gestureState.dy) < 12;
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dx < 0) {
-          pan.setValue({ x: Math.max(gestureState.dx, -90), y: 0 });
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -45) {
-          Animated.spring(pan, { toValue: { x: -80, y: 0 }, useNativeDriver: false }).start();
-        } else {
-          Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
-        }
-      }
-    })
-  ).current;
 
   const currentSaved = (accumulatedSavings || 0) + (goal.extraSavings || 0);
   const target = goal.targetAmount || 1;
@@ -4699,121 +4699,137 @@ function SwipeableGoalCard({
   else if (goal.icon === "heart") iconName = "heart";
 
   return (
-    <View style={{ position: "relative", marginBottom: 14 }}>
-      {/* Background Swipe Red Delete Action */}
-      <View style={{
-        position: "absolute",
-        right: 0,
-        top: 0,
-        bottom: 0,
-        width: 80,
-        backgroundColor: "#EF4444",
-        borderRadius: 22,
-        justifyContent: "center",
-        alignItems: "center"
-      }}>
-        <Pressable 
-          onPress={() => {
-            Animated.timing(pan, { toValue: { x: 0, y: 0 }, duration: 150, useNativeDriver: false }).start(() => {
-              onDelete(goal.id);
-            });
-          }}
-          style={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center", gap: 2 }}
-        >
-          <Feather name="trash-2" size={20} color="#FFFFFF" />
-          <Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>Sil</Text>
-        </Pressable>
-      </View>
-
-      {/* Swipeable Goal Card */}
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          {
-            transform: [{ translateX: pan.x }],
-            backgroundColor: themeColors.surface,
-            borderColor: themeColors.border,
-            borderWidth: 1,
-            borderRadius: 22,
-            padding: 18,
-            gap: 12,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: isDarkMode ? 0.2 : 0.04,
-            shadowRadius: 10,
-            elevation: 2
-          }
-        ]}
+    <View style={{ marginBottom: 16 }}>
+      <LinearGradient
+        colors={isDarkMode ? ["#142B23", "#0A1713"] : ["#FFFFFF", "#F6FAF7"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          borderColor: isDarkMode ? "rgba(0, 229, 143, 0.3)" : "rgba(13, 50, 40, 0.14)",
+          borderWidth: 1.5,
+          borderRadius: 24,
+          padding: 18,
+          gap: 14,
+          shadowColor: isDarkMode ? "#00E58F" : "#0D3228",
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: isDarkMode ? 0.22 : 0.08,
+          shadowRadius: 16,
+          elevation: 5
+        }}
       >
         <Pressable 
-          onPress={() => {
-            Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
-            onPress();
-          }}
-          style={{ gap: 12 }}
+          onPress={onPress}
+          style={{ gap: 14 }}
         >
-          {/* Top Row: Icon + Title + Target Date + Percent */}
+          {/* Top Row: Icon Ring + Title + Target Date + Percent Badge */}
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 14, flex: 1, paddingRight: 8 }}>
               <View style={{
-                width: 50,
-                height: 50,
-                borderRadius: 16,
-                backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : `${cardColor}18`,
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.12)" : `${cardColor}15`,
+                borderColor: cardColor,
+                borderWidth: 1.8,
                 alignItems: "center",
-                justifyContent: "center"
+                justifyContent: "center",
+                shadowColor: cardColor,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+                elevation: 3
               }}>
-                <Feather name={iconName} size={24} color={cardColor} />
+                <Feather name={iconName} size={22} color={cardColor} />
               </View>
-              <View style={{ flex: 1, gap: 3 }}>
-                <Text style={{ fontSize: 16, fontWeight: "800", color: themeColors.text }}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ fontSize: 16, fontWeight: "900", color: themeColors.text }}>
                   {goal.title}
                 </Text>
-                {goal.targetDate && (
-                  <Text style={{ fontSize: 12, fontWeight: "600", color: themeColors.textMuted }}>
-                    {goal.targetDate}
+                {goal.targetDate ? (
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
+                    📅 {goal.targetDate}
+                  </Text>
+                ) : (
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
+                    ✨ {language === "tr" ? "Birikim Hedefi" : "Savings Target"}
                   </Text>
                 )}
               </View>
             </View>
-            <Text style={{ fontSize: 16, fontWeight: "900", color: cardColor }}>
-              %{percent}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <View style={{
+                backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.18)" : "rgba(13, 50, 40, 0.08)",
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: isDarkMode ? "rgba(0, 229, 143, 0.3)" : "rgba(13, 50, 40, 0.15)"
+              }}>
+                <Text style={{ fontSize: 14, fontWeight: "900", color: cardColor }}>
+                  %{percent}
+                </Text>
+              </View>
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  Alert.alert(
+                    language === "tr" ? "Hedefi Sil" : "Delete Goal",
+                    language === "tr" ? `"${goal.title}" hedefini silmek istediğinize emin misiniz?` : `Are you sure you want to delete "${goal.title}"?`,
+                    [
+                      { text: language === "tr" ? "İptal" : "Cancel", style: "cancel" },
+                      { 
+                        text: language === "tr" ? "Sil" : "Delete", 
+                        style: "destructive", 
+                        onPress: () => onDelete(goal.id) 
+                      }
+                    ]
+                  );
+                }}
+                hitSlop={10}
+                style={{ padding: 7, borderRadius: 12, backgroundColor: "rgba(239, 68, 68, 0.12)", borderWidth: 1, borderColor: "rgba(239, 68, 68, 0.25)" }}
+              >
+                <Feather name="trash-2" size={15} color="#EF4444" />
+              </Pressable>
+            </View>
           </View>
 
           {/* Amounts Row */}
           <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
             <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-              <Text style={{ fontSize: 18, fontWeight: "900", color: themeColors.text }}>
+              <Text style={{ fontSize: 19, fontWeight: "900", color: themeColors.text }}>
                 {formatCurrency(currentSaved)}
               </Text>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: themeColors.textMuted }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: themeColors.textMuted }}>
                 / {formatCurrency(target)}
               </Text>
             </View>
-            <View style={{ backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.1)" : "rgba(75, 155, 88, 0.1)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
-              <Text style={{ fontSize: 10, fontWeight: "800", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
-                🔒 Otomatik Birikim
+            <View style={{ backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.14)" : "rgba(75, 155, 88, 0.12)", paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 }}>
+              <Text style={{ fontSize: 10, fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>
+                🔒 {language === "tr" ? "Otomatik Birikim" : "Auto Savings"}
               </Text>
             </View>
           </View>
 
-          {/* Progress Bar */}
+          {/* Glowing Progress Bar */}
           <View style={{
-            height: 9,
-            borderRadius: 4.5,
-            backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "#F3F4F6",
+            height: 10,
+            borderRadius: 5,
+            backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#E2E8F0",
             overflow: "hidden"
           }}>
             <View style={{
               height: "100%",
-              borderRadius: 4.5,
+              borderRadius: 5,
               backgroundColor: cardColor,
-              width: `${percent}%`
+              width: `${percent}%`,
+              shadowColor: cardColor,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.6,
+              shadowRadius: 4
             }} />
           </View>
         </Pressable>
-      </Animated.View>
+      </LinearGradient>
     </View>
   );
 }
@@ -5489,8 +5505,8 @@ function AboutModal({ visible, onClose }: { visible: boolean; onClose: () => voi
       <View style={[styles.sheetBackdrop, { justifyContent: "center", alignItems: "center" }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={[styles.dialogBox, { backgroundColor: themeColors.surface, borderColor: themeColors.border }]}>
-          <View style={[styles.dialogAvatar, { backgroundColor: themeColors.primary }]}>
-            <Text style={{ fontSize: 32 }}>🐷</Text>
+          <View style={[styles.dialogAvatar, { backgroundColor: "transparent" }]}>
+            <Image source={mascotTR} style={{ width: 48, height: 48 }} resizeMode="contain" />
           </View>
           <Text style={[styles.dialogTitle, { color: themeColors.text }]}>{t("aboutTitle")}</Text>
           <Text style={[styles.dialogVersion, { color: themeColors.textMuted }]}>{t("aboutVersion")}</Text>
@@ -7448,12 +7464,20 @@ function LegalModal({
             )}
           </ScrollView>
 
+          {/* Legal Consent Approved Badge */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: isDarkMode ? "rgba(0,229,143,0.12)" : "#F0FDF4", borderRadius: 14, borderWidth: 1, borderColor: "rgba(0,229,143,0.3)", marginTop: 10 }}>
+            <Feather name="check-circle" size={18} color="#00E58F" />
+            <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.text, flex: 1 }}>
+              {language === "tr" ? "Girişte Okundu ve Onaylandı (Değiştirilemez)" : "Read & Approved at Onboarding (Locked)"}
+            </Text>
+          </View>
+
           <Pressable
             onPress={onClose}
-            style={{ width: "100%", paddingVertical: 14, borderRadius: 16, backgroundColor: "#00E58F", alignItems: "center", marginTop: 10 }}
+            style={{ width: "100%", paddingVertical: 14, borderRadius: 16, backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "#E5E7EB", alignItems: "center", marginTop: 10 }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "900", color: "#031D14" }}>
-              {language === "tr" ? "Anladım ve Kabul Ediyorum" : "I Understand & Accept"}
+            <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text }}>
+              {language === "tr" ? "Kapat" : "Close"}
             </Text>
           </Pressable>
         </View>

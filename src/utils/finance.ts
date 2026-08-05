@@ -45,10 +45,45 @@ export function getMonthlyLimit(incomes: Income[], expenses: Expense[], savingsG
 
 export function buildSpendingLimits(incomes: Income[], expenses: Expense[], savingsGoal: SavingsGoal, now = new Date()): SpendingLimits {
   return {
-    daily: getDailyLimit(incomes, expenses, savingsGoal, now),
-    weekly: getWeeklyLimit(incomes, expenses, savingsGoal, now),
+    daily: getDynamicDailyLimit(incomes, expenses, savingsGoal, now),
+    weekly: getDynamicWeeklyLimit(incomes, expenses, savingsGoal, now),
     monthly: getMonthlyLimit(incomes, expenses, savingsGoal)
   };
+}
+
+export function getDynamicWeeklyLimit(
+  incomes: Income[],
+  expenses: Expense[],
+  savingsGoal: SavingsGoal,
+  now = new Date()
+) {
+  const baseWeekly = getWeeklyLimit(incomes, expenses, savingsGoal, now);
+  const monthlyLimit = getMonthlyLimit(incomes, expenses, savingsGoal);
+
+  const start = savingsGoal.planStartDate ? new Date(savingsGoal.planStartDate) : now;
+  const dStart = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const diffTime = Math.max(0, dNow.getTime() - dStart.getTime());
+  const currentDayInPlan = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const currentWeekIndex = Math.floor((currentDayInPlan - 1) / 7); // 0, 1, 2, 3
+
+  if (currentWeekIndex === 0) {
+    return baseWeekly;
+  }
+
+  const pastWeeksEndDay = currentWeekIndex * 7;
+  const pastWeeksEndDate = new Date(dStart.getTime() + pastWeeksEndDay * 24 * 60 * 60 * 1000);
+  
+  const pastExpensesTotal = expenses
+    .filter((e) => !e.isFixed && e.occurredAt && new Date(e.occurredAt) < pastWeeksEndDate)
+    .reduce((sum, e) => sum + toSafeAmount(e.amount), 0);
+
+  const remainingWeeks = Math.max(1, 4 - currentWeekIndex);
+  const remainingBudgetForCycle = Math.max(0, monthlyLimit - pastExpensesTotal);
+  const pacingWeekly = Math.round(remainingBudgetForCycle / remainingWeeks);
+
+  return Math.min(pacingWeekly, baseWeekly);
 }
 
 export function getPlanDayNumber(planStartDate?: string, now = new Date()): number {

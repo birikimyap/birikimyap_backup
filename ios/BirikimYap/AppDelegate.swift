@@ -36,6 +36,13 @@ public class AppDelegate: ExpoAppDelegate {
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
+  public override func applicationDidBecomeActive(_ application: UIApplication) {
+    super.applicationDidBecomeActive(application)
+    if #available(iOS 16.0, *) {
+      BirikimYapShortcuts.updateAppShortcutParameters()
+    }
+  }
+
   // Linking API
   public override func application(
     _ app: UIApplication,
