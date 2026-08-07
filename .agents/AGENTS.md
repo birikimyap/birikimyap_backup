@@ -45,5 +45,6 @@
   * Kullanıcı çıkış yapıp aynı hesapla tekrar girdiğinde `loadUserPlanFromCloud(userId)` işlevi çağrılarak bütçe planı saniyeler içinde geri yüklenmeli ve kullanıcı Ad-Soyad ekranına sokulmadan doğrudan Ana Sayfaya (`/home-dashboard`) aktarılmalıdır.
   * Uygulama başlangıcında otomatik oturum atlaması yapılmamalı, uygulama her açıldığında Giriş Sayfası (`LoginScreen`) ekranda sabit tutulmalıdır.
 
-- **Otomatik Yedekleme ve GitHub Senkronizasyon Kuralı (Auto-Backup Policy):**
-  * Yapılan her güncelleme, yeni özellik veya tasarım/mantık düzeltmesinden sonra kullanıcının hatrılarmasına gerek kalmadan yapılan değişiklikler otomatik olarak git commit mesajıyla kaydedilmeli ve GitHub `origin main` deposuna push edilmelidir.
+- **Yedekleme ve GitHub Senkronizasyon Onay Kuralı (Backup Approval Policy):**
+  * Yedekleme, git commit, zip arşivleme ve GitHub push işlemleri KESİNLİKLE kullanıcının açık talebi veya onayı olmadan YAPILMAYACAKTIR.
+  * Yapılan değişikliklerden sonra yedekleme almadan önce her zaman kullanıcının "yedekle" talimatı veya onayı beklenecektir.

@@ -261,9 +261,18 @@ export async function saveUserPlanToCloud() {
       incomes: state.incomes,
       expenses: state.expenses,
       savingsGoal: state.savingsGoal,
+      goals: state.goals,
       selectedPeriod: state.selectedPeriod,
       monthlyArchives: state.monthlyArchives,
       userProfile: state.userProfile,
+      familyGroup: state.familyGroup,
+      isDarkMode: state.isDarkMode,
+      isHapticsEnabled: state.isHapticsEnabled,
+      isSmartNotificationsEnabled: state.isSmartNotificationsEnabled,
+      isLiveActivityEnabled: state.isLiveActivityEnabled,
+      streakCount: state.streakCount,
+      unlockedBadges: state.unlockedBadges,
+      xpPoints: state.xpPoints,
       hasCompletedOnboarding: true,
       updated_at: new Date().toISOString()
     };
@@ -286,11 +295,11 @@ export async function saveUserPlanToCloud() {
 
     if (error) {
       console.log('[CloudSave] Supabase upsert error:', error.message);
+      return { success: false, error: error.message };
     } else {
       console.log('[CloudSave] Successfully saved to Supabase profiles for:', userId);
+      return { success: true };
     }
-
-    return { success: true };
   } catch (e: any) {
     console.log('[CloudSave] Exception:', e);
     return { success: false, error: e?.message || e };
@@ -362,8 +371,17 @@ export async function loadUserPlanFromCloud(userId: string): Promise<boolean> {
           incomes: rawUserData?.incomes || [],
           expenses: rawUserData?.expenses || [],
           savingsGoal: rawUserData?.savingsGoal || useFinanceStore.getState().savingsGoal,
+          goals: rawUserData?.goals || useFinanceStore.getState().goals,
           selectedPeriod: rawUserData?.selectedPeriod || 'daily',
           monthlyArchives: rawUserData?.monthlyArchives || [],
+          familyGroup: rawUserData?.familyGroup || null,
+          isDarkMode: typeof rawUserData?.isDarkMode === "boolean" ? rawUserData.isDarkMode : true,
+          isHapticsEnabled: typeof rawUserData?.isHapticsEnabled === "boolean" ? rawUserData.isHapticsEnabled : true,
+          isSmartNotificationsEnabled: typeof rawUserData?.isSmartNotificationsEnabled === "boolean" ? rawUserData.isSmartNotificationsEnabled : true,
+          isLiveActivityEnabled: typeof rawUserData?.isLiveActivityEnabled === "boolean" ? rawUserData.isLiveActivityEnabled : true,
+          streakCount: rawUserData?.streakCount || 1,
+          unlockedBadges: rawUserData?.unlockedBadges || ["first_expense"],
+          xpPoints: rawUserData?.xpPoints || 100,
           userProfile: { id: userId, email: userEmail, fullName: fullName },
           hasCompletedOnboarding: true
         });
@@ -387,8 +405,17 @@ export async function loadUserPlanFromCloud(userId: string): Promise<boolean> {
             incomes: localData.incomes || [],
             expenses: localData.expenses || [],
             savingsGoal: localData.savingsGoal || useFinanceStore.getState().savingsGoal,
+            goals: localData.goals || useFinanceStore.getState().goals,
             selectedPeriod: localData.selectedPeriod || 'daily',
             monthlyArchives: localData.monthlyArchives || [],
+            familyGroup: localData.familyGroup || null,
+            isDarkMode: typeof localData.isDarkMode === "boolean" ? localData.isDarkMode : true,
+            isHapticsEnabled: typeof localData.isHapticsEnabled === "boolean" ? localData.isHapticsEnabled : true,
+            isSmartNotificationsEnabled: typeof localData.isSmartNotificationsEnabled === "boolean" ? localData.isSmartNotificationsEnabled : true,
+            isLiveActivityEnabled: typeof localData.isLiveActivityEnabled === "boolean" ? localData.isLiveActivityEnabled : true,
+            streakCount: localData.streakCount || 1,
+            unlockedBadges: localData.unlockedBadges || ["first_expense"],
+            xpPoints: localData.xpPoints || 100,
             userProfile: localData.userProfile || { id: userId, email: '', fullName: 'Kullanıcı' },
             hasCompletedOnboarding: true
           });

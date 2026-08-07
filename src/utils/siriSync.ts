@@ -18,18 +18,19 @@ export async function syncSiriExpenses() {
       return;
     }
 
-    // ANINDA TEMIZLE KI CIFTE SENKRONIZASYON OLMASIN
-    await SiriBridge.clearPendingSiriExpenses();
-
     const store = useFinanceStore.getState();
     const existingExpenses = store.expenses;
+    let addedCount = 0;
 
     for (const item of pendingExpenses) {
       const parsed = parseTurkishExpense(item.rawInput);
       if (parsed && parsed.amount > 0) {
-        const itemDateStr = new Date(item.timestamp * 1000).toISOString();
+        // Timestamp saniye cinsindense milisaniyeye çevir
+        const rawTimeMs = item.timestamp > 1e11 ? item.timestamp : item.timestamp * 1000;
+        const itemDateStr = new Date(rawTimeMs).toISOString();
+        
         const alreadyExists = existingExpenses.some(
-          (e) => e.id === item.id || (e.amount === parsed.amount && e.note === (parsed.note || item.rawInput))
+          (e) => e.id === item.id || (e.amount === parsed.amount && e.note === (parsed.note || item.rawInput) && e.occurredAt === itemDateStr)
         );
 
         if (!alreadyExists) {
@@ -42,10 +43,15 @@ export async function syncSiriExpenses() {
             category: parsed.category,
             note: parsed.note || item.rawInput,
             occurredAt: itemDateStr,
+            addedByName: "Siri 🎙️"
           });
+          addedCount++;
         }
       }
     }
+
+    // YALNIZCA STORE'A BAŞARIYLA EKLENDİKTEN SONRA SİRİ KUYRUĞUNU TEMİZLE
+    await SiriBridge.clearPendingSiriExpenses();
   } catch (error) {
     console.error("[SiriSync] Hata:", error);
   } finally {

@@ -18,6 +18,18 @@ export type Expense = {
   category?: string;
   note?: string;
   occurredAt?: string;
+  addedByName?: string;
+  addedByUserId?: string;
+};
+
+export type FamilyGroup = {
+  id: string;
+  name: string;
+  inviteCode: string;
+  isOwner: boolean;
+  ownerName: string;
+  partnerName?: string;
+  createdAt: string;
 };
 
 export type SavingsGoal = {
@@ -40,6 +52,8 @@ export type GoalItem = {
   icon?: string;
   color?: string;
   createdAt: string;
+  isSharedGoal?: boolean;
+  sharedPartnerName?: string;
 };
 
 export type SpendingLimits = {
@@ -71,4 +85,11 @@ export type MonthlyArchiveRecord = {
   totalSpent: number;
   spendableBudget: number;
   isSuccess: boolean;
+};
+
+export type UserStreakState = {
+  streakCount: number;
+  lastLoggedDate: string;
+  unlockedBadges: string[];
+  xpPoints: number;
 };

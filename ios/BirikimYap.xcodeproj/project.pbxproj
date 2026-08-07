@@ -17,6 +17,8 @@
 		SR1000012D0307B40044C1D9 /* AddExpenseIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR1000002D0307B40044C1D9 /* AddExpenseIntent.swift */; };
 		SR1000032D0307B40044C1D9 /* SiriBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = SR1000022D0307B40044C1D9 /* SiriBridge.swift */; };
 		SR1000052D0307B40044C1D9 /* SiriBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = SR1000042D0307B40044C1D9 /* SiriBridge.m */; };
+		WT1000012D0307B40044C1D9 /* WatchSyncModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = WT1000002D0307B40044C1D9 /* WatchSyncModule.swift */; };
+		WT1000032D0307B40044C1D9 /* WatchSyncModule.m in Sources */ = {isa = PBXBuildFile; fileRef = WT1000022D0307B40044C1D9 /* WatchSyncModule.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +38,8 @@
 		SR1000002D0307B40044C1D9 /* AddExpenseIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AddExpenseIntent.swift; path = BirikimYap/Siri/AddExpenseIntent.swift; sourceTree = "<group>"; };
 		SR1000022D0307B40044C1D9 /* SiriBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SiriBridge.swift; path = BirikimYap/Siri/SiriBridge.swift; sourceTree = "<group>"; };
 		SR1000042D0307B40044C1D9 /* SiriBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = SiriBridge.m; path = BirikimYap/Siri/SiriBridge.m; sourceTree = "<group>"; };
+		WT1000002D0307B40044C1D9 /* WatchSyncModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WatchSyncModule.swift; path = BirikimYap/WatchSyncModule.swift; sourceTree = "<group>"; };
+		WT1000022D0307B40044C1D9 /* WatchSyncModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = WatchSyncModule.m; path = BirikimYap/WatchSyncModule.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +61,8 @@
 				SR1000002D0307B40044C1D9 /* AddExpenseIntent.swift */,
 				SR1000022D0307B40044C1D9 /* SiriBridge.swift */,
 				SR1000042D0307B40044C1D9 /* SiriBridge.m */,
+				WT1000002D0307B40044C1D9 /* WatchSyncModule.swift */,
+				WT1000022D0307B40044C1D9 /* WatchSyncModule.m */,
 				F11748442D0722820044C1D9 /* BirikimYap-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -342,6 +348,8 @@
 				SR1000012D0307B40044C1D9 /* AddExpenseIntent.swift in Sources */,
 				SR1000032D0307B40044C1D9 /* SiriBridge.swift in Sources */,
 				SR1000052D0307B40044C1D9 /* SiriBridge.m in Sources */,
+				WT1000012D0307B40044C1D9 /* WatchSyncModule.swift in Sources */,
+				WT1000032D0307B40044C1D9 /* WatchSyncModule.m in Sources */,
 				C1A41C1DF2C75E1380F22295 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -358,7 +366,7 @@
 				CODE_SIGN_ENTITLEMENTS = BirikimYap/BirikimYap.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 104;
+				CURRENT_PROJECT_VERSION = 118;
 				DEVELOPMENT_TEAM = TH26W2P688;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -397,7 +405,7 @@
 				CODE_SIGN_ENTITLEMENTS = BirikimYap/BirikimYap.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 104;
+				CURRENT_PROJECT_VERSION = 118;
 				DEVELOPMENT_TEAM = TH26W2P688;
 				INFOPLIST_FILE = BirikimYap/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;

@@ -20,6 +20,7 @@ import { Swipeable } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useFinanceStore } from "@/store/financeStore";
+import { FamilyPairingModal } from "@/components/FamilyPairingModal";
 import { colors, radius } from "@/theme";
 import { formatAmountInput, parseAmount } from "@/utils/currency";
 import { translations } from "@/utils/translations";
@@ -103,6 +104,7 @@ export default function IncomeSetupScreen() {
   };
 
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [isFamilyModalVisible, setIsFamilyModalVisible] = useState(false);
   const [defaultRows, setDefaultRows] = useState<EditableIncomeRow[]>(
     defaultIncomeRows.map((row) => {
       const storedIncome = storedIncomes.find((income) => income.id === row.id);
@@ -340,9 +342,31 @@ export default function IncomeSetupScreen() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.content}>
-            <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-              <Feather name="chevron-left" size={30} color={colors.primary} />
-            </Pressable>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", paddingHorizontal: 4, marginBottom: 8 }}>
+              <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+                <Feather name="chevron-left" size={30} color={colors.primary} />
+              </Pressable>
+
+              <Pressable 
+                onPress={() => setIsFamilyModalVisible(true)}
+                style={({ pressed }) => [{
+                  backgroundColor: "rgba(0, 223, 137, 0.15)",
+                  borderColor: "#00DF89",
+                  borderWidth: 1.5,
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  borderRadius: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6
+                }, pressed && styles.pressed]}
+              >
+                <Feather name="users" size={15} color="#00DF89" />
+                <Text style={{ fontSize: 12, fontWeight: "900", color: colors.primary }}>
+                  {language === "tr" ? "Çift Hesabı (QR Kod)" : "Couple Account"}
+                </Text>
+              </Pressable>
+            </View>
 
             <View style={[styles.hero, isKeyboardVisible && styles.heroKeyboard]}>
               <View style={[styles.mascotStage, isKeyboardVisible && styles.mascotStageKeyboard]}>
@@ -440,6 +464,15 @@ export default function IncomeSetupScreen() {
           </View>
         </InputAccessoryView>
       )}
+      <FamilyPairingModal
+        visible={isFamilyModalVisible}
+        onClose={() => setIsFamilyModalVisible(false)}
+        initialTab="join"
+        onSuccessJoin={() => {
+          useFinanceStore.setState({ hasCompletedOnboarding: true });
+          router.replace("/home-dashboard");
+        }}
+      />
     </SafeAreaView>
   );
 }

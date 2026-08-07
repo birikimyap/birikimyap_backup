@@ -254,13 +254,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Live Financial Rates Auto-Fetcher (Refreshes Every Hour)
     async function fetchLiveRates() {
         try {
-            const resUsd = await fetch('https://open.er-api.com/v6/latest/USD');
-            const dataUsd = await resUsd.json();
+            const res = await fetch('https://finans.truncgil.com/today.json');
+            const data = await res.json();
             
-            if (dataUsd && dataUsd.rates) {
-                const usdTry = dataUsd.rates.TRY || 47.56;
-                const eurRate = dataUsd.rates.EUR ? (usdTry / dataUsd.rates.EUR) : 54.83;
-                const gramGold = (3350 * usdTry / 31.1035);
+            const parseVal = (strVal) => parseFloat((strVal || '0').replace('.', '').replace(',', '.'));
+            
+            if (data) {
+                const usdTry = data.USD ? parseVal(data.USD.Satış) : 47.71;
+                const eurRate = data.EUR ? parseVal(data.EUR.Satış) : 55.04;
+                const gramGold = data['gram-altin'] ? parseVal(data['gram-altin'].Satış) : 6540;
 
                 const formattedTime = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
                 const formattedDate = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });

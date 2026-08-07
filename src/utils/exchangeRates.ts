@@ -1,27 +1,29 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface ExchangeRates {
-  USD: number; // 1 TRY kac USD (veya tam tersi)
+  USD: number; // 1 TRY kac USD
   EUR: number;
   GBP: number;
   TRY: number;
+  GAU: number; // Gram Altin (TL)
   [key: string]: number;
 }
 
-const CACHE_KEY = 'exchange_rates_cache';
-const TIMESTAMP_KEY = 'exchange_rates_timestamp';
+const CACHE_KEY = 'exchange_rates_cache_v2';
+const TIMESTAMP_KEY = 'exchange_rates_timestamp_v2';
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 // Varsayilan Guvenli Yedek Kurlar (Internet yoksa)
 const FALLBACK_RATES: ExchangeRates = {
   TRY: 1,
-  USD: 0.025, // ~40 TL
-  EUR: 0.023, // ~43.5 TL
-  GBP: 0.019,
+  USD: 0.021, // ~47.7 TL
+  EUR: 0.018, // ~55.0 TL
+  GBP: 0.015,
+  GAU: 6540,  // Gram Altin ~6.540 TL
 };
 
 /**
- * Saatte 1 güncellenen canlı döviz kurlarını getirir
+ * Saatte 1 güncellenen canlı döviz ve gram altın kurlarını getirir (Truncgil + OpenER API)
  */
 export async function getLiveExchangeRates(): Promise<{ rates: ExchangeRates; lastUpdated: string; isLive: boolean }> {
   try {
@@ -41,7 +43,41 @@ export async function getLiveExchangeRates(): Promise<{ rates: ExchangeRates; la
       };
     }
 
-    // 60 dakika geçtiyse CANLI API'den çek (Open Exchange Rates API - Ücretsiz & Hızlı)
+    // 1. Önce Canlı Türkiye Finans API'den (Truncgil) Gram Altın ve Döviz Çek
+    try {
+      const truncgilRes = await fetch('https://finans.truncgil.com/today.json');
+      if (truncgilRes.ok) {
+        const tData = await truncgilRes.json();
+        if (tData && (tData['gram-altin'] || tData.USD)) {
+          const parseVal = (strVal: string) => parseFloat((strVal || '0').replace('.', '').replace(',', '.'));
+          const usdTry = tData.USD?.Satış ? parseVal(tData.USD.Satış) : 47.7;
+          const eurTry = tData.EUR?.Satış ? parseVal(tData.EUR.Satış) : 55.0;
+          const gbpTry = tData.GBP?.Satış ? parseVal(tData.GBP.Satış) : 64.2;
+          const gauTry = tData['gram-altin']?.Satış ? parseVal(tData['gram-altin'].Satış) : 6540;
+
+          const liveRates: ExchangeRates = {
+            TRY: 1,
+            USD: usdTry > 0 ? 1 / usdTry : FALLBACK_RATES.USD,
+            EUR: eurTry > 0 ? 1 / eurTry : FALLBACK_RATES.EUR,
+            GBP: gbpTry > 0 ? 1 / gbpTry : FALLBACK_RATES.GBP,
+            GAU: gauTry > 0 ? gauTry : FALLBACK_RATES.GAU,
+          };
+
+          await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(liveRates));
+          await AsyncStorage.setItem(TIMESTAMP_KEY, now.toString());
+
+          return {
+            rates: liveRates,
+            lastUpdated: new Date(now).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+            isLive: true,
+          };
+        }
+      }
+    } catch (e) {
+      console.log('[ExchangeRates] Truncgil fetch error, trying OpenER API:', e);
+    }
+
+    // 2. Yedek API (Open Exchange Rates)
     const response = await fetch('https://open.er-api.com/v6/latest/TRY');
     if (response.ok) {
       const data = await response.json();
@@ -51,6 +87,7 @@ export async function getLiveExchangeRates(): Promise<{ rates: ExchangeRates; la
           USD: data.rates.USD || FALLBACK_RATES.USD,
           EUR: data.rates.EUR || FALLBACK_RATES.EUR,
           GBP: data.rates.GBP || FALLBACK_RATES.GBP,
+          GAU: FALLBACK_RATES.GAU,
         };
 
         await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(liveRates));

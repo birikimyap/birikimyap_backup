@@ -40,6 +40,13 @@ import { translations } from "@/utils/translations";
 import { syncSiriExpenses } from "@/utils/siriSync";
 import { requestNotificationPermissions } from "@/services/notificationService";
 import { syncWidgetData } from "@/utils/widgetSync";
+import { SYSTEM_BADGES } from "@/utils/badges";
+import { CelebrationModal } from "@/components/CelebrationModal";
+import { FamilyPairingModal } from "@/components/FamilyPairingModal";
+import { getDailyMotivationQuote } from "@/utils/motivation";
+import { generateAICoachInsights } from "@/utils/aiCoach";
+import { getUserLevelInfo, getSystemQuests } from "@/utils/gamification";
+import { ShareableReportCard } from "@/components/ShareableReportCard";
 
 const mascotTR = require("../../pgn/mascot-cutout.png");
 const mascotEN = require("../../pgn/mascot-cutout-dollar.png");
@@ -92,6 +99,12 @@ export default function HomeDashboardScreen() {
   const userProfile = useFinanceStore((state) => state.userProfile);
   const setUserProfile = useFinanceStore((state) => state.setUserProfile);
   const userFirstName = userProfile?.fullName ? userProfile.fullName.trim().split(" ")[0] : "";
+  const streakCount = useFinanceStore((state) => state.streakCount);
+  const xpPoints = useFinanceStore((state) => state.xpPoints);
+  const unlockedBadges = useFinanceStore((state) => state.unlockedBadges);
+  const updateStreakAndCheckBadges = useFinanceStore((state) => state.updateStreakAndCheckBadges);
+  const isLiveActivityEnabled = useFinanceStore((state) => state.isLiveActivityEnabled);
+  const setIsLiveActivityEnabled = useFinanceStore((state) => state.setIsLiveActivityEnabled);
 
   const goals = useFinanceStore((state) => state.goals) || [];
   const addGoal = useFinanceStore((state) => state.addGoal);
@@ -162,6 +175,8 @@ export default function HomeDashboardScreen() {
   const [isLegalModalVisible, setIsLegalModalVisible] = useState(false);
   const [legalTab, setLegalTab] = useState<"terms" | "privacy" | "disclaimer">("terms");
   const [isCategoryLimitsModalVisible, setIsCategoryLimitsModalVisible] = useState(false);
+  const [isFamilyModalVisible, setIsFamilyModalVisible] = useState(false);
+  const familyGroup = useFinanceStore((state) => state.familyGroup);
   const [isAboutModalVisible, setIsAboutModalVisible] = useState(false);
   const [isFaqModalVisible, setIsFaqModalVisible] = useState(false);
   const [isResetConfirmVisible, setIsResetConfirmVisible] = useState(false);
@@ -174,6 +189,23 @@ export default function HomeDashboardScreen() {
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [mascotMessage, setMascotMessage] = useState<string | null>(null);
   const mascotTimeoutRef = useRef<any>(null);
+
+  const [celebrationConfig, setCelebrationConfig] = useState<{
+    visible: boolean;
+    type: "streak" | "badge" | "goal";
+    title?: string;
+    subtitle?: string;
+    badgeId?: string;
+    streakCount?: number;
+    xpEarned?: number;
+  }>({
+    visible: false,
+    type: "streak"
+  });
+
+  const [isReportCardVisible, setIsReportCardVisible] = useState(false);
+  const [tempGoalIsShared, setTempGoalIsShared] = useState(false);
+  const [tempGoalPartnerName, setTempGoalPartnerName] = useState("");
 
   // Income & Fixed Expense Profile Edit Modals
   const [isIncomeEditModalVisible, setIsIncomeEditModalVisible] = useState(false);
@@ -238,7 +270,7 @@ export default function HomeDashboardScreen() {
   // Custom states for Siri Voice Overlay and Toast
   const [isDirectVoiceActive, setIsDirectVoiceActive] = useState(false);
   const [draftTranscript, setDraftTranscript] = useState("");
-  const [toastConfig, setToastConfig] = useState<{ visible: boolean; message: string; subtext?: string; type?: "success" | "warning" } | null>(null);
+  const [toastConfig, setToastConfig] = useState<{ visible: boolean; message: string; subtext?: string; type?: "success" | "warning" | "info" } | null>(null);
   
   // Analysis Chart filter state
   const [selectedChartLabel, setSelectedChartLabel] = useState<string | null>(null);
@@ -680,21 +712,22 @@ export default function HomeDashboardScreen() {
 
     const isNoSpendCompleted = noSpendDaysCount >= 5;
 
+    const weeklyLimit = plan.limits.weekly || 5000;
+    const marketTarget = Math.round(Math.max(weeklyLimit * 0.35, 1500));
+    const diningTarget = Math.round(Math.max(weeklyLimit * 0.15, 600));
+
     const weeklyExpenses = getExpensesForPeriod(expenses, "weekly", new Date(), savingsGoal?.planStartDate);
     const weeklyMarketSpent = weeklyExpenses
       .filter(e => getCategoryKey(e.category) === "market")
       .reduce((sum, e) => sum + e.amount, 0);
-    const marketProgress = Math.min(weeklyMarketSpent / 1500, 1.0);
-    const isMarketExceeded = weeklyMarketSpent > 1500;
-    // Market target is 'stay under', so it's never completed until week ends (which resets it), thus false.
-    const isMarketCompleted = false; 
+    const isMarketExceeded = weeklyMarketSpent > marketTarget;
+    const isMarketCompleted = weeklyMarketSpent > 0 && weeklyMarketSpent <= marketTarget; 
 
     const weeklyDiningSpent = weeklyExpenses
       .filter(e => getCategoryKey(e.category) === "dining")
       .reduce((sum, e) => sum + e.amount, 0);
-    const diningProgress = Math.min(weeklyDiningSpent / 300, 1.0);
-    const isDiningExceeded = weeklyDiningSpent > 300;
-    const isDiningCompleted = false;
+    const isDiningExceeded = weeklyDiningSpent > diningTarget;
+    const isDiningCompleted = weeklyDiningSpent > 0 && weeklyDiningSpent <= diningTarget;
 
     const goalTarget = Math.max(savingsGoal.targetAmount || 0, 0);
     const goalSaved = Math.max(savingsGoal.currentAmount || 0, 0);
@@ -715,23 +748,23 @@ export default function HomeDashboardScreen() {
       {
         id: "market-saver",
         title: language === "tr" ? "Market Tasarrufu" : "Grocery Saver",
-        desc: language === "tr" ? "Bu haftalık market harcamanızı ₺3.000 altında tutun." : "Keep weekly grocery spending under ₺3,000.",
-        progress: Math.min(weeklyMarketSpent / 3000, 1.0),
-        progressText: `${formatCurrency(weeklyMarketSpent)} / ${formatCurrency(3000)}`,
-        isCompleted: weeklyMarketSpent <= 3000,
+        desc: language === "tr" ? `Bu haftalık market harcamanızı ${formatCurrency(marketTarget)} altında tutun.` : `Keep weekly grocery spending under ${formatCurrency(marketTarget)}.`,
+        progress: Math.min(weeklyMarketSpent / marketTarget, 1.0),
+        progressText: `${formatCurrency(weeklyMarketSpent)} / ${formatCurrency(marketTarget)}`,
+        isCompleted: isMarketCompleted,
         isFailed: false,
-        isExceeded: weeklyMarketSpent > 3000,
+        isExceeded: isMarketExceeded,
         icon: "shopping-bag"
       },
       {
         id: "dining-friend",
         title: language === "tr" ? "Dışarıda Yemek & Kahve" : "Dining & Coffee",
-        desc: language === "tr" ? "Bu haftalık kafe/restoran harcamanızı ₺1.200 altında tutun." : "Keep weekly cafe/dining spending under ₺1,200.",
-        progress: Math.min(weeklyDiningSpent / 1200, 1.0),
-        progressText: `${formatCurrency(weeklyDiningSpent)} / ${formatCurrency(1200)}`,
-        isCompleted: weeklyDiningSpent <= 1200,
+        desc: language === "tr" ? `Bu haftalık kafe/restoran harcamanızı ${formatCurrency(diningTarget)} altında tutun.` : `Keep weekly cafe/dining spending under ${formatCurrency(diningTarget)}.`,
+        progress: Math.min(weeklyDiningSpent / diningTarget, 1.0),
+        progressText: `${formatCurrency(weeklyDiningSpent)} / ${formatCurrency(diningTarget)}`,
+        isCompleted: isDiningCompleted,
         isFailed: false,
-        isExceeded: weeklyDiningSpent > 1200,
+        isExceeded: isDiningExceeded,
         icon: "coffee"
       },
       {
@@ -1511,15 +1544,22 @@ export default function HomeDashboardScreen() {
 
         {/* Smart Forecast Card */}
         <View style={{
-          backgroundColor: isDarkMode ? "rgba(0, 223, 137, 0.08)" : "rgba(75, 155, 88, 0.08)",
-          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(75, 155, 88, 0.18)",
-          borderWidth: 1.2,
+          backgroundColor: isDarkMode ? "rgba(13, 50, 40, 0.45)" : "#FFFFFF",
+          borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(13, 50, 40, 0.12)",
+          borderWidth: 1.5,
+          borderLeftWidth: 4,
+          borderLeftColor: "#00DF89",
           borderRadius: 20,
           padding: 16,
           marginBottom: 16,
           flexDirection: "row",
           alignItems: "center",
-          gap: 12
+          gap: 12,
+          shadowColor: "#00DF89",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: isDarkMode ? 0.2 : 0.05,
+          shadowRadius: 12,
+          elevation: 3
         }}>
           <View style={{
             width: 42,
@@ -1529,21 +1569,21 @@ export default function HomeDashboardScreen() {
             alignItems: "center",
             justifyContent: "center"
           }}>
-            <Feather name="target" size={22} color={isDarkMode ? "#00DF89" : "#4B9B58"} />
+            <Feather name="target" size={22} color={isDarkMode ? "#00DF89" : "#046C4E"} />
           </View>
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={{ fontSize: 11, fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58", textTransform: "uppercase", letterSpacing: 0.4 }}>
+            <Text style={{ fontSize: 11, fontWeight: "900", color: isDarkMode ? "#00DF89" : "#046C4E", textTransform: "uppercase", letterSpacing: 0.5 }}>
               🎯 {language === "tr" ? "AKILLI HEDEF ÖNGÖRÜSÜ" : "SMART GOAL FORECAST"}
             </Text>
-            <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "600", color: themeColors.text }}>
+            <Text style={{ fontSize: 12, lineHeight: 17, fontWeight: "700", color: themeColors.text }}>
               {spendableMonthly > 0 ? (
                 language === "tr" ? (
                   <>
-                    Aylık <Text style={{ fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>{formatCurrency(spendableMonthly)}</Text> birikim potansiyelinizle hayallerinize adım adım yaklaşıyorsunuz! 🚀
+                    Aylık <Text style={{ fontWeight: "900", color: isDarkMode ? "#00DF89" : "#046C4E" }}>{formatCurrency(spendableMonthly)}</Text> birikim potansiyelinizle hayallerinize adım adım yaklaşıyorsunuz! 🚀
                   </>
                 ) : (
                   <>
-                    With your <Text style={{ fontWeight: "900", color: isDarkMode ? "#00DF89" : "#4B9B58" }}>{formatCurrency(spendableMonthly)}</Text> monthly savings potential, you're getting closer to your dreams! 🚀
+                    With your <Text style={{ fontWeight: "900", color: isDarkMode ? "#00DF89" : "#046C4E" }}>{formatCurrency(spendableMonthly)}</Text> monthly savings potential, you're getting closer to your dreams! 🚀
                   </>
                 )
               ) : (
@@ -1604,6 +1644,8 @@ export default function HomeDashboardScreen() {
       analysisMonthlyData;
     const highestCategory = analysisCategoryData[0]?.category || "Yok";
     const analysisPeriodRemaining = getRemainingLimitForPeriod(analysisPeriod);
+    const analysisPeriodSpent = getExpensesTotalForPeriod(expenses, analysisPeriod, simulatedDate);
+    const analysisPeriodLimit = plan.limits[analysisPeriod] || plan.spendableMonthlyBudget;
 
     const dailyRemaining = getRemainingLimitForPeriod("daily");
     const monthlyRemainingPlan = getRemainingLimitForPeriod("monthly");
@@ -1983,6 +2025,105 @@ export default function HomeDashboardScreen() {
           </View>
         </View>
 
+        {/* Performans Karnesini Paylaş Butonu */}
+        <Pressable 
+          onPress={() => {
+            triggerHaptic();
+            setIsReportCardVisible(true);
+          }}
+          style={({ pressed }) => [
+            {
+              backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.12)" : "#ECFDF5",
+              borderColor: "rgba(0, 229, 143, 0.4)",
+              borderWidth: 1.5,
+              borderRadius: 16,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginTop: 12,
+              shadowColor: "#00E58F",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 8,
+              elevation: 2
+            },
+            pressed && { opacity: 0.85 }
+          ]}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Feather name="share-2" size={18} color="#00E58F" />
+            <Text style={{ fontSize: 13, fontWeight: "900", color: themeColors.text }}>
+              {language === "tr" ? "Haftalık / Aylık Karneni Paylaş" : "Share Performance Report"}
+            </Text>
+          </View>
+          <View style={{ backgroundColor: "#00E58F", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+            <Text style={{ fontSize: 10.5, fontWeight: "900", color: "#031D14" }}>
+              📸 PAYLAŞ
+            </Text>
+          </View>
+        </Pressable>
+
+        {/* 🤖 Yapay Zekâ Tasarruf Asistanı Kartı */}
+        {(() => {
+          const aiInsights = generateAICoachInsights(
+            expenses,
+            plan.monthlyRemaining,
+            plan.spendableMonthlyBudget,
+            streakCount,
+            language
+          );
+          if (aiInsights.length === 0) return null;
+
+          return (
+            <View style={[
+              styles.analysisCard, 
+              { 
+                backgroundColor: isDarkMode ? "rgba(13, 50, 40, 0.4)" : "#F0FDF4", 
+                borderColor: "rgba(0, 229, 143, 0.35)",
+                borderWidth: 1.5,
+                marginTop: 12,
+                gap: 10
+              }
+            ]}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Feather name="cpu" size={18} color="#00E58F" />
+                <Text style={{ fontSize: 14, fontWeight: "900", color: themeColors.text }}>
+                  🤖 {language === "tr" ? "Yapay Zekâ Tasarruf Asistanı" : "AI Savings Coach"}
+                </Text>
+              </View>
+
+              {aiInsights.map((insight) => (
+                <View 
+                  key={insight.id}
+                  style={{
+                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.8)",
+                    borderRadius: 12,
+                    padding: 10,
+                    borderWidth: 1,
+                    borderColor: "rgba(0,229,143,0.2)"
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.text, marginBottom: 2 }}>
+                    {language === "tr" ? insight.titleTr : insight.titleEn}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: themeColors.textMuted, lineHeight: 15, fontWeight: "600" }}>
+                    {language === "tr" ? insight.descTr : insight.descEn}
+                  </Text>
+                  {insight.actionableSavingTr && (
+                    <View style={{ marginTop: 6, alignSelf: "flex-start", backgroundColor: "rgba(0,229,143,0.15)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                      <Text style={{ fontSize: 10, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#065F46" }}>
+                        {language === "tr" ? insight.actionableSavingTr : insight.actionableSavingEn}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          );
+        })()}
+
         {/* Dynamic Trend Bar Chart */}
         <View style={[styles.analysisCard, { backgroundColor: themeColors.surface, borderColor: themeColors.border, marginTop: 14 }]}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
@@ -2164,10 +2305,10 @@ export default function HomeDashboardScreen() {
         <View style={[
           styles.profileCardCompact, 
           { 
-            backgroundColor: themeColors.surface, 
-            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(13, 50, 40, 0.12)",
-            borderWidth: 1.2,
-            borderLeftWidth: 3.5,
+            backgroundColor: isDarkMode ? "rgba(13, 50, 40, 0.45)" : "#FFFFFF", 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(13, 50, 40, 0.12)",
+            borderWidth: 1.5,
+            borderLeftWidth: 4,
             borderLeftColor: "#00DF89",
             shadowColor: "#00DF89",
             shadowOffset: { width: 0, height: 6 },
@@ -2177,48 +2318,48 @@ export default function HomeDashboardScreen() {
           }
         ]}>
           <View style={styles.profileBudgetCol}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-              <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#00DF89" }} />
-              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted, fontWeight: "700" }]}>{t("profileIncomeLabel")}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#00E58F" }} />
+              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted, fontWeight: "800" }]}>{t("profileIncomeLabel")}</Text>
             </View>
             <Text style={[styles.profileBudgetValCompact, { color: isDarkMode ? "#00E58F" : "#065F46", fontWeight: "900" }]}>{formatCurrency(totalIncome)}</Text>
             <Pressable 
               style={({ pressed }) => [
                 styles.profileMiniBtn, 
                 { 
-                  backgroundColor: isDarkMode ? "rgba(0,223,137,0.14)" : "rgba(13,50,40,0.06)",
-                  borderWidth: 1,
-                  borderColor: "rgba(0,223,137,0.25)"
+                  backgroundColor: isDarkMode ? "rgba(0,223,137,0.18)" : "#ECFDF5",
+                  borderWidth: 1.2,
+                  borderColor: "rgba(0,223,137,0.4)"
                 }, 
                 pressed && styles.pressed
               ]}
               onPress={openIncomeEditModal}
             >
-              <Text style={[styles.profileMiniBtnText, { color: isDarkMode ? "#00E58F" : "#065F46", fontWeight: "800" }]}>{t("profileEditIncomeBtn")}</Text>
+              <Text style={[styles.profileMiniBtnText, { color: isDarkMode ? "#00E58F" : "#046C4E", fontWeight: "900" }]}>{t("profileEditIncomeBtn")}</Text>
             </Pressable>
           </View>
 
-          <View style={[styles.profileVerticalDivider, { backgroundColor: themeColors.border }]} />
+          <View style={[styles.profileVerticalDivider, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }]} />
 
           <View style={styles.profileBudgetCol}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-              <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#DF7A12" }} />
-              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted, fontWeight: "700" }]}>{t("profileFixedExpenseLabel")}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#F59E0B" }} />
+              <Text style={[styles.profileBudgetLabelCompact, { color: themeColors.textMuted, fontWeight: "800" }]}>{t("profileFixedExpenseLabel")}</Text>
             </View>
-            <Text style={[styles.profileBudgetValCompact, { color: "#DF7A12", fontWeight: "900" }]}>{formatCurrency(totalFixedExpenses)}</Text>
+            <Text style={[styles.profileBudgetValCompact, { color: "#F59E0B", fontWeight: "900" }]}>{formatCurrency(totalFixedExpenses)}</Text>
             <Pressable 
               style={({ pressed }) => [
                 styles.profileMiniBtn, 
                 { 
-                  backgroundColor: isDarkMode ? "rgba(223,122,18,0.14)" : "rgba(223,122,18,0.08)",
-                  borderWidth: 1,
-                  borderColor: "rgba(223,122,18,0.25)"
+                  backgroundColor: isDarkMode ? "rgba(245, 158, 11, 0.16)" : "#FFFBEB",
+                  borderWidth: 1.2,
+                  borderColor: "rgba(245, 158, 11, 0.4)"
                 }, 
                 pressed && styles.pressed
               ]}
               onPress={openFixedExpenseEditModal}
             >
-              <Text style={[styles.profileMiniBtnText, { color: "#DF7A12", fontWeight: "800" }]}>{t("profileEditExpenseBtn")}</Text>
+              <Text style={[styles.profileMiniBtnText, { color: isDarkMode ? "#F59E0B" : "#B45309", fontWeight: "900" }]}>{t("profileEditExpenseBtn")}</Text>
             </Pressable>
           </View>
         </View>
@@ -2227,14 +2368,14 @@ export default function HomeDashboardScreen() {
         <View style={[
           styles.profileCard, 
           { 
-            backgroundColor: themeColors.surface, 
-            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.25)" : "rgba(13, 50, 40, 0.12)",
-            borderWidth: 1.2,
-            borderLeftWidth: 3.5,
+            backgroundColor: isDarkMode ? "rgba(13, 50, 40, 0.45)" : "#FFFFFF", 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(13, 50, 40, 0.12)",
+            borderWidth: 1.5,
+            borderLeftWidth: 4,
             borderLeftColor: "#00DF89",
             flexDirection: "column", 
-            gap: 10, 
-            paddingVertical: 14,
+            gap: 12, 
+            paddingVertical: 16,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: isDarkMode ? 0.2 : 0.04,
@@ -2242,23 +2383,23 @@ export default function HomeDashboardScreen() {
             elevation: 4
           }
         ]}>
-          <Text style={[styles.profileCardTitle, { color: themeColors.text, fontWeight: "900" }]}>{t("profileSavingsGoalHeader")}</Text>
+          <Text style={[styles.profileCardTitle, { color: themeColors.text, fontWeight: "900", fontSize: 16 }]}>{t("profileSavingsGoalHeader")}</Text>
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted, fontWeight: "600" }]}>{t("profileGoalTarget")}</Text>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted, fontWeight: "700" }]}>{t("profileGoalTarget")}</Text>
             <Text style={[styles.profileBudgetVal, { color: themeColors.text, fontWeight: "900" }]}>{formatCurrency(savingsGoal.targetAmount)}</Text>
           </View>
           <View style={styles.profileBudgetRow}>
-            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted, fontWeight: "600" }]}>{t("profileGoalSaved")}</Text>
-            <Text style={[styles.profileBudgetVal, { color: isDarkMode ? "#00E58F" : "#009E60", fontWeight: "900" }]}>{formatCurrency(goalSavedAmount)}</Text>
+            <Text style={[styles.profileBudgetLabel, { color: themeColors.textMuted, fontWeight: "700" }]}>{t("profileGoalSaved")}</Text>
+            <Text style={[styles.profileBudgetVal, { color: isDarkMode ? "#00E58F" : "#046C4E", fontWeight: "900" }]}>{formatCurrency(goalSavedAmount)}</Text>
           </View>
           
           <Pressable 
             style={({ pressed }) => [
               styles.profileEditButton, 
               { 
-                backgroundColor: isDarkMode ? "rgba(0,223,137,0.14)" : "rgba(13,50,40,0.06)",
-                borderWidth: 1,
-                borderColor: "rgba(0,223,137,0.25)"
+                backgroundColor: isDarkMode ? "rgba(0,223,137,0.18)" : "#ECFDF5",
+                borderWidth: 1.2,
+                borderColor: "rgba(0,223,137,0.4)"
               },
               pressed && styles.pressed
             ]}
@@ -2270,7 +2411,7 @@ export default function HomeDashboardScreen() {
               setIsGoalModalVisible(true);
             }}
           >
-            <Text style={[styles.profileEditButtonText, { color: isDarkMode ? "#00E58F" : "#065F46", fontWeight: "800" }]}>{t("profileEditGoalBtn")}</Text>
+            <Text style={[styles.profileEditButtonText, { color: isDarkMode ? "#00E58F" : "#046C4E", fontWeight: "900" }]}>{t("profileEditGoalBtn")}</Text>
           </Pressable>
         </View>
 
@@ -2278,12 +2419,14 @@ export default function HomeDashboardScreen() {
         <View style={[
           styles.profileCard, 
           { 
-            backgroundColor: themeColors.surface, 
-            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(13, 50, 40, 0.1)", 
-            borderWidth: 1.2,
+            backgroundColor: isDarkMode ? "rgba(13, 50, 40, 0.45)" : "#FFFFFF", 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(13, 50, 40, 0.12)", 
+            borderWidth: 1.5,
+            borderLeftWidth: 4,
+            borderLeftColor: "#00DF89",
             flexDirection: "column", 
             gap: 12, 
-            paddingVertical: 14,
+            paddingVertical: 16,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: isDarkMode ? 0.2 : 0.04,
@@ -2291,20 +2434,20 @@ export default function HomeDashboardScreen() {
             elevation: 4
           }
         ]}>
-          <Text style={[styles.profileCardTitle, { color: themeColors.text, fontWeight: "900" }]}>
+          <Text style={[styles.profileCardTitle, { color: themeColors.text, fontWeight: "900", fontSize: 16 }]}>
             🏆 {language === "tr" ? "Meydan Okumalar" : "Savings Challenges"}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 10 }}>
             {challenges.map((challenge: any) => {
               const isDanger = challenge.isFailed || challenge.isExceeded;
               const borderCol = isDanger
-                ? "rgba(211, 47, 47, 0.4)"
-                : (challenge.isCompleted ? "#00DF89" : themeColors.border);
+                ? "rgba(239, 68, 68, 0.5)"
+                : (challenge.isCompleted ? "#00DF89" : "rgba(0, 229, 143, 0.25)");
               
               const progressVal = isDanger ? 1.0 : challenge.progress;
               const barFillColor = isDanger 
-                ? "#D32F2F" 
-                : (challenge.isCompleted ? "#00DF89" : themeColors.primary);
+                ? "#EF4444" 
+                : (challenge.isCompleted ? "#00DF89" : "#00DF89");
 
               return (
                 <View 
@@ -2312,20 +2455,20 @@ export default function HomeDashboardScreen() {
                   style={{
                     width: 240,
                     borderRadius: 20,
-                    borderWidth: 1.2,
+                    borderWidth: 1.5,
                     borderColor: borderCol,
                     padding: 14,
-                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.01)"
+                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "#F8FAFC"
                   }}
                 >
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <View style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
+                      width: 34,
+                      height: 34,
+                      borderRadius: 17,
                       backgroundColor: isDanger 
-                        ? "rgba(211, 47, 47, 0.08)"
-                        : (challenge.isCompleted ? "rgba(0, 223, 137, 0.1)" : "rgba(0,0,0,0.05)"),
+                        ? "rgba(239, 68, 68, 0.15)"
+                        : (challenge.isCompleted ? "rgba(0, 223, 137, 0.16)" : "rgba(0, 223, 137, 0.1)"),
                       alignItems: "center",
                       justifyContent: "center"
                     }}>
@@ -2333,34 +2476,34 @@ export default function HomeDashboardScreen() {
                         name={challenge.icon as any} 
                         size={16} 
                         color={isDanger 
-                          ? "#D32F2F"
+                          ? "#EF4444"
                           : (challenge.isCompleted ? "#00DF89" : themeColors.text)} 
                       />
                     </View>
                     
                     {challenge.isCompleted && (
-                      <View style={{ backgroundColor: "rgba(0, 223, 137, 0.12)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
-                        <Text style={{ fontSize: 9, fontWeight: "900", color: "#00DF89" }}>✨ {language === "tr" ? "TAMAMLANDI" : "COMPLETED"}</Text>
+                      <View style={{ backgroundColor: "rgba(0, 223, 137, 0.18)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 9.5, fontWeight: "900", color: "#00DF89" }}>✨ {language === "tr" ? "TAMAMLANDI" : "COMPLETED"}</Text>
                       </View>
                     )}
                     {challenge.isFailed && (
-                      <View style={{ backgroundColor: "rgba(211, 47, 47, 0.1)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
-                        <Text style={{ fontSize: 9, fontWeight: "900", color: "#D32F2F" }}>❌ {language === "tr" ? "BAŞARISIZ" : "FAILED"}</Text>
+                      <View style={{ backgroundColor: "rgba(239, 68, 68, 0.15)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 9.5, fontWeight: "900", color: "#EF4444" }}>❌ {language === "tr" ? "BAŞARISIZ" : "FAILED"}</Text>
                       </View>
                     )}
                     {!challenge.isCompleted && !challenge.isFailed && (
-                      <Text style={{ fontSize: 10, fontWeight: "800", color: themeColors.textMuted }}>
+                      <Text style={{ fontSize: 10.5, fontWeight: "800", color: themeColors.textMuted }}>
                         {challenge.progressText}
                       </Text>
                     )}
                   </View>
 
-                  <Text style={{ fontSize: 13, fontWeight: "900", color: themeColors.text, marginBottom: 2 }}>{challenge.title}</Text>
+                  <Text style={{ fontSize: 13.5, fontWeight: "900", color: themeColors.text, marginBottom: 3 }}>{challenge.title}</Text>
                   <Text style={{ fontSize: 11, color: themeColors.textMuted, lineHeight: 15, height: 45, fontWeight: "600" }} numberOfLines={3}>
                     {challenge.desc}
                   </Text>
 
-                  <View style={{ height: 6, borderRadius: 3, backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)", overflow: "hidden", marginTop: 8 }}>
+                  <View style={{ height: 6, borderRadius: 3, backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", overflow: "hidden", marginTop: 8 }}>
                     <View style={{ width: `${progressVal * 100}%`, height: "100%", backgroundColor: barFillColor, borderRadius: 3 }} />
                   </View>
                 </View>
@@ -2369,78 +2512,187 @@ export default function HomeDashboardScreen() {
           </ScrollView>
         </View>
 
-        {/* Canlı Piyasa Kurları Rozeti & Standalone Tam Genişlik Kartı */}
-        <View style={{
-          backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.09)" : "#F0FDF4",
-          borderRadius: 22,
-          paddingVertical: 16,
-          paddingHorizontal: 18,
-          marginBottom: 16,
-          borderWidth: 1.5,
-          borderColor: "rgba(0, 229, 143, 0.35)",
-          shadowColor: "#00E58F",
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: isDarkMode ? 0.2 : 0.08,
-          shadowRadius: 14,
-          elevation: 4
-        }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Feather name="activity" size={18} color="#00E58F" />
-              <Text style={{ fontSize: 15, fontWeight: "900", color: themeColors.text }}>
-                {language === "tr" ? "Canlı Piyasa Kurları" : "Live Exchange Rates"}
+        {/* 🎮 Seviye & Görev Sistemi */}
+        {(() => {
+          const levelInfo = getUserLevelInfo(xpPoints || 100);
+          const quests = getSystemQuests(
+            expenses.length,
+            streakCount,
+            goals.length > 0
+          );
+
+          return (
+            <View style={[
+              styles.profileCard, 
+              { 
+                backgroundColor: isDarkMode ? "rgba(13, 50, 40, 0.45)" : "#FFFFFF", 
+                borderColor: isDarkMode ? "rgba(59, 130, 246, 0.35)" : "rgba(59, 130, 246, 0.2)", 
+                borderWidth: 1.5,
+                borderLeftWidth: 4,
+                borderLeftColor: "#3B82F6",
+                flexDirection: "column", 
+                gap: 12, 
+                paddingVertical: 16,
+                shadowColor: "#3B82F6",
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: isDarkMode ? 0.2 : 0.05,
+                shadowRadius: 14,
+                elevation: 4,
+                marginBottom: 16
+              }
+            ]}>
+              {/* Level Progress Header */}
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 4 }}>
+                <View>
+                  <Text style={{ fontSize: 11, fontWeight: "900", color: "#3B82F6", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    SEVİYE {levelInfo.level}
+                  </Text>
+                  <Text style={{ fontSize: 16, fontWeight: "900", color: themeColors.text }}>
+                    {language === "tr" ? levelInfo.titleTr : levelInfo.titleEn}
+                  </Text>
+                </View>
+
+                <View style={{ backgroundColor: "rgba(59, 130, 246, 0.18)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
+                  <Text style={{ fontSize: 11, fontWeight: "900", color: "#3B82F6" }}>
+                    {levelInfo.currentXp} / {levelInfo.nextLevelXp} XP
+                  </Text>
+                </View>
+              </View>
+
+              {/* Progress Bar */}
+              <View style={{ height: 8, borderRadius: 4, backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", overflow: "hidden", marginHorizontal: 4 }}>
+                <View style={{ width: `${levelInfo.progressRatio * 100}%`, height: "100%", backgroundColor: "#3B82F6", borderRadius: 4 }} />
+              </View>
+
+              {/* Quests List */}
+              <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.textMuted, marginTop: 4, paddingHorizontal: 4 }}>
+                🎯 {language === "tr" ? "Aktif Görevler" : "Active Quests"}
               </Text>
+
+              {quests.map((q) => (
+                <View 
+                  key={q.id}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    borderRadius: 14,
+                    backgroundColor: q.isCompleted 
+                      ? (isDarkMode ? "rgba(0, 229, 143, 0.12)" : "#ECFDF5") 
+                      : (isDarkMode ? "rgba(255, 255, 255, 0.04)" : "#F8FAFC"),
+                    borderWidth: 1.2,
+                    borderColor: q.isCompleted ? "rgba(0, 229, 143, 0.4)" : "rgba(0, 0, 0, 0.06)"
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+                    <Feather 
+                      name={q.isCompleted ? "check-circle" : "circle"} 
+                      size={17} 
+                      color={q.isCompleted ? "#00E58F" : themeColors.textMuted} 
+                    />
+                    <Text style={{ fontSize: 12, fontWeight: "800", color: themeColors.text, flex: 1 }} numberOfLines={1}>
+                      {language === "tr" ? q.titleTr : q.titleEn}
+                    </Text>
+                  </View>
+
+                  <Text style={{ fontSize: 11, fontWeight: "900", color: q.isCompleted ? "#00E58F" : "#F59E0B" }}>
+                    +{q.xpReward} XP
+                  </Text>
+                </View>
+              ))}
             </View>
-            <View style={{ backgroundColor: "rgba(0, 229, 143, 0.18)", paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 }}>
-              <Text style={{ fontSize: 11, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#065F46" }}>
-                🟢 {new Date().toLocaleDateString(language === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "short", year: "numeric" })}
+          );
+        })()}
+        <View style={[
+          styles.profileCard, 
+          { 
+            backgroundColor: isDarkMode ? "rgba(13, 50, 40, 0.45)" : "#FFFFFF", 
+            borderColor: isDarkMode ? "rgba(245, 158, 11, 0.35)" : "rgba(245, 158, 11, 0.2)", 
+            borderWidth: 1.5,
+            borderLeftWidth: 4,
+            borderLeftColor: "#F59E0B",
+            flexDirection: "column", 
+            gap: 12, 
+            paddingVertical: 16,
+            shadowColor: "#F59E0B",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.05,
+            shadowRadius: 14,
+            elevation: 4,
+            marginBottom: 16
+          }
+        ]}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 4 }}>
+            <Text style={[styles.profileCardTitle, { color: themeColors.text, fontWeight: "900", fontSize: 16 }]}>
+              🏅 {language === "tr" ? "Başarım Rozetleri" : "Achievement Badges"}
+            </Text>
+            <View style={{ backgroundColor: "rgba(245, 158, 11, 0.18)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
+              <Text style={{ fontSize: 11, fontWeight: "900", color: "#F59E0B" }}>
+                ⚡ {xpPoints || 100} XP
               </Text>
             </View>
           </View>
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 14, paddingHorizontal: 4 }}>
-            <View style={{ gap: 3 }}>
-              <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>🇺🇸 Dolar / TL</Text>
-              <Text style={{ fontSize: 16, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#065F46" }}>
-                {(1 / (exchangeRates.USD || 0.021)).toFixed(2)} ₺
-              </Text>
-            </View>
-
-            <View style={{ height: 32, width: 1.2, backgroundColor: "rgba(0, 229, 143, 0.3)" }} />
-
-            <View style={{ gap: 3 }}>
-              <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>🇪🇺 Euro / TL</Text>
-              <Text style={{ fontSize: 16, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#065F46" }}>
-                {(1 / (exchangeRates.EUR || 0.018)).toFixed(2)} ₺
-              </Text>
-            </View>
-
-            <View style={{ height: 32, width: 1.2, backgroundColor: "rgba(0, 229, 143, 0.3)" }} />
-
-            <View style={{ gap: 3 }}>
-              <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>🪙 Gram Altın</Text>
-              <Text style={{ fontSize: 16, fontWeight: "900", color: "#F59E0B" }}>
-                5.120 ₺
-              </Text>
-            </View>
-          </View>
-
-          <Text style={{ fontSize: 10, fontWeight: "700", color: themeColors.textMuted, marginTop: 10, textAlign: "right" }}>
-            ⚡ {language === "tr" ? `Otomatik Saat Başı (${lastRatesUpdated})` : `Auto Hourly (${lastRatesUpdated})`}
-          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 10, paddingLeft: 4 }}>
+            {SYSTEM_BADGES.map((badge) => {
+              const isUnlocked = (unlockedBadges || ["first_expense"]).includes(badge.id);
+              return (
+                <View 
+                  key={badge.id}
+                  style={{
+                    width: 140,
+                    borderRadius: 20,
+                    borderWidth: 1.5,
+                    borderColor: isUnlocked ? badge.color : (isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"),
+                    padding: 12,
+                    alignItems: "center",
+                    backgroundColor: isUnlocked 
+                      ? (isDarkMode ? "rgba(0, 229, 143, 0.08)" : "#ECFDF5") 
+                      : (isDarkMode ? "rgba(255,255,255,0.02)" : "#F8FAFC"),
+                    opacity: isUnlocked ? 1.0 : 0.55
+                  }}
+                >
+                  <View style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 23,
+                    backgroundColor: isUnlocked ? `${badge.color}25` : (isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)"),
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 8
+                  }}>
+                    <Feather name={badge.icon} size={22} color={isUnlocked ? badge.color : themeColors.textMuted} />
+                  </View>
+                  <Text style={{ fontSize: 12.5, fontWeight: "900", color: themeColors.text, textAlign: "center", marginBottom: 3 }} numberOfLines={1}>
+                    {language === "tr" ? badge.titleTr : badge.titleEn}
+                  </Text>
+                  <Text style={{ fontSize: 10, fontWeight: "600", color: themeColors.textMuted, textAlign: "center", lineHeight: 14 }} numberOfLines={2}>
+                    {language === "tr" ? badge.descTr : badge.descEn}
+                  </Text>
+                  {isUnlocked && (
+                    <View style={{ marginTop: 8, backgroundColor: `${badge.color}20`, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                      <Text style={{ fontSize: 9.5, fontWeight: "900", color: badge.color }}>+ {badge.xpReward} XP</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* Settings Toggle Card */}
         <View style={[
           styles.profileCard, 
           { 
-            backgroundColor: themeColors.surface, 
-            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.2)" : "rgba(13, 50, 40, 0.1)", 
-            borderWidth: 1.2,
-            borderLeftWidth: 3.5,
+            backgroundColor: isDarkMode ? "rgba(13, 50, 40, 0.45)" : "#FFFFFF", 
+            borderColor: isDarkMode ? "rgba(0, 223, 137, 0.3)" : "rgba(13, 50, 40, 0.12)", 
+            borderWidth: 1.5,
+            borderLeftWidth: 4,
             borderLeftColor: "#00DF89",
             flexDirection: "column", 
-            paddingVertical: 8,
+            paddingVertical: 10,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: isDarkMode ? 0.2 : 0.04,
@@ -2464,7 +2716,7 @@ export default function HomeDashboardScreen() {
             />
           </View>
 
-          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+          <View style={[styles.expenseDivider, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }]} />
 
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
@@ -2474,20 +2726,20 @@ export default function HomeDashboardScreen() {
             <View style={{ flexDirection: "row", gap: 6 }}>
               <Pressable 
                 onPress={() => { triggerHaptic(); setLanguage("tr"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "tr" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "tr" ? { backgroundColor: "#00E58F" } : { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#F1F5F9" }]}
               >
                 <Text style={{ fontSize: 12, fontWeight: "900", color: language === "tr" ? "#031D14" : themeColors.text }}>TR</Text>
               </Pressable>
               <Pressable 
                 onPress={() => { triggerHaptic(); setLanguage("en"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "en" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, language === "en" ? { backgroundColor: "#00E58F" } : { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#F1F5F9" }]}
               >
                 <Text style={{ fontSize: 12, fontWeight: "900", color: language === "en" ? "#031D14" : themeColors.text }}>EN</Text>
               </Pressable>
             </View>
           </View>
 
-          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+          <View style={[styles.expenseDivider, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }]} />
 
           <View style={styles.settingRow}>
             <View style={styles.settingIconWrap}>
@@ -2499,26 +2751,114 @@ export default function HomeDashboardScreen() {
             <View style={{ flexDirection: "row", gap: 6 }}>
               <Pressable 
                 onPress={() => { triggerHaptic(); setCurrency("TRY"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "TRY" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "TRY" ? { backgroundColor: "#00E58F" } : { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#F1F5F9" }]}
               >
                 <Text style={{ fontSize: 12, fontWeight: "900", color: currency === "TRY" ? "#031D14" : themeColors.text }}>₺ (TL)</Text>
               </Pressable>
               <Pressable 
                 onPress={() => { triggerHaptic(); setCurrency("USD"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "USD" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "USD" ? { backgroundColor: "#00E58F" } : { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#F1F5F9" }]}
               >
                 <Text style={{ fontSize: 12, fontWeight: "900", color: currency === "USD" ? "#031D14" : themeColors.text }}>$ (USD)</Text>
               </Pressable>
               <Pressable 
                 onPress={() => { triggerHaptic(); setCurrency("EUR"); }}
-                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "EUR" ? { backgroundColor: "#00E58F" } : { backgroundColor: "rgba(0,0,0,0.05)" }]}
+                style={[{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, currency === "EUR" ? { backgroundColor: "#00E58F" } : { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "#F1F5F9" }]}
               >
                 <Text style={{ fontSize: 12, fontWeight: "900", color: currency === "EUR" ? "#031D14" : themeColors.text }}>€ (EUR)</Text>
               </Pressable>
             </View>
           </View>
 
-          <View style={[styles.expenseDivider, { backgroundColor: themeColors.border }]} />
+          {/* Canlı Piyasa Kurları Rozeti & Bilgi Kartı */}
+          <View style={{
+            backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.12)" : "#ECFDF5",
+            borderRadius: 18,
+            paddingVertical: 16,
+            paddingHorizontal: 16,
+            marginVertical: 12,
+            borderWidth: 1.5,
+            borderColor: "rgba(0, 229, 143, 0.4)",
+            shadowColor: "#00E58F",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 10,
+            elevation: 3
+          }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Feather name="activity" size={18} color="#00E58F" />
+                <Text style={{ fontSize: 15, fontWeight: "900", color: themeColors.text }}>
+                  {language === "tr" ? "Canlı Piyasa Kurları" : "Live Exchange Rates"}
+                </Text>
+              </View>
+              <View style={{ backgroundColor: "rgba(0, 229, 143, 0.2)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                <Text style={{ fontSize: 10, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#046C4E" }}>
+                  🟢 {new Date().toLocaleDateString(language === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "short", year: "numeric" })}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
+              <View style={{ gap: 2 }}>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>🇺🇸 Dolar / TL</Text>
+                <Text style={{ fontSize: 16, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#046C4E" }}>
+                  {(1 / (exchangeRates.USD || 0.021)).toFixed(2)} ₺
+                </Text>
+              </View>
+
+              <View style={{ height: 28, width: 1, backgroundColor: "rgba(0, 229, 143, 0.3)" }} />
+
+              <View style={{ gap: 2 }}>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>🇪🇺 Euro / TL</Text>
+                <Text style={{ fontSize: 16, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#046C4E" }}>
+                  {(1 / (exchangeRates.EUR || 0.018)).toFixed(2)} ₺
+                </Text>
+              </View>
+
+              <View style={{ height: 28, width: 1, backgroundColor: "rgba(0, 229, 143, 0.3)" }} />
+
+              <View style={{ gap: 2 }}>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: themeColors.textMuted }}>🪙 Gram Altın</Text>
+                <Text style={{ fontSize: 16, fontWeight: "900", color: "#F59E0B" }}>
+                  {Math.round(exchangeRates.GAU || 6540).toLocaleString("tr-TR")} ₺
+                </Text>
+              </View>
+            </View>
+
+            <Text style={{ fontSize: 10, fontWeight: "700", color: themeColors.textMuted, marginTop: 10, textAlign: "right" }}>
+              ⚡ {language === "tr" ? `Otomatik Saat Başı (${lastRatesUpdated})` : `Auto Hourly (${lastRatesUpdated})`}
+            </Text>
+          </View>
+
+          <View style={[styles.expenseDivider, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }]} />
+
+          <Pressable 
+            style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
+            onPress={() => {
+              triggerHaptic();
+              setIsFamilyModalVisible(true);
+            }}
+          >
+            <View style={styles.settingIconWrap}>
+              <Feather name="users" size={20} color="#00DF89" />
+              <Text style={[styles.settingLabel, { color: themeColors.text, fontWeight: "800" }]}>
+                {language === "tr" ? "Çift & Aile Hesabı 👥" : "Couple & Family Budget 👥"}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              {familyGroup && (
+                <View style={{ backgroundColor: "rgba(0, 223, 137, 0.18)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                  <Text style={{ fontSize: 9.5, fontWeight: "900", color: isDarkMode ? "#00E58F" : "#046C4E" }}>
+                    🟢 {language === "tr" ? "Bağlı" : "Paired"}
+                  </Text>
+                </View>
+              )}
+              <Feather name="chevron-right" size={20} color={themeColors.textMuted} />
+            </View>
+          </Pressable>
+
+          <View style={[styles.expenseDivider, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }]} />
 
           <Pressable 
             style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
@@ -2563,6 +2903,36 @@ export default function HomeDashboardScreen() {
               }}
               trackColor={{ false: isDarkMode ? "#2D3748" : "#E2E8F0", true: "#00E58F" }}
               thumbColor={isSmartNotificationsEnabled ? "#031D14" : "#94A3B8"}
+            />
+          </View>
+
+          <View style={[styles.expenseDivider, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }]} />
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingIconWrap}>
+              <Feather name="zap" size={20} color="#00DF89" />
+              <Text style={[styles.settingLabel, { color: themeColors.text, fontWeight: "800" }]}>
+                {language === "tr" ? "Dinamik Ada (Live Activity)" : "Dynamic Island Live Activity"}
+              </Text>
+            </View>
+            <Switch
+              value={isLiveActivityEnabled}
+              onValueChange={(val) => {
+                triggerHaptic();
+                setIsLiveActivityEnabled(val);
+                setToastConfig({
+                  visible: true,
+                  message: val 
+                    ? (language === "tr" ? "Dinamik Ada Açıldı 🏝️" : "Dynamic Island Enabled 🏝️")
+                    : (language === "tr" ? "Dinamik Ada Kapatıldı ⏸️" : "Dynamic Island Disabled ⏸️"),
+                  subtext: val
+                    ? (language === "tr" ? "Kilit ekranı ve Dinamik Ada canlı güncellenecek." : "Lock Screen & Dynamic Island will update live.")
+                    : (language === "tr" ? "Canlı takip durduruldu." : "Live tracking paused."),
+                  type: val ? "success" : "info"
+                });
+              }}
+              trackColor={{ false: isDarkMode ? "#2D3748" : "#E2E8F0", true: "#00E58F" }}
+              thumbColor={isLiveActivityEnabled ? "#031D14" : "#94A3B8"}
             />
           </View>
         </View>
@@ -2718,8 +3088,31 @@ export default function HomeDashboardScreen() {
           </Pressable>
         </View>
 
-        {/* Danger Zone Card */}
-        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: themeColors.danger, borderWidth: 1.5, flexDirection: "column", paddingVertical: 8, marginTop: 14 }]}>
+        {/* Professional Account & Danger Zone Card */}
+        <View style={[
+          styles.profileCard, 
+          { 
+            backgroundColor: isDarkMode ? "rgba(239, 68, 68, 0.06)" : "#FEF2F2", 
+            borderColor: isDarkMode ? "rgba(239, 68, 68, 0.3)" : "rgba(239, 68, 68, 0.2)", 
+            borderWidth: 1.5,
+            borderLeftWidth: 4,
+            borderLeftColor: "#EF4444",
+            flexDirection: "column", 
+            paddingVertical: 12,
+            marginTop: 16,
+            marginBottom: 40,
+            shadowColor: "#EF4444",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.04,
+            shadowRadius: 14,
+            elevation: 4
+          }
+        ]}>
+          <Text style={{ fontSize: 11, fontWeight: "900", color: "#EF4444", textTransform: "uppercase", letterSpacing: 0.6, paddingHorizontal: 16, marginBottom: 4 }}>
+            🛡️ {language === "tr" ? "Hesap Yönetimi & Tehlikeli Bölge" : "Account & Danger Zone"}
+          </Text>
+
+          {/* Reset Budget / Clear Data */}
           <Pressable 
             style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
             onPress={() => {
@@ -2728,15 +3121,17 @@ export default function HomeDashboardScreen() {
             }}
           >
             <View style={styles.settingIconWrap}>
-              <Feather name="trash-2" size={20} color={themeColors.danger} />
-              <Text style={[styles.settingLabel, { color: themeColors.danger }]}>{t("profileSettingReset")}</Text>
+              <Feather name="refresh-cw" size={20} color="#F59E0B" />
+              <Text style={[styles.settingLabel, { color: "#F59E0B", fontWeight: "800" }]}>
+                {t("profileSettingReset")}
+              </Text>
             </View>
-            <Feather name="chevron-right" size={20} color={themeColors.danger} />
+            <Feather name="chevron-right" size={20} color="#F59E0B" />
           </Pressable>
-        </View>
 
-        {/* Log Out Card */}
-        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: "#EF4444", borderWidth: 1.5, flexDirection: "column", paddingVertical: 8, marginTop: 14 }]}>
+          <View style={[styles.expenseDivider, { backgroundColor: isDarkMode ? "rgba(239, 68, 68, 0.15)" : "rgba(239, 68, 68, 0.1)" }]} />
+
+          {/* Log Out */}
           <Pressable 
             style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
             onPress={() => {
@@ -2768,23 +3163,23 @@ export default function HomeDashboardScreen() {
             </View>
             <Feather name="chevron-right" size={20} color="#EF4444" />
           </Pressable>
-        </View>
 
-        {/* Delete Account Card */}
-        <View style={[styles.profileCard, { backgroundColor: themeColors.surface, borderColor: "rgba(239, 68, 68, 0.3)", borderWidth: 1, flexDirection: "column", paddingVertical: 8, marginTop: 14, marginBottom: 40 }]}>
+          <View style={[styles.expenseDivider, { backgroundColor: isDarkMode ? "rgba(239, 68, 68, 0.15)" : "rgba(239, 68, 68, 0.1)" }]} />
+
+          {/* Permanent Delete Account */}
           <Pressable 
             style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
             onPress={() => {
               triggerHaptic();
               Alert.alert(
-                language === "tr" ? "Hesabımı Sil" : "Delete Account",
+                language === "tr" ? "Hesabımı Kalıcı Olarak Sil" : "Permanently Delete Account",
                 language === "tr" 
                   ? "Hesabınız ve tüm verileriniz kalıcı olarak silinecektir. Bu işlem geri alınamaz. Emin misiniz?" 
                   : "Your account and all data will be permanently deleted. This action cannot be undone. Are you sure?",
                 [
                   { text: language === "tr" ? "İptal" : "Cancel", style: "cancel" },
                   {
-                    text: language === "tr" ? "Evet, Hesabımı Sil" : "Yes, Delete",
+                    text: language === "tr" ? "Evet, Hesabımı Sil" : "Yes, Delete Account",
                     style: "destructive",
                     onPress: async () => {
                       triggerHaptic();
@@ -2804,12 +3199,12 @@ export default function HomeDashboardScreen() {
             }}
           >
             <View style={styles.settingIconWrap}>
-              <Feather name="user-x" size={20} color="#EF4444" />
-              <Text style={[styles.settingLabel, { color: "#EF4444", fontWeight: "800" }]}>
-                {language === "tr" ? "Hesabımı Sil" : "Delete My Account"}
+              <Feather name="shield-off" size={20} color="#DC2626" />
+              <Text style={[styles.settingLabel, { color: "#DC2626", fontWeight: "900" }]}>
+                {language === "tr" ? "Hesabımı Kalıcı Olarak Sil" : "Permanently Delete Account"}
               </Text>
             </View>
-            <Feather name="chevron-right" size={20} color="#EF4444" />
+            <Feather name="chevron-right" size={20} color="#DC2626" />
           </Pressable>
         </View>
       </ScrollView>
@@ -2860,6 +3255,17 @@ export default function HomeDashboardScreen() {
             addExpense(expense);
             setIsSheetVisible(false);
             
+            const streakResult = updateStreakAndCheckBadges(expense.amount);
+            if (streakResult && (streakResult.streakIncreased || streakResult.newBadgeId)) {
+              setCelebrationConfig({
+                visible: true,
+                type: streakResult.newBadgeId ? "badge" : "streak",
+                badgeId: streakResult.newBadgeId,
+                streakCount: streakResult.newStreakCount,
+                xpEarned: streakResult.xpGained
+              });
+            }
+
             const wouldExceed = expense.amount > selectedPeriodRemaining;
             if (wouldExceed) {
               if (isHapticsEnabled) {
@@ -3668,6 +4074,36 @@ export default function HomeDashboardScreen() {
             onHide={() => setToastConfig(null)} 
           />
         )}
+
+        {/* Streak & Badge Celebration Modal */}
+        <CelebrationModal
+          visible={celebrationConfig.visible}
+          onClose={() => setCelebrationConfig((prev) => ({ ...prev, visible: false }))}
+          type={celebrationConfig.type}
+          title={celebrationConfig.title}
+          subtitle={celebrationConfig.subtitle}
+          badgeId={celebrationConfig.badgeId}
+          streakCount={celebrationConfig.streakCount}
+          xpEarned={celebrationConfig.xpEarned}
+        />
+
+        {/* Shareable Performance Report Modal */}
+        <ShareableReportCard
+          visible={isReportCardVisible}
+          onClose={() => setIsReportCardVisible(false)}
+          period={analysisPeriod === "monthly" ? "monthly" : "weekly"}
+          totalSpent={getExpensesTotalForPeriod(expenses, analysisPeriod, simulatedDate)}
+          totalLimit={analysisPeriod === "daily" ? plan.limits.daily : analysisPeriod === "weekly" ? plan.limits.weekly : plan.spendableMonthlyBudget}
+          totalSaved={plan.monthlySavings}
+          userName={userFirstName}
+          language={language}
+        />
+
+        {/* Family / Couple Pairing Modal */}
+        <FamilyPairingModal
+          visible={isFamilyModalVisible}
+          onClose={() => setIsFamilyModalVisible(false)}
+        />
       </View>
     </SafeAreaView>
   );
@@ -4041,6 +4477,10 @@ function SwipeableExpenseRow({
   onDelete: () => void;
 }) {
   const iconConfig = getCategoryIconConfig(item.expense.category);
+  const isDarkMode = useFinanceStore((state) => state.isDarkMode);
+  const userProfile = useFinanceStore((state) => state.userProfile);
+  const familyGroup = useFinanceStore((state) => state.familyGroup);
+  const userFirstName = userProfile?.fullName?.split(" ")[0] || "Siz";
   const planStartDate = useFinanceStore((state) => state.savingsGoal.planStartDate);
   const expDate = new Date(item.expense.occurredAt || new Date());
   const startDate = planStartDate ? new Date(planStartDate) : expDate;
@@ -4083,6 +4523,24 @@ function SwipeableExpenseRow({
                 <View style={{ backgroundColor: `${weekColor}22`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginLeft: 6, flexShrink: 0 }}>
                   <Text style={{ color: weekColor, fontSize: 9.5, fontWeight: "900" }}>{weekName}</Text>
                 </View>
+                {(familyGroup || item.expense.addedByName) && (
+                  <View style={{
+                    width: 19,
+                    height: 19,
+                    borderRadius: 9.5,
+                    backgroundColor: isDarkMode ? "rgba(0, 229, 143, 0.2)" : "rgba(4, 108, 78, 0.12)",
+                    borderColor: isDarkMode ? "#00E58F" : "#046C4E",
+                    borderWidth: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginLeft: 5,
+                    flexShrink: 0
+                  }}>
+                    <Text style={{ color: isDarkMode ? "#00E58F" : "#046C4E", fontSize: 9.5, fontWeight: "900" }}>
+                      {(item.expense.addedByName || userFirstName || "G").trim().charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                )}
               </View>
               <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.expenseCategory, { color: themeColors.textMuted, fontWeight: "600", fontSize: 11, marginTop: 2 }]}>
                 {item.expense.category}{item.expense.subtitle && item.expense.subtitle !== item.expense.category ? ` • ${item.expense.subtitle}` : ""}
@@ -4514,7 +4972,7 @@ function ToastBanner({
 }: {
   message: string;
   subtext?: string;
-  type?: "success" | "warning";
+  type?: "success" | "warning" | "info";
   onHide: () => void;
 }) {
   const isDarkMode = useFinanceStore((state) => state.isDarkMode);
@@ -4701,12 +5159,14 @@ function SwipeableGoalCard({
   return (
     <View style={{ marginBottom: 16 }}>
       <LinearGradient
-        colors={isDarkMode ? ["#142B23", "#0A1713"] : ["#FFFFFF", "#F6FAF7"]}
+        colors={isDarkMode ? ["rgba(13, 50, 40, 0.55)", "rgba(8, 30, 24, 0.45)"] : ["#FFFFFF", "#F8FAFC"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
-          borderColor: isDarkMode ? "rgba(0, 229, 143, 0.3)" : "rgba(13, 50, 40, 0.14)",
+          borderColor: isDarkMode ? "rgba(0, 229, 143, 0.35)" : "rgba(13, 50, 40, 0.14)",
           borderWidth: 1.5,
+          borderLeftWidth: 4,
+          borderLeftColor: cardColor,
           borderRadius: 24,
           padding: 18,
           gap: 14,
@@ -4745,6 +5205,13 @@ function SwipeableGoalCard({
                 <Text style={{ fontSize: 16, fontWeight: "900", color: themeColors.text }}>
                   {goal.title}
                 </Text>
+                {goal.isSharedGoal && (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 1, backgroundColor: "rgba(59, 130, 246, 0.14)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, alignSelf: "flex-start" }}>
+                    <Text style={{ fontSize: 9.5, fontWeight: "900", color: "#3B82F6" }}>
+                      👥 Ortak ({goal.sharedPartnerName || "Aile / Eş"})
+                    </Text>
+                  </View>
+                )}
                 {goal.targetDate ? (
                   <Text style={{ fontSize: 12, fontWeight: "700", color: themeColors.textMuted }}>
                     📅 {goal.targetDate}
@@ -5785,6 +6252,20 @@ function ExpenseDetailModal({
                 {formattedDate}
               </Text>
             </View>
+
+            {expense.addedByName ? (
+              <>
+                <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
+                <View style={styles.formRow}>
+                  <Text style={[styles.formLabel, { color: themeColors.textMuted }]}>
+                    {language === "tr" ? "Harcamayı Ekleyen" : "Added By"}
+                  </Text>
+                  <Text style={{ fontSize: 13, fontWeight: "900", color: "#00DF89", textAlign: "right", flex: 1 }}>
+                    👤 {expense.addedByName}
+                  </Text>
+                </View>
+              </>
+            ) : null}
             
             <View style={[styles.formDivider, { backgroundColor: themeColors.border }]} />
 

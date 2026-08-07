@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { Expense, FinancePlan, GoalItem, Income, Period, SavingsGoal } from "@/models/finance";
+import { Expense, FamilyGroup, FinancePlan, GoalItem, Income, Period, SavingsGoal } from "@/models/finance";
 import {
   calculateFinancePlan,
   getDailyLimit as calculateDailyLimit,
@@ -58,6 +58,8 @@ type FinanceState = {
   setIsHapticsEnabled: (enabled: boolean) => void;
   isSmartNotificationsEnabled: boolean;
   setIsSmartNotificationsEnabled: (enabled: boolean) => void;
+  isLiveActivityEnabled: boolean;
+  setIsLiveActivityEnabled: (enabled: boolean) => void;
   language: "tr" | "en";
   setLanguage: (lang: "tr" | "en") => void;
   currency: "TRY" | "USD" | "EUR";
@@ -95,6 +97,17 @@ type FinanceState = {
   setUserProfile: (profile: { id: string; email: string; fullName: string } | null) => void;
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (completed: boolean) => void;
+  streakCount: number;
+  lastLoggedDate: string;
+  unlockedBadges: string[];
+  xpPoints: number;
+  familyGroup: FamilyGroup | null;
+  pendingInviteCode: string | null;
+  generateInviteCode: () => string;
+  createFamilyGroup: (ownerName?: string) => FamilyGroup;
+  joinFamilyGroup: (inviteCode: string, partnerName?: string) => { success: boolean; error?: string };
+  leaveFamilyGroup: () => void;
+  updateStreakAndCheckBadges: (addedExpenseAmount?: number) => { newBadgeId?: string; streakIncreased?: boolean; newStreakCount?: number; xpGained?: number } | null;
   resetAllData: () => void;
 };
 
@@ -245,6 +258,112 @@ export const useFinanceStore = create<FinanceState>()(
       setIsHapticsEnabled: (isHapticsEnabled) => set({ isHapticsEnabled }),
       isSmartNotificationsEnabled: true,
       setIsSmartNotificationsEnabled: (isSmartNotificationsEnabled) => set({ isSmartNotificationsEnabled }),
+      isLiveActivityEnabled: true,
+      setIsLiveActivityEnabled: (isLiveActivityEnabled) => set({ isLiveActivityEnabled }),
+      streakCount: 1,
+      lastLoggedDate: new Date().toISOString().split("T")[0],
+      unlockedBadges: ["first_expense"],
+      xpPoints: 100,
+      familyGroup: null,
+      pendingInviteCode: null,
+      generateInviteCode: () => {
+        const state = get();
+        if (state.pendingInviteCode) return state.pendingInviteCode;
+        const code = `BRK-${Math.floor(1000 + Math.random() * 9000)}`;
+        set({ pendingInviteCode: code });
+        return code;
+      },
+      createFamilyGroup: (ownerName) => {
+        const state = get();
+        const code = state.pendingInviteCode || `BRK-${Math.floor(1000 + Math.random() * 9000)}`;
+        const group: FamilyGroup = {
+          id: `fam_${Date.now()}`,
+          name: `${ownerName || state.userProfile?.fullName || "Aileniz"}'in Aile Bütçesi 👥`,
+          inviteCode: code,
+          isOwner: true,
+          ownerName: ownerName || state.userProfile?.fullName || "Siz",
+          createdAt: new Date().toISOString()
+        };
+        set({ familyGroup: group, pendingInviteCode: null });
+        return group;
+      },
+      joinFamilyGroup: (inviteCode, partnerName) => {
+        const cleanCode = inviteCode.trim().toUpperCase();
+        if (!cleanCode || cleanCode.length < 4) {
+          return { success: false, error: "Geçersiz veya eksik aile kodu." };
+        }
+        const state = get();
+        const group: FamilyGroup = {
+          id: `fam_joined_${Date.now()}`,
+          name: `Ortak Aile Bütçesi 👥`,
+          inviteCode: cleanCode,
+          isOwner: false,
+          ownerName: "Eşiniz",
+          partnerName: partnerName || state.userProfile?.fullName || "Siz",
+          createdAt: new Date().toISOString()
+        };
+        set({ familyGroup: group, pendingInviteCode: null });
+        return { success: true };
+      },
+      leaveFamilyGroup: () => set({ familyGroup: null, pendingInviteCode: null }),
+      updateStreakAndCheckBadges: (addedExpenseAmount) => {
+        const state = get();
+        const todayStr = new Date().toISOString().split("T")[0];
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+        let newStreak = state.streakCount || 1;
+        let streakIncreased = false;
+
+        if (state.lastLoggedDate !== todayStr) {
+          if (state.lastLoggedDate === yesterdayStr) {
+            newStreak += 1;
+          } else {
+            newStreak = 1;
+          }
+          streakIncreased = true;
+        }
+
+        let newBadges = [...(state.unlockedBadges || ["first_expense"])];
+        let newlyUnlockedBadgeId: string | undefined = undefined;
+        let xpGained = 50;
+
+        if (!newBadges.includes("first_expense") && state.expenses.length > 0) {
+          newBadges.push("first_expense");
+          newlyUnlockedBadgeId = "first_expense";
+          xpGained += 50;
+        }
+
+        if (newStreak >= 7 && !newBadges.includes("streak_7")) {
+          newBadges.push("streak_7");
+          newlyUnlockedBadgeId = "streak_7";
+          xpGained += 150;
+        }
+
+        if (newStreak >= 30 && !newBadges.includes("streak_30")) {
+          newBadges.push("streak_30");
+          newlyUnlockedBadgeId = "streak_30";
+          xpGained += 500;
+        }
+
+        set({
+          streakCount: newStreak,
+          lastLoggedDate: todayStr,
+          unlockedBadges: newBadges,
+          xpPoints: (state.xpPoints || 100) + xpGained
+        });
+
+        if (streakIncreased || newlyUnlockedBadgeId) {
+          return {
+            newBadgeId: newlyUnlockedBadgeId,
+            streakIncreased,
+            newStreakCount: newStreak,
+            xpGained
+          };
+        }
+        return null;
+      },
       monthlyArchives: [],
       addMonthlyArchiveRecord: (record) => {
         set((state) => {
@@ -579,7 +698,8 @@ export const useFinanceStore = create<FinanceState>()(
           selectedPeriod: "daily",
           plan: cleanPlan,
           simulatedDateOffsetDays: 0,
-          monthlyArchives: []
+          monthlyArchives: [],
+          familyGroup: null
         });
       }
     }),

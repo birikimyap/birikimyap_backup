@@ -23,6 +23,16 @@ export function syncWidgetData(
       updatedAt: now.toISOString()
     };
 
+    // Auto sync to Dynamic Island (Live Activity) & Apple Watch
+    try {
+      const { syncLiveActivityData } = require("./liveActivitySync");
+      const { syncWatchData } = require("./watchSync");
+      syncLiveActivityData(dynamicDaily, monthlyLimit > 0 ? Math.round(monthlyLimit / 30) : 500);
+      syncWatchData(dynamicDaily, monthlyLimit > 0 ? Math.round(monthlyLimit / 30) : 500);
+    } catch (e) {
+      console.log("[widget-sync] live/watch sync skipped:", e);
+    }
+
     console.log("[widget-sync] payload updated:", widgetPayload);
     return widgetPayload;
   } catch (err) {
