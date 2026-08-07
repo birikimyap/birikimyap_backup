@@ -164,7 +164,7 @@ export const translations = {
     sheetCancelBtn: "İptal",
     sheetSaveBtn: "Kaydet",
     sheetContactToast: "Destek Adresi Kopyalandı",
-    sheetContactToastSub: "support@birikimyap.com adresine mail atabilirsiniz! 📬"
+    sheetContactToastSub: "destek@birikimyap.app adresine mail atabilirsiniz! 📬"
   },
   en: {
     // General / Common
@@ -331,6 +331,6 @@ export const translations = {
     sheetCancelBtn: "Cancel",
     sheetSaveBtn: "Save",
     sheetContactToast: "Support Address Copied",
-    sheetContactToastSub: "You can send an e-mail to support@birikimyap.com! 📬"
+    sheetContactToastSub: "You can send an e-mail to support@birikimyap.app! 📬"
   }
 } as const;

@@ -15,7 +15,7 @@ export const TERMS_OF_SERVICE: LegalDoc = {
 İşbu Kullanım Koşulları ("Sözleşme"), Birikim Yap mobil uygulamasını ("Uygulama") kullanan tüm gerçek kişiler ("Kullanıcı") ile Uygulama geliştiricisi ve yönetimi ("Birikim Yap") arasında akdedilmiştir. Uygulamayı indirerek, bir hesap oluşturarak veya hizmetleri kullanarak işbu Sözleşme şartlarını eksiksiz kabul etmiş sayılırsınız.
 
 2. VERİ SORUMLUSU VE İLETİŞİM
-Uygulama geliştiricisi Veri Sorumlusu sıfatını taşımaktadır. Her türlü yasal bildirim, sözleşme talebi veya soru için resmi destek e-posta adresimiz: destek@birikimyap.co.
+Uygulama geliştiricisi Veri Sorumlusu sıfatını taşımaktadır. Her türlü yasal bildirim, sözleşme talebi veya soru için resmi destek e-posta adresimiz: destek@birikimyap.app.
 
 3. HİZMETİN KAPSAMI VE NİTELİĞİ
 Birikim Yap; kullanıcıların kişisel gelir, sabit gider, bütçe takibi ve birikim hedeflerini yönetmelerine yardımcı olan sesli, yapay zeka destekli ve çift/aile paylaşımlı bir bütçe simülasyon ve takip aracıdır.
@@ -51,7 +51,7 @@ Kullanıcı QR Kodu veya Davet Kodu ile bir Çift / Aile Bütçesine bağlandı�
 These Terms of Service ("Agreement") are entered into between all individual users ("User") of the Birikim Yap mobile application ("Application") and Birikim Yap development ("Birikim Yap"). By using the Application, you accept these terms in full.
 
 2. DATA CONTROLLER & CONTACT
-Official support and legal contact email: support@birikimyap.co.
+Official support and legal contact email: support@birikimyap.app.
 
 3. SCOPE OF SERVICE
 Birikim Yap is a voice, AI-assisted, and family-shared personal budget tracking and savings simulation tool.
@@ -91,7 +91,7 @@ export const PRIVACY_POLICY: LegalDoc = {
   lastUpdated: "6 Ağustos 2026",
   content: {
     tr: `1. VERİ SORUMLUSU
-6698 sayılı KVKK ve Genel Veri Koruma Yönetmeliği (GDPR) uyarınca, kişisel verileriniz Veri Sorumlusu sıfatıyla Birikim Yap (destek@birikimyap.co) tarafından işlenmektedir.
+6698 sayılı KVKK ve Genel Veri Koruma Yönetmeliği (GDPR) uyarınca, kişisel verileriniz Veri Sorumlusu sıfatıyla Birikim Yap (destek@birikimyap.app) tarafından işlenmektedir.
 
 2. TOPLANAN VERİLER VE İŞLEME AMAÇLARI
 - Kimlik ve İletişim Verileri: Ad, soyad, e-posta adresi (Google ve Apple Sign-In OAuth servisleri üzerinden).
@@ -116,11 +116,11 @@ Kişisel verileriniz reklam şirketlerine satılmaz veya pazarlama amacıyla pay
 Uygulama kendi adına yasal sözleşme yapabilecek yaştaki kullanıcılar içindir. Reşit olmayanların ebeveyn gözetiminde kullanması tavsiye edilir.
 
 7. İLETİŞİM
-Tüm KVKK/GDPR talepleriniz için: destek@birikimyap.co.
+Tüm KVKK/GDPR talepleriniz için: destek@birikimyap.app.
 
 Son Güncelleme Tarihi: 6 Ağustos 2026`,
     en: `1. DATA CONTROLLER
-Processed by Birikim Yap (support@birikimyap.co) under KVKK & GDPR guidelines.
+Processed by Birikim Yap (support@birikimyap.app) under KVKK & GDPR guidelines.
 
 2. COLLECTED DATA & PURPOSES
 Identity data (Google/Apple Auth), user-entered budget amounts, and app settings for budget tracking purposes.
@@ -132,13 +132,13 @@ Google & Apple Sign-In for OAuth, Supabase for RLS-encrypted cloud storage, Asyn
 Secured via SSL/TLS and RLS policies. Deleted account data is irreversibly wiped within 30 days.
 
 5. DATA PORTABILITY & RIGHT TO ERASURE
-Users can delete their account at any time via Profile Settings or request a copy of their data by emailing support@birikimyap.co.
+Users can delete their account at any time via Profile Settings or request a copy of their data by emailing support@birikimyap.app.
 
 6. AGE LIMIT
 Intended for users capable of forming legally binding contracts. Minors should use under parental guidance.
 
 7. CONTACT
-Privacy inquiries: support@birikimyap.co.
+Privacy inquiries: support@birikimyap.app.
 
 Last Updated: August 6, 2026`
   },

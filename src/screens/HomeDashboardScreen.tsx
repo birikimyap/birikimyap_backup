@@ -3006,7 +3006,7 @@ export default function HomeDashboardScreen() {
             style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
             onPress={async () => {
               triggerHaptic();
-              const targetEmail = language === "tr" ? "destek@birikimyap.co" : "support@birikimyap.co";
+              const targetEmail = language === "tr" ? "destek@birikimyap.app" : "support@birikimyap.app";
               const subjectText = language === "tr" ? "Birikim Yap Destek Talebi" : "Birikim Yap Support Request";
               const mailUrl = `mailto:${targetEmail}?subject=${encodeURIComponent(subjectText)}`;
               try {
@@ -3796,7 +3796,7 @@ export default function HomeDashboardScreen() {
                       const curProfile = useFinanceStore.getState().userProfile;
                       const updatedProfile = {
                         id: curProfile?.id || "local-user",
-                        email: curProfile?.email || "user@birikimyap.co",
+                        email: curProfile?.email || "user@birikimyap.app",
                         fullName: trimmedName
                       };
                       useFinanceStore.getState().setUserProfile(updatedProfile);

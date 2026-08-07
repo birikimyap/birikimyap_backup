@@ -317,24 +317,35 @@ document.addEventListener('DOMContentLoaded', () => {
         btnTermsModal.addEventListener('click', () => {
             openLegalModal(
                 'Kullanım Koşulları',
-                `<p><b>1. Taraflar ve Amaç</b><br>Birikim Yap uygulaması ve birikimyap.app web sitesi kişisel bütçe yönetimi, sesli harcama kaydı ve birikim hedefleri takibi amacıyla hizmet verir.</p>
-                <p style="margin-top:12px;"><b>2. Veri Sorumluluğu</b><br>Kullanıcılar bütçe ve harcama verilerini kendi özgür iradeleriyle uygulamaya kaydeder. Verileriniz şifrelenmiş olarak cihazınızda ve Supabase altyapısında saklanır.</p>`
+                `<p><b>1. KABUL VE TARAFLAR</b><br>İşbu Kullanım Koşulları ("Sözleşme"), Birikim Yap mobil uygulamasını ("Uygulama") ve birikimyap.app web sitesini kullanan tüm kullanıcılar ile Uygulama geliştiricisi ("Birikim Yap") arasında akdedilmiştir.</p>
+                <p style="margin-top:12px;"><b>2. VERİ SORUMLUSU VE İLETİŞİM</b><br>Veri Sorumlusu sıfatıyla her türlü bildirim ve yasal talepleriniz için resmi destek e-posta adresimiz: <b>destek@birikimyap.app</b>.</p>
+                <p style="margin-top:12px;"><b>3. HİZMETİN KAPSAMI VE NİTELİĞİ</b><br>Birikim Yap; kullanıcıların kişisel gelir, sabit gider, bütçe takibi ve birikim hedeflerini yönetmelerine yardımcı olan sesli, yapay zeka destekli ve çift/aile paylaşımlı bir bütçe simülasyon ve takip aracıdır.</p>
+                <p style="margin-top:12px;"><b>4. BANKACILIK VE FİNANSAL VERİ GÜVENCESİ</b><br>• Birikim Yap hiçbir banka veya finans kuruluşu hesabına bağlanmaz.<br>• Kredi kartı numarası, CVV, kart şifresi veya internet bankacılığı giriş bilgisi talep etmez ve saklamaz.<br>• Bankalardan otomatik veri veya bakiye çekmez. Tüm veriler kullanıcının kendi özgür beyanı ile işlenir.</p>
+                <p style="margin-top:12px;"><b>5. YAPAY ZEKA VE AKILLI ANALİZ DİSCLAIMER'I</b><br>• Uygulama içerisinde sunulan AI önerileri, akıllı analizler, bütçe tahminleri veya motivasyon mesajları otomatik kurallar vasıtasıyla bilgilendirme amacıyla üretilir.<br>• Sunulan içerikler 6362 sayılı Sermaye Piyasası Kanunu uyarınca yatırım tavsiyesi, portföy yöneticiliği veya resmi finansal danışmanlık niteliği taşımaz.</p>
+                <p style="margin-top:12px;"><b>6. SIRI VE SESLİ GİRDİ ENTEGRASYONU</b><br>• Siri ve sesli harcama girdileri Apple iOS sistem servisleri aracılığıyla anlık konuşmadan metne dönüştürme (speech-to-text) yöntemiyle işlenir.<br>• Birikim Yap ses kayıtlarını kesinlikle saklamaz veya sunucularına yüklemez. Yalnızca harcama tutarı ve kategorisini içeren metin verileri işlenir.</p>
+                <p style="margin-top:12px;"><b>7. ÇİFT VE AİLE HESABI PAYLAŞIMI</b><br>Kullanıcı QR Kodu veya Davet Kodu ile bir Çift / Aile Bütçesine bağlandığında, eklediği harcama kayıtlarının (tutar, kategori, tarih ve ekleyen adı) ortak bütçe üyeleri tarafından görüntülenebileceğini kabul eder.</p>
+                <p style="margin-top:12px;"><b>8. KULLANICI SORUMLULUKLARI</b><br>Kullanıcı girdiği verilerin doğruluk ve güncelliğinden bizzat sorumludur. Sahte hesaplar, tersine mühendislik ve bot kullanımı yasaktır.</p>
+                <p style="margin-top:12px;"><b>9. FİKRİ MÜLKİYET VE HUKUK</b><br>Uygulama kodları, arayüz tasarımları, logolar ve maskot görsellerinin tüm mülkiyeti Birikim Yap'a aittir. İhtilafların çözümünde İstanbul (Çağlayan) Mahkemeleri yetkilidir.</p>`
             );
         });
 
         btnPrivacyModal.addEventListener('click', () => {
             openLegalModal(
-                'Gizlilik Politikası',
-                `<p><b>1. Sıfır Reklam ve Reklam Takibi</b><br>Birikim Yap uygulamasında üçüncü taraf reklam ağları (Google AdMob, Meta Ads vb.) bulunmaz. Verileriniz asla reklam verenlere satılmaz.</p>
-                <p style="margin-top:12px;"><b>2. Güvenli Depolama</b><br>Cihazınızdaki veriler yerel diskte şifreli saklanır. Bulut yedeklemesinde Row Level Security (RLS) kullanılır.</p>`
+                'Gizlilik Politikası ve KVKK / GDPR',
+                `<p><b>1. VERİ SORUMLUSU</b><br>6698 sayılı KVKK ve Genel Veri Koruma Yönetmeliği (GDPR) uyarınca kişisel verileriniz Veri Sorumlusu sıfatıyla Birikim Yap (<b>destek@birikimyap.app</b>) tarafından işlenmektedir.</p>
+                <p style="margin-top:12px;"><b>2. TOPLANAN VERİLER VE İŞLEME AMAÇLARI</b><br>• Kimlik Verileri: Ad, soyad, e-posta (Google & Apple OAuth servisleri üzerinden).<br>• Bütçe Verileri: Beyan edilen gelir, sabit gider, değişken harcamalar, birikim hedefleri ve çift/aile eşleşme kodları.<br>• Teknik Veriler: Cihaz OS, dil, para birimi ve uygulama tercihleri.</p>
+                <p style="margin-top:12px;"><b>3. ÜÇÜNCÜ TARAF ENTEGRASYONLARI & SIFIR REKLAM</b><br>• Google & Apple Sign-In: Güvenli OAuth kimlik doğrulama.<br>• Supabase Altyapısı: Şifrelenmiş bulut veritabanı ve yedekleme (RLS Row Level Security koruması altında).<br>• Sıfır Reklam: Kişisel verileriniz asla reklam şirketlerine satılmaz veya pazarlama amacıyla paylaşılmaz.</p>
+                <p style="margin-top:12px;"><b>4. VERİ GÜVENLİĞİ VE SAKLAMA SÜRELERİ</b><br>Tüm veri aktarımları SSL/TLS şifreleme ile korunur. Hesap silindiğinde bulut yedekleri en geç 30 gün içinde kalıcı ve geri döndürülemez şekilde imha edilir.</p>
+                <p style="margin-top:12px;"><b>5. VERİ TAŞINABİLİRLİĞİ VE HESAP SİLME HAKKI</b><br>Kullanıcılar dilediği zaman Profil sayfasından "Hesabımı Sil" seçeneğiyle tüm verilerini anında temizleyebilir veya kişisel verilerinin bir kopyasını talep edebilir.</p>`
             );
         });
 
         btnKvkkModal.addEventListener('click', () => {
             openLegalModal(
                 'KVKK Aydınlatma Metni',
-                `<p>6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) uyarınca, Birikim Yap kullanıcısı olarak kişisel verileriniz yalnızca bütçe matematiği ve hesap oluşturma süreçlerinde işlenmektedir.</p>
-                <p style="margin-top:12px;">Destek talepleriniz için <b>destek@birikimyap.app</b> adresi üzerinden bizimle iletişime geçebilirsiniz.</p>`
+                `<p>6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) uyarınca, Birikim Yap kullanıcısı olarak kişisel verileriniz (ad, soyad, e-posta ve bütçe hesaplamaları) yalnızca bütçe simülasyonu, akıllı limit belirleme ve bulut yedekleme süreçlerinde işlenmektedir.</p>
+                <p style="margin-top:12px;">Veri sahibi olarak KVKK Madde 11 kapsamındaki tüm haklarınız (veri işlenip işlenmediğini öğrenme, düzeltme, silme ve verilerin kopyasını talep etme) saklıdır.</p>
+                <p style="margin-top:12px;">Tüm KVKK ve GDPR talepleriniz için resmi destek adresimiz: <b>destek@birikimyap.app</b>.</p>`
             );
         });
 
